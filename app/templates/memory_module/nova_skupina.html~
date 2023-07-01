@@ -1,0 +1,72 @@
+{% extends "peopleflow/base.html" %}
+
+{% block extraheader %}
+{% endblock %}
+
+{% block content%}
+
+{% macro render_field(field, placeholder=None) %}
+ <div class="form-group">
+     {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+  
+     {{ field.label }}
+  
+     {% if field.errors %}
+         {% set css_class = css_class + ' is-invalid' %}
+  
+         {% for error in field.errors %}
+             
+             <small id="{{ field.label.text }}" class="text-danger">
+                 {{ error }}
+           </small>
+  
+         {% endfor %}
+         </ul>
+     {% endif %}
+  
+     {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+ </div>
+ {% endmacro %}
+
+  <main>
+  <br>
+  
+  <nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="{{ url_for('peopleflow.index') }}">Home</a></li>
+	   <li class="breadcrumb-item active" aria-current="page">Nova Skupina</li>
+	  </ol>
+	</nav>
+	
+  <div class="row g-5">  
+  
+
+      <div class="py-5 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
+        <h2>Nova Skupina</h2>
+			<span id="vari" data-value="3"></span>
+        
+      </div>
+   </div>
+    
+
+    <form method="POST" action="{{ url_for('peopleflow.new_clovek') }}" accept-charset="UTF-8" role="form">
+     {{ form.csrf_token }}
+     <input type="hidden" id="id" name="id" value="999">
+     {{ render_field(form.ime_skupine, placeholder="Ime skupine", autofocus="") }}
+     {{ render_field(form.opis_skupine, placeholder="Opis skupine") }}
+     {{ render_field(form.prikaz_s, placeholder="Enter Password") }}
+
+
+     
+     <div class="form-group">
+    	{{ form.submit(class="form-control btn btn-primary mb-2", value="Dodaj Skupino") }}
+    	</div>
+     </form>
+     
+
+	
+  </div>
+  </main>
+{% endblock %}
+

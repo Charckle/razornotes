@@ -1,0 +1,98 @@
+{% extends "memory_module/base.html" %}
+
+{% block extraheader %}
+{% endblock %}
+
+
+{% set m_items = Mem_.get_all_from(g_id) %}
+
+{% block content%}
+
+{% macro render_field(field, placeholder=None) %}
+ <div class="form-group">
+     {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+  
+     {{ field.label }}
+  
+     {% if field.errors %}
+         {% set css_class = css_class + ' is-invalid' %}
+  
+         {% for error in field.errors %}
+             
+             <small id="{{ field.label.text }}" class="text-danger">
+                 {{ error }}
+           </small>
+  
+         {% endfor %}
+         </ul>
+     {% endif %}
+  
+     {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+ </div>
+ {% endmacro %}
+
+  <main>
+  <br>
+  
+  <nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
+		<li class="breadcrumb-item"><a href="{{ url_for('memory_module.group_all') }}">Group All</a></li>
+		<li class="breadcrumb-item"><a href="{{ url_for('memory_module.group_view', g_id=g_id) }}">{{ form.name.data }}</a></li>
+	   <li class="breadcrumb-item active" aria-current="page">Edit Group</li>
+	  </ol>
+	</nav>
+	
+  <div class="row g-5">  
+  
+
+      <div class="py-5 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
+        <h2>{{ form.name.data }}</h2>
+			<span id="vari" data-value="3"></span>
+        
+      </div>
+   </div>
+    
+
+    <form method="POST" action="{{ url_for('memory_module.group_edit') }}" accept-charset="UTF-8" role="form">
+     {{ form.csrf_token }}
+     {{ form.id }}
+     {{ render_field(form.name, autofocus="") }}
+     {{ render_field(form.comment_) }}
+     {{ render_field(form.show_) }}
+
+     {{ render_field(form.submit) }}
+
+     </form>
+     
+		<!-- Button trigger modal -->
+		{% if m_items|length == 0 %}
+			<button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+			  Odstrani Skupino
+			</button>
+		  {% endif %}   
+     
+     <!-- Modal -->
+		<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		  <div class="modal-dialog">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title" id="exampleModalLabel">Odstranitev človeka iz baze</h5>
+		        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		      </div>
+		      <div class="modal-body">
+		        Ali hočeš resnično odstraniti skupino {{ form.name.data }} iz baze?
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+			        <a type="button" class="btn btn-danger" href="{{ url_for('memory_module.group_delete', g_id=g_id) }}">Delete Group</a>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+	
+  </div>
+  </main>
+{% endblock %}
+

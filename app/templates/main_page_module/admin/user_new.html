@@ -1,0 +1,88 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+{% block nav_all_users %}active{% endblock nav_all_users %}
+
+
+{% macro render_field(field, placeholder=None) %}
+<div class="form-group">
+    {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+
+    {{ field.label }}
+
+    {% if field.errors %}
+        {% set css_class = css_class + ' is-invalid' %}
+
+        {% for error in field.errors %}
+            
+            <small id="{{ field.label.text }}" class="text-danger">
+                {{ error }}
+          </small>
+
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+</div>
+{% endmacro %}
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md">
+      <!-- insert column here -->
+    </div>
+    <div class="col-md-6">
+
+
+      <legend>New User</legend>
+
+        <form method="POST" action="{{ url_for('main_page_module.user_new') }}" accept-charset="UTF-8" role="form">
+          {{ form.csrf_token }}
+          <input type="hidden" id="id" name="id" value="999">
+
+          <div class="row">
+            <div class="col-md-6">
+              {{ render_field(form.name, autofocus="") }}
+            </div>
+            <div class="col-md-6">
+              {{ render_field(form.username) }}
+            </div>
+          </div>
+
+          {{ render_field(form.email) }}
+
+          <div class="row">
+            <div class="col-md-6">
+              {{ render_field(form.password) }}
+            </div>
+            <div class="col-md-6">
+              {{ render_field(form.password_2) }}
+            </div>
+          </div>
+          
+        {{ render_field(form.api_key, value = Pylavor.gen_passwd(20)) }}
+
+          
+          
+          {{ render_field(form.status) }}
+          
+          <div class="form-group">
+            {{ form.submit(class="form-control btn btn-primary mb-2") }}
+            </div>
+        </form>
+
+      <hr>
+
+    </div>
+    <div class="col-md">
+    </div>
+  </div>
+  
+</div>      
+{% endblock content %}

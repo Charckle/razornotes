@@ -1,0 +1,100 @@
+{% extends "peopleflow/base.html" %}
+
+{% block extraheader %}
+{% endblock %}
+
+{% block content%}
+
+{% macro render_field(field, placeholder=None) %}
+ <div class="form-group">
+     {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+  
+     {{ field.label }}
+  
+     {% if field.errors %}
+         {% set css_class = css_class + ' is-invalid' %}
+  
+         {% for error in field.errors %}
+             
+             <small id="{{ field.label.text }}" class="text-danger">
+                 {{ error }}
+           </small>
+  
+         {% endfor %}
+         </ul>
+     {% endif %}
+  
+     {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+ </div>
+ {% endmacro %}
+
+  <main>
+  <br>
+  
+  <nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="{{ url_for('peopleflow.index') }}">Home</a></li>
+		<li class="breadcrumb-item"><a href="{{ url_for('peopleflow.group', group_id=form.id_skupina.data) }}">Skupina - {{ skupina['ime_skupine'] }}</a></li>
+	   <li class="breadcrumb-item active" aria-current="page">Clovek</li>
+	  </ol>
+	</nav>
+	
+  <div class="row g-5">  
+  
+
+      <div class="py-5 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
+        <h2>{{ form.ime.data }} {{ form.priimek.data }}</h2>
+			<span id="vari" data-value="3"></span>
+        
+      </div>
+   </div>
+    
+
+    <form method="POST" action="{{ url_for('peopleflow.change_clovek') }}" accept-charset="UTF-8" role="form">
+     {{ form.csrf_token }}
+     {{ form.id }}
+     {{ render_field(form.ime, placeholder="Enter Employee Name", autofocus="") }}
+     {{ render_field(form.priimek, placeholder="Enter Email") }}
+     {{ render_field(form.vprasanje, placeholder="Enter Password") }}
+     {{ render_field(form.komentar, placeholder="Reenter Password") }}
+     {{ render_field(form.id_skupina, placeholder="Reenter Password") }}
+
+     
+     <div class="form-group">
+    	{{ form.submit(class="form-control btn btn-primary mb-2", value="Poslji spremembe") }}
+    	</div>
+     </form>
+     
+		<!-- Button trigger modal -->
+		<button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+		  Odstrani človeka
+		</button>
+		     
+     
+     <!-- Modal -->
+		<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		  <div class="modal-dialog">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title" id="exampleModalLabel">Odstranitev človeka iz baze</h5>
+		        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		      </div>
+		      <div class="modal-body">
+		        Ali hočeš resnično odstraniti človeka {{ form.ime.data }} {{ form.priimek.data }} iz baze?
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+		        {% if People.get_all_from(group_id).len == 0%}
+					 <a type="button" class="btn btn-danger" href="{{ url_for('peopleflow.delete_clovek', clovek_id=form.id.data) }}">Odstrani človeka</a>
+				  {% endif %}
+		        
+		      </div>
+		    </div>
+		  </div>
+		</div>
+	
+  </div>
+  </main>
+{% endblock %}
+

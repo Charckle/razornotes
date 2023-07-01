@@ -1,0 +1,97 @@
+{% extends "memory_module/base.html" %}
+
+{% block extraheader %}
+{% endblock %}
+
+{% set group = Grp_.get_one(m_item["m_group_id"]) %}
+
+{% block content%}
+
+{% macro render_field(field, placeholder=None) %}
+ <div class="form-group">
+     {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+  
+     {{ field.label }}
+  
+     {% if field.errors %}
+         {% set css_class = css_class + ' is-invalid' %}
+  
+         {% for error in field.errors %}
+             
+             <small id="{{ field.label.text }}" class="text-danger">
+                 {{ error }}
+           </small>
+  
+         {% endfor %}
+         </ul>
+     {% endif %}
+  
+     {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+ </div>
+ {% endmacro %}
+
+  <main>
+  <br>
+  
+  <nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('memory_module.group_view', g_id=m_item['m_group_id']) }}">Group - {{ group['name'] }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Memory Item</li>
+	  </ol>
+	</nav>
+	
+  <div class="row g-5">  
+  
+
+      <div class="py-5 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
+        <h2>{{ form.answer.data }}</h2>
+			<span id="vari" data-value="3"></span>
+        
+      </div>
+   </div>
+    
+
+    <form method="POST" action="{{ url_for('memory_module.m_item_edit') }}" accept-charset="UTF-8" role="form">
+     {{ form.csrf_token }}
+     {{ form.id }}
+     {{ render_field(form.answer, autofocus="") }}
+     {{ render_field(form.question) }}
+     {{ render_field(form.comment_) }}
+     {{ render_field(form.m_group_id) }}
+
+     
+     {{ render_field(form.submit) }}
+
+     </form>
+     
+		<!-- Button trigger modal -->
+		<button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+		  Delete Memory Item
+		</button>
+		     
+     
+     <!-- Modal -->
+		<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+		  <div class="modal-dialog">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title" id="deleteModalLabel">Remove the Memory</h5>
+		        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		      </div>
+		      <div class="modal-body">
+		        Do you confirm the removal of: {{ form.answer.data }} ?
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+					<a type="button" class="btn btn-danger" href="{{ url_for('memory_module.m_item_delete', mi_id=form.id.data) }}">Delete Memory</a>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+	
+  </div>
+  </main>
+{% endblock %}
+

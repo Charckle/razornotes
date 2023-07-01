@@ -1,0 +1,109 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+{% block nav_search %}active{% endblock nav_search %}
+
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2">
+      <!-- insert column here -->
+    </div>
+    <div class="col-md-8">
+
+      <h1>Hello, there!</h1>
+      <input class="form-control mr-sm-2" id ="search" type="search" placeholder="Search" size="50" aria-label="Search" autofocus="">
+      <hr>
+      <div class="container">
+        <div id="results">
+          <p>Now search something!</p>
+        </div>
+      </div>
+      <script>
+        
+        function load_results(){
+          var search_key = document.getElementById("search").value;
+
+          var results=[];
+
+          $.post('/search/', {"key": search_key}, function(data, textStatus) {
+            //data contains the JSON object
+            //textStatus contains the status: success, error, etc
+
+            var searchResults = document.createElement("div");
+            searchResults.setAttribute('class', 'container');
+            var count = Object(data);
+            console.log(count);
+
+            if (0 < Object.keys(data).length) {
+
+              for (const [key, value] of Object.entries(data)) {
+                var newMedia = document.createElement("div")
+                newMedia.setAttribute('class', 'media');
+                newMedia.setAttribute('style', 'font-size: 12px;background-color: hsl(64, 100%, 86%);border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;>');
+
+                var newBodyLink = document.createElement("a")
+                newBodyLink.setAttribute('class', 'btn align-self-center mr-3');
+                newBodyLink.setAttribute('href', '/view_note/' + key);
+
+                var newBodyImage = document.createElement("img")
+                newBodyImage.setAttribute('src', "{{ url_for('static', filename='icons/note.svg') }}");
+                newBodyImage.setAttribute('height', '32');
+                newBodyImage.setAttribute('width', '32');
+                newBodyLink.appendChild(newBodyImage);
+
+                var newBody = document.createElement("div")
+                newBody.setAttribute('class', 'media-body');
+
+                var newBodyTitle = document.createElement("h6")
+                newBodyTitle.setAttribute('class', 'mt-0');
+                newBodyTitle.textContent = value[0];
+
+                var newBodyText = document.createElement("p")
+                newBodyText.innerHTML = value[1];
+
+                newBody.appendChild(newBodyTitle);
+                newBody.appendChild(newBodyText);
+                
+                newMedia.appendChild(newBodyLink);
+                newMedia.appendChild(newBody);
+                
+                searchResults.appendChild(newMedia);
+                
+              }
+
+            } else {
+              var noResults = document.createElement("p")
+              noResults.textContent = "We searched high and low, and we found nothing... its clearly because you were not specific enough.";
+              searchResults.appendChild(noResults);
+              var new_note = document.createElement("a")
+              new_note.textContent = "Make One";
+              new_note.setAttribute('href', "{{ url_for('main_page_module.new_note') }}");
+              searchResults.appendChild(new_note);
+
+            }
+
+            $("#results").empty();
+            document.getElementById("results").appendChild(searchResults);
+          }, "json");
+
+        };
+
+        document.getElementById("search").onkeyup = load_results;
+
+      </script>
+
+    </div>
+  <div class="col-md-2">
+
+      
+  </div>
+</div>
+
+</div>
+{% endblock content %}

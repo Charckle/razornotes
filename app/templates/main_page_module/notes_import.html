@@ -1,0 +1,67 @@
+{% extends "main_page_module/base.html" %}
+
+
+{% block extraheader %}
+{% endblock %}
+
+{% block notes_import %}active{% endblock notes_import %}
+
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-1">
+      <!-- insert column here -->
+
+    </div>
+    <div class="col-md-10">
+
+      {% macro render_field(field, placeholder=None) %}
+      <div class="form-group">
+          {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+
+          {{ field.label }}
+
+          {% if field.errors %}
+              {% set css_class = css_class + ' is-invalid' %}
+
+              {% for error in field.errors %}
+                  
+                  <small id="{{ field.label.text }}" class="text-danger">
+                      {{ error }}
+                </small>
+
+              {% endfor %}
+              </ul>
+          {% endif %}
+
+          {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+      </div>
+      {% endmacro %}
+
+
+      <div>
+        <div>
+          <legend>Import Notes</legend>
+
+          <form method="POST" action="{{ url_for('main_page_module.notes_import') }}" accept-charset="UTF-8" role="form"enctype="multipart/form-data">
+            {{ form.csrf_token }}
+            {{ render_field(form.import_file) }}
+            
+            <div class="form-group">
+              {{ form.submit(class="form-control btn btn-primary mb-2") }}
+              </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+    <div class="col-md-1">
+        
+    </div>
+  </div>
+  
+</div>      
+{% endblock %}

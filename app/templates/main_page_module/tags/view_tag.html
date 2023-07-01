@@ -1,0 +1,48 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <br>  
+
+  <div class="row">
+    <div class="col-md-3 text-center">
+      <h5>Options</h5>
+
+    </div>
+    <div class="col-md-6">
+
+      
+      <legend>{{ tag["name"] }}
+      
+      </legend>
+
+
+      {% for i in notes%}
+        <hr>
+        <div class="media">
+          <a href="{{ url_for('main_page_module.view_note', note_id=i["n_id"]) }}">
+            <img class="mr-3" id="icon_image" src="{{ url_for('static', filename='icons/note.svg') }}" class="rounded float-left" alt="..." style="width: 50px; height: 50px;">
+          </a>
+          <div class="media-body">
+            <h4 class="mt-0">{{ i["n_title"] }}</h4>
+            <p>{{ i["n_text"] }}</p>
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </div>
+    <div class="col-md">
+      
+
+    </div>
+  </div>
+  
+  </div>
+{% endblock content %}

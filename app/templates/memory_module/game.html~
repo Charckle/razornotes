@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <title>Helper Application</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/checkout/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+<link href="{{ url_for('static', filename='dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
+
+  </head>
+  <body class="bg-light">
+    
+<div class="container">
+
+  <main>
+  
+  <script type="text/javascript" >
+  
+ 
+  var people_f = [
+          {% for key, value in people.items() %}
+            { id :{{ key }}, ime: "{{ value['ime'] }}", priimek: "{{ value['priimek'] }}", vprasanje: "{{ value['vprasanje'] }}", komentar: "{{ value['komentar'] }}"},
+            
+          {% endfor %}
+          ];
+          
+  var people_d = people_f.slice();
+  
+	var cuid = people_d[0]["id"];
+	var old_cuid = cuid;
+	
+  </script>
+  <br>
+  
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="{{ url_for('peopleflow.index') }}">Home</a></li>
+	    <li class="breadcrumb-item active" aria-current="page">Game</li>
+	  </ol>
+	</nav>
+	
+  <div class="row g-5">
+
+    <div class="col-md-12">
+      <div class="py-5 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
+        <h2>Train Your Brain</h2>
+			<span id="vari" data-value="3"></span>
+        <br>
+        <h3 id="naslov"> </h3>
+        <p id="komentar"></p>
+        <br>
+        <div id="buttons" class="d-grid gap-2">
+          <button id="bumg1" class="btn btn-danger" type="button" onclick="nePoznam()">NE poznam</button>
+          <button id="bumg2" class="btn btn-success" type="button" onclick="poznam()">Poznam</button>
+        </div>
+        
+      </div>
+    </div>
+    
+
+	
+  </div>
+  </main>
+
+  <footer class="my-5 pt-5 text-muted text-center text-small">
+    <p class="mb-1">&copy; 2020 - <script>document.write(new Date().getFullYear())</script> &copy; Razor IS</p>
+    <ul class="list-inline">
+      <li class="list-inline-item"><a href="#">Privacy</a></li>
+      <li class="list-inline-item"><a href="#">Terms</a></li>
+      <li class="list-inline-item"><a href="#">Support</a></li>
+    </ul>
+  </footer>
+</div>
+<script type="text/javascript" >
+
+
+function start_() {
+	var first_ = people_d[0];
+	var id_ = first_["id"];
+	var vprasanje = first_["vprasanje"];
+
+	var result_naslov = document.getElementById("naslov");
+	result_naslov.innerHTML = vprasanje;
+
+
+	
+}
+
+function nePoznam() {
+nextPerson();
+	var ime = "";
+	for (i = 0; i < people_d.length; i++) {
+		if (old_cuid == people_d[i]["id"]) {
+			ime = people_d[i]["ime"] + " " + people_d[i]["priimek"] 
+			
+			var result_naslov = document.getElementById("naslov");
+			result_naslov.innerHTML = ime;
+			
+			var opis = document.getElementById("komentar");
+			opis.innerHTML = people_d[i]["komentar"];
+			
+			var gumb1 = document.getElementById("bumg1");
+			gumb1.innerHTML = "Naprej";
+			var gumb2 = document.getElementById("bumg2");
+			gumb2.remove(); 
+			
+			gumb1.setAttribute("onclick", "naprej()");
+
+
+
+		}
+	}
+	
+}
+
+function naprej() {
+	var gumb1 = document.getElementById("bumg1");
+	gumb1.innerHTML = "Ne Poznam";
+	var button_2 = document.createElement("button")
+	button_2.setAttribute("class", "btn btn-success");
+	button_2.setAttribute("id", "bumg2");
+	button_2.setAttribute("onclick", "poznam()");
+	button_2.textContent = "Poznam";
+	
+	var gumbi = document.getElementById("buttons");
+	var is_gumb2 = document.getElementById("bumg2");
+
+	gumbi.appendChild(button_2);
+	
+	
+	var ime = "";
+	
+	for (i = 0; i < people_d.length; i++) {
+		if (cuid == people_d[i]["id"]) {
+			
+			console.log(people_d[i]);
+			var person = people_d[i];
+			
+			var id_ = person["id"];
+			var ime = person["ime"] + " " + person["priimek"];
+			var vprasanje = person["vprasanje"];
+			var komentar = person["komentar"];
+			
+			var result_naslov = document.getElementById("naslov");
+			result_naslov.innerHTML = vprasanje;
+			
+			var opis = document.getElementById("komentar");
+			opis.innerHTML = "";
+			
+			//cuid = id_;
+			
+			gumb1.setAttribute("onclick", "nePoznam()");
+			break; 
+			
+			
+		}
+		
+	}
+	
+}
+
+function poznam() {
+	var ime = "";
+	for (i = 0; i < people_d.length; i++) {
+		if (cuid == people_d[i]["id"]) {
+			ime = people_d[i]["ime"] + " " + people_d[i]["priimek"] 
+			
+			var result_naslov = document.getElementById("naslov");
+			result_naslov.innerHTML = ime;
+			
+			var opis = document.getElementById("komentar");
+			opis.innerHTML = people_d[i]["komentar"];
+			
+			var gumb1 = document.getElementById("bumg1");
+			gumb1.innerHTML = "Falil :(";
+			gumb1.setAttribute("onclick", "falil()");
+			
+			var gumb2 = document.getElementById("bumg2");
+			gumb2.innerHTML = "Zadel!";
+			gumb2.setAttribute("onclick", "zadel()");
+			
+			
+		}
+	}
+}
+
+function falil() {
+	nextPerson();
+	var gumb2 = document.getElementById("bumg2");
+	gumb2.remove(); 
+	naprej();
+}
+
+function zadel() {
+	var result_naslov = document.getElementById("naslov");
+	var gumb1 = document.getElementById("bumg1");
+	var gumb2 = document.getElementById("bumg2");
+	
+	if (people_d.length == 1) {
+		
+		result_naslov.innerHTML = "Ni vec ljudi";
+		var opis = document.getElementById("komentar");
+		opis.innerHTML = "";
+		gumb1.innerHTML = "Končaj";
+		gumb1.setAttribute("onclick", "koncaj()");
+		gumb2.textContent = "Ponovi vajo";
+		gumb2.setAttribute("onclick", "ponovi()");
+		
+	} else {
+		nextPerson();
+		removePerson();
+
+		gumb2.remove(); 
+		naprej();
+	}
+
+}
+
+function ponovi() {
+	people_d = people_f;
+	var gumb2 = document.getElementById("bumg2");
+	gumb2.remove(); 
+	nextPerson();
+	naprej();
+}
+
+function koncaj() {
+	window.open({{ url_for('peopleflow.index') }});
+}
+
+function nextPerson() {
+	for (i = 0; i < people_d.length; i++) {
+		if (cuid == people_d[i]["id"]) {	
+			nextp = i + 1;
+			if (nextp == people_d.length) {
+				nextp = 0;
+			}
+			old_cuid = cuid;
+			console.log("old: " + old_cuid);
+			cuid = people_d[nextp]["id"];
+			console.log("new: " + cuid);
+			break;
+		}
+	}
+}
+
+function removePerson() {
+	for (i = 0; i < people_d.length; i++) {
+		if (old_cuid == people_d[i]["id"]) {	
+			people_d.splice(i, 1);
+
+		}
+	}
+}
+
+
+
+window.onload = function() {
+    start_();
+    
+  }
+  
+</script>
+
+
+    <script src="{{ url_for('static', filename='dist/js/bootstrap.bundle.min.js') }}"></script>
+
+  </body>
+</html>

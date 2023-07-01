@@ -1,0 +1,118 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+{% block nav_all_users %}active{% endblock nav_all_users %}
+
+
+{% macro render_field(field, placeholder=None) %}
+<div class="form-group">
+    {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+
+    {{ field.label }}
+
+    {% if field.errors %}
+        {% set css_class = css_class + ' is-invalid' %}
+
+        {% for error in field.errors %}
+            
+            <small id="{{ field.label.text }}" class="text-danger">
+                {{ error }}
+          </small>
+
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+</div>
+{% endmacro %}
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md">
+      <!-- insert column here -->
+    </div>
+    <div class="col-md-6">
+
+
+      <legend>User</legend>
+
+        <form method="POST" action="{{ url_for('main_page_module.user_edit') }}" accept-charset="UTF-8" role="form">
+          {{ form.csrf_token }}
+          {{ form.id }}
+
+          <div class="row">
+            <div class="col-md-6">
+              {{ render_field(form.name, autofocus="") }}
+            </div>
+            <div class="col-md-6">
+              {{ render_field(form.username) }}
+            </div>
+          </div>
+
+          {{ render_field(form.email) }}
+
+          <div class="row">
+            <div class="col-md-6">
+              {{ render_field(form.password) }}
+            </div>
+            <div class="col-md-6">
+              {{ render_field(form.password_2) }}
+            </div>
+          </div>
+          
+        {{ render_field(form.api_key) }}
+
+          
+          
+          {{ render_field(form.status) }}
+          
+          <div class="form-group">
+            {{ form.submit(class="form-control btn btn-primary mb-2") }}
+            </div>
+        </form>
+
+      <hr>
+
+    </div>
+    <div class="col-md">
+      <h5>Options</h5>
+
+      <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ form.id.data }}">Delete user</button>
+
+
+      <!-- Modal -->
+      <div class="modal fade" id="{{ 'for_modal' ~ form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="{{ form.id.data ~ 'for_modaltext' }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="{{ form.id.data ~'for_modaltext' }}">Delete the Entry</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              Do you really want to delete the entry "{{ form.name.data }} - {{ form.username.data }}"
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              
+              <form method="POST" action="{{ url_for('main_page_module.delete_user') }}" accept-charset="UTF-8" role="form">
+                <input type="hidden" id="id" name="id" value="{{ form.id.data }}">
+                <button type="submit" class="btn btn-danger">Delete entry</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+        
+    </div>
+  </div>
+  
+</div>      
+{% endblock content %}

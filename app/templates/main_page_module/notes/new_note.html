@@ -1,0 +1,74 @@
+{% extends "main_page_module/base.html" %}
+
+
+{% block extraheader %}
+{% endblock %}
+
+{% block nav_new_note %}active{% endblock nav_new_note %}
+
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-1">
+      <!-- insert column here -->
+
+    </div>
+    <div class="col-md-10">
+
+      {% macro render_field(field, placeholder=None) %}
+      <div class="form-group">
+          {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+
+          {{ field.label }}
+
+          {% if field.errors %}
+              {% set css_class = css_class + ' is-invalid' %}
+
+              {% for error in field.errors %}
+                  
+                  <small id="{{ field.label.text }}" class="text-danger">
+                      {{ error }}
+                </small>
+
+              {% endfor %}
+              </ul>
+          {% endif %}
+
+          {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+      </div>
+      {% endmacro %}
+
+
+      <div>
+        <div>
+          <legend>New Note</legend>
+          <a href="https://daringfireball.net/projects/markdown/syntax#list" target="_blank">> Syntax Help</a>
+
+          <form method="POST" action="{{ url_for('main_page_module.new_note') }}" accept-charset="UTF-8" role="form">
+            {{ form.csrf_token }}
+            <input type="hidden" id="id" name="id" value="999">
+            <input type="hidden" id="pinned" name="pinned" value="999">
+            <input type="hidden" id="relevant" name="relevant" value="999">
+
+            {{ render_field(form.title, placeholder="Enter the title of the new note",
+                                        autofocus="") }}
+            {{ render_field(form.note_text, placeholder="Write what stuff", rows='20') }}
+            
+            <div class="form-group">
+              {{ form.submit(class="form-control btn btn-primary mb-2") }}
+              </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+    <div class="col-md-1">
+        
+    </div>
+  </div>
+  
+</div>      
+{% endblock %}

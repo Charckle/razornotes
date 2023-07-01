@@ -1,0 +1,92 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2 text-center">
+      <h5>Options</h5>
+      <button type="button btn btn-block" class="btn btn-outline-danger" data-toggle="modal" data-target="#for_modal_delete_all">Delete all</button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="for_modal_delete_all" tabindex="-1" role="dialog" aria-labelledby="for_modal_delete_all_text" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="for_modal_delete_all_text">Delete All</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                Delete All trashed notes
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <a href="{{ url_for('main_page_module.notes_delete_all_trashed') }}" class="btn btn-danger" role="button">Delete All Notes</a>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+    </div>
+    <div class="col-md-6">
+
+      <legend><span class="badge badge-danger">Trash</span> - All Notes</legend>
+      <div id="all_entries" class="container">
+        {% for i in notes%}
+        <hr>
+        <div class="media">
+            <div class="btn-group btn-group-sm align-self-center mr-3" role="group" aria-label="...">
+              <a href="{{ url_for('main_page_module.view_note', note_id=i["id"]) }}" class="btn btn-secondary" role="button">View Note</a>
+              <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ i["id"] }}">Delete</button>
+              <a href="{{ url_for('main_page_module.reactivate_note', note_id=i["id"]) }}" class="btn btn-success" role="button">ReActivate</a>
+            </div>
+          <div class="media-body">
+            <h4 class="mt-0">{{ i["title"] }}</h4>
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="{{ 'for_modal' ~ i["id"] }}" tabindex="-1" role="dialog" aria-labelledby="{{ i["id"] ~ 'for_modaltext' }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="{{ i["id"] ~ 'for_modaltext' }}">Delete the Note</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                Do you really want to delete the Note "{{ i["title"] }}"
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                
+                <form method="POST" action="{{ url_for('main_page_module.delete_note') }}" accept-charset="UTF-8" role="form">
+                  <input type="hidden" id="id" name="id" value="{{ i["id"] }}">
+                  <button type="submit" class="btn btn-danger">Delete Note</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% endfor %}
+      </div>
+
+      <hr>
+
+    </div>
+    <div class="col-md-2">
+      <!-- insert column here -->
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

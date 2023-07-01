@@ -1,0 +1,145 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="{{ url_for('static', filename='main_page_module/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- Custom styles for this template -->
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      
+      body {
+        display: -ms-flexbox;
+        display: -webkit-box;
+        display: flex;
+        -ms-flex-align: center;
+        -ms-flex-pack: center;
+        -webkit-box-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        justify-content: center;
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background-color: #f5f5f5;
+      }
+      
+      .form-signin {
+        width: 100%;
+        max-width: 330px;
+        padding: 15px;
+        margin: 0 auto;
+      }
+      .form-signin .checkbox {
+        font-weight: 400;
+      }
+      .form-signin .form-control {
+        position: relative;
+        box-sizing: border-box;
+        height: auto;
+        padding: 10px;
+        font-size: 16px;
+      }
+      .form-signin .form-control:focus {
+        z-index: 2;
+      }
+      .form-signin input[type="email"] {
+        margin-bottom: -1px;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+      .form-signin input[type="password"] {
+        margin-bottom: 10px;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+      }
+
+    </style>
+
+    <title>Razor Notes</title>
+
+  </head>
+
+  <body class="text-center">
+
+
+{% block content%}
+
+{% macro render_field(field, placeholder=None) %}
+<div class="form-group">
+    {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+
+    {{ field.label }}
+
+    {% if field.errors %}
+        {% set css_class = css_class + ' is-invalid' %}
+
+        {% for error in field.errors %}
+            
+            <small id="{{ field.label.text }}" class="text-danger">
+                {{ error }}
+          </small>
+
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+</div>
+{% endmacro %}
+
+
+<div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div>
+        {% for category, message in messages %}
+          {% if category == "error" %}
+            <div class="alert alert-danger" role="alert">
+              {{ message }}
+            </div>
+            <br>
+          {% else %}
+            <div class="alert alert-success" role="alert">
+              {{ message }}
+            </div>
+            <br>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  <div>
+    <img class="mb-4" src="{{ url_for('static', filename='brand/bootstrap-solid.svg') }}" alt="" width="72" height="72">
+    <legend>Sign in</legend>
+
+    <form method="POST" action="." accept-charset="UTF-8" role="form">
+      {{ form.csrf_token }}
+      {{ render_field(form.username_or_email, placeholder="Your Email Address",
+                                  autofocus="") }}
+      {{ render_field(form.password, placeholder="Password") }}
+      <div>
+      <label>
+        <input type="checkbox" name="remember"> Remember Me
+      </label>
+      <a role="button" href="">Forgot your password?</a><span class="clearfix"></span>
+      </div>
+      <div class="form-group">
+        {{ form.submit(class="form-control btn btn-primary mb-2") }}
+        </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+</body>
+</html>

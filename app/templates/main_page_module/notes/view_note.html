@@ -1,0 +1,415 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+{% block nav_index %}active{% endblock nav_index %}
+
+
+
+{% block content%}
+
+{% set note_id = note["id"] %}
+{% set all_tags = Tag.get_all() %}
+{% set tags = Tag.get_all_of_note(note_id) %}
+
+{% set text = markdown2.markdown(note["text"])  %}
+
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-1 text-center">
+
+      
+    </div>
+    <div class="col-md-10">
+
+      
+      <legend>{{ note["title"] }}
+          <div class="btn-group btn-group-sm" role="group" aria-label="...">
+            <a href="{{ url_for('main_page_module.edit_note', note_id=note_id) }}" class="btn btn-info" role="button">Edit Note</a>
+            <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#TrashNote">Trash</button>
+          </div>
+          <hr>
+          {% for i in tags%}
+            {% if i["tag_color"] == 0 %}
+            <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-primary">{{ i["tag_name"] }}</span></a>
+            {% elif i["tag_color"] == 1 %}
+            <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-secondary">{{ i["tag_name"] }}</span></a>
+            {% elif i["tag_color"] == 2 %}
+            <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-success">{{ i["tag_name"] }}</span></a>
+            {% elif i["tag_color"] == 3 %}
+            <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-danger">{{ i["tag_name"] }}</span></a>
+            {% elif i["tag_color"] == 4 %}
+            <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-warning">{{ i["tag_name"] }}</span></a>
+            {% elif i["tag_color"] == 5 %}
+            <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-info">{{ i["tag_name"] }}</span></a>
+            {% elif i["tag_color"] == 6 %}
+            <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-light">{{ i["tag_name"] }}</span></a>
+            {% elif i["tag_color"] == 7 %}
+            <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-dark">{{ i["tag_name"] }}</span></a>
+          {% endif %}
+        {% endfor %}
+
+      </legend>
+
+      <hr>
+      <div style="background-image: linear-gradient(to bottom, rgb(253, 251, 238), rgb(255, 251, 233));background-repeat: no-repeat;border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;padding: 5px;">
+          {{ text |safe }}
+      </div>
+      
+      <hr>
+      <br>
+      <!-- Modal -->
+      <div class="modal fade" id="TrashNote" tabindex="-1" role="dialog" aria-labelledby="TrashNoteTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="TrashNoteTitle">Trash the Note</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              Do you really want to Trash the note "{{ note["title"] }}" ?
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              
+              <form method="POST" action="{{ url_for('main_page_module.trash_note') }}" accept-charset="UTF-8" role="form">
+                <input type="hidden" id="id" name="id" value="{{ note_id }}">
+                <button type="submit" class="btn btn-danger">Trash note</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-1"> 
+
+    </div>
+    <div class="col-md-10">
+        <hr>
+        <button class="btn btn-dark btn-block" type="button" data-toggle="collapse" data-target="#collapseTags" aria-expanded="false" aria-controls="collapseTags">
+            Tags
+          </button>
+        <div class="collapse" id="collapseTags">
+          <hr>
+            <button class="btn btn-outline-success btn-block" title="Tag button" data-toggle="modal" data-target="#tagModal">Add Tags</button>
+  
+            <ul id="tags_list">
+            {% for i in tags%}
+              {% if i["tag_color"] == 0 %}
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-primary">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                    <span aria-hidden="true">&times;</span>
+                  </button></li>
+                
+              {% elif i["tag_color"] == 1 %}
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-secondary">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                    <span aria-hidden="true">&times;</span>
+                  </button></li>
+              {% elif i["tag_color"] == 2 %}
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-success">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                      <span aria-hidden="true">&times;</span>
+                    </button></li>
+              {% elif i["tag_color"] == 3 %}
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-danger">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                      <span aria-hidden="true">&times;</span>
+                    </button></li>
+              {% elif i["tag_color"] == 4 %}
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-warning">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                      <span aria-hidden="true">&times;</span>
+                    </button></li>
+              {% elif i["tag_color"] == 5 %}
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-info">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                      <span aria-hidden="true">&times;</span>
+                    </button></li>
+              {% elif i["tag_color"] == 6 %}
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-light">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                      <span aria-hidden="true">&times;</span>
+                    </button></li>
+              {% elif i["tag_color"] == 7 %}
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-dark">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                      <span aria-hidden="true">&times;</span>
+                    </button></li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+        
+      </div>
+  </div>
+  <br>
+
+
+  <!-- Modal -->
+  <div class="modal fade" id="tagModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalLabel">Tags</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+              <div class="input-group">
+                <div class="input-group-append">
+                  <select class="custom-select" id="choosen_tag">
+                    {% for tag in all_tags %}
+                      <option value="{{ tag["id"] }}">{{ tag["name"] }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <button type="button" class="form-control btn btn-outline-info" onclick="add_tag()">Add Tag</button>
+              </div>
+            <hr>
+              <div class="form-group">
+                <label for="notationName">Tag Name</label>
+                <input type="text" class="form-control" id="tagName" placeholder="Tag name">
+              </div>
+              <div class="form-group">
+                <label for="notationName">Tag Color</label>
+                <select class="form-control" id="tagColor">
+                  <option value="0" selected>Primary</option>
+                  <option value="1">Secondary</option>
+                  <option value="2">Success</option>
+                  <option value="3">Danger</option>
+                  <option value="4">Warning</option>
+                  <option value="5">Info</option>
+                  <option value="6">Light</option>
+                  <option value="7">Dark</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" onclick="create_tag()">Create and Add Tag</button>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+  function remove_tag(tag_id){
+    var note_id = document.getElementById("id").value;
+
+    $.post('/remove_tag/', {"note_id": note_id, "tag_id": tag_id}, function(data, textStatus) {
+      //console.log(data["a"]);
+      var snackbar = document.getElementById("snackbar");
+
+      if (data["a"] != "-1"){
+        //console.log(returned_data);
+        snackbar.innerHTML = "Tag removed";
+        var tag = document.getElementById("t" + tag_id);
+        tag.remove()
+
+      } else {
+        snackbar.innerHTML = "Error while removing the tag";
+      }
+
+      show_snackbar();
+      
+
+    }, "json");
+
+  };
+    
+  function create_tag(){
+      var note_id = document.getElementById("id").value;
+      var tagName = document.getElementById("tagName").value;
+      var tagColor = document.getElementById("tagColor").value;
+
+      $.post('/create_tag/', {"note_id": note_id, "tagName": tagName, "tagColor": tagColor}, function(data, textStatus) {
+        //console.log(data["a"]);
+        var snackbar = document.getElementById("snackbar");
+
+        if (data["a"] != "no"){
+          var returned_data = data["a"].split("++++__++++++");
+
+          var color = ""
+          switch(returned_data[1]) {
+            case "0":
+             color = "primary"
+              break;
+            case "1":
+              color = "secondary"
+              break;
+            case "2":
+              color = "success"
+              break;
+            case "3":
+              color = "danger"
+              break;
+            case "4":
+              color = "warning"
+              break;
+            case "5":
+              color = "info"
+              break;
+            case "6":
+              color = "light"
+              break;
+            case "7":
+              color = "dark"
+              break;
+            default:
+              color = "dark"
+          } 
+
+          
+          //console.log(returned_data);
+          snackbar.innerHTML = "Tag added - " + returned_data[0];
+
+          var tags_list_div = document.getElementById("tags_list")
+
+          var nel_list_thing = document.createElement("li")
+          var tag_spant = document.createElement("span")
+          tag_spant.setAttribute('class', "badge badge-pill badge-" + color );
+          tag_spant.textContent = returned_data[0];
+
+          nel_list_thing.appendChild(tag_spant);
+          tags_list_div.appendChild(nel_list_thing);
+
+        } else {
+          snackbar.innerHTML = "Error while adding the Tag";
+        }
+
+        show_snackbar();
+        
+
+      }, "json");
+
+    };
+
+    function add_tag(){
+      var note_id = document.getElementById("id").value;
+      var tag_id = document.getElementById("choosen_tag").value;
+
+      $.post('/add_tag/', {"note_id": note_id, "tag_id": tag_id}, function(data, textStatus) {
+        //console.log(data["a"]);
+        var snackbar = document.getElementById("snackbar");
+
+        if (data["a"] != "no"){
+          var returned_data = data["a"].split("++++__++++++");
+
+          var color = ""
+          switch(returned_data[1]) {
+            case "0":
+             color = "primary"
+              break;
+            case "1":
+              color = "secondary"
+              break;
+            case "2":
+              color = "success"
+              break;
+            case "3":
+              color = "danger"
+              break;
+            case "4":
+              color = "warning"
+              break;
+            case "5":
+              color = "info"
+              break;
+            case "6":
+              color = "light"
+              break;
+            case "7":
+              color = "dark"
+              break;
+            default:
+              color = "dark"
+          } 
+
+          
+          //console.log(returned_data);
+          snackbar.innerHTML = "Tag added - " + returned_data[0];
+
+          var tags_list_div = document.getElementById("tags_list")
+
+          var nel_list_thing = document.createElement("li")
+          var tag_spant = document.createElement("span")
+          tag_spant.setAttribute('class', "badge badge-pill badge-" + color );
+          tag_spant.textContent = returned_data[0];
+
+          nel_list_thing.appendChild(tag_spant);
+          tags_list_div.appendChild(nel_list_thing);
+
+        } else {
+          snackbar.innerHTML = "Error while adding the Tag";
+        }
+
+        show_snackbar();
+        
+
+      }, "json");
+
+    };
+  
+  </script>
+
+
+  <div id="snackbar">Notation added</div>
+  <style>
+  /* The snackbar - position it at the bottom and in the middle of the screen */
+    #snackbar {
+      visibility: hidden; /* Hidden by default. Visible on click */
+      min-width: 250px; /* Set a default minimum width */
+      margin-left: -125px; /* Divide value of min-width by 2 */
+      background-color: #333; /* Black background color */
+      color: #fff; /* White text color */
+      text-align: center; /* Centered text */
+      border-radius: 2px; /* Rounded borders */
+      padding: 16px; /* Padding */
+      position: fixed; /* Sit on top of the screen */
+      z-index: 1; /* Add a z-index if needed */
+      left: 50%; /* Center the snackbar */
+      bottom: 30px; /* 30px from the bottom */
+    }
+
+    /* Show the snackbar when clicking on a button (class added with JavaScript) */
+    #snackbar.show {
+      visibility: visible; /* Show the snackbar */
+      /* Add animation: Take 0.5 seconds to fade in and out the snackbar.
+      However, delay the fade out process for 2.5 seconds */
+      -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+
+    /* Animations to fade the snackbar in and out */
+    @-webkit-keyframes fadein {
+      from {bottom: 0; opacity: 0;}
+      to {bottom: 30px; opacity: 1;}
+    }
+
+    @keyframes fadein {
+      from {bottom: 0; opacity: 0;}
+      to {bottom: 30px; opacity: 1;}
+    }
+
+    @-webkit-keyframes fadeout {
+      from {bottom: 30px; opacity: 1;}
+      to {bottom: 0; opacity: 0;}
+    }
+
+    @keyframes fadeout {
+      from {bottom: 30px; opacity: 1;}
+      to {bottom: 0; opacity: 0;}
+    }
+  </style>
+  
+  </div>
+{% endblock content %}

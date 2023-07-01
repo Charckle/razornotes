@@ -1,0 +1,49 @@
+{% extends "memory_module/base.html" %}
+
+{% block extraheader %}
+{% endblock %}
+
+{% block content%}
+
+{% set group = Grp_.get_one(g_id) %}
+{% set m_items = Mem_.get_all_from(g_id) %}
+
+
+  <main>
+  <br>
+  
+  <nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
+		<li class="breadcrumb-item"><a href="{{ url_for('memory_module.group_all') }}">Group All</a></li>
+	    <li class="breadcrumb-item active" aria-current="page">Group</li>
+	  </ol>
+	</nav>
+	
+  <div class="row g-5">
+
+    <div class="col-md-12">
+      <div class="py-5 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
+        <h2>{{ group['name'] }} - <small>{{ group['comment_'] }}</small></h2> 
+      </div>
+    </div>
+    
+
+    
+    <div class="list-group">
+    {% for i in m_items %}
+	  <a href="{{ url_for('memory_module.m_item_edit', mi_id=i['id']) }}" class="list-group-item list-group-item-action list-group-item-info">{{ i['answer'] }} - {{ i['question'] }}</a>
+	 {% endfor %}
+	 </div>
+	 <hr>
+	 
+	 <div class="list-group">
+	  <a href="{{ url_for('memory_module.m_item_new', g_id=g_id) }}" class="list-group-item list-group-item-action list-group-item-success">Add Memory</a>
+	  <a href="{{ url_for('memory_module.group_edit', g_id=g_id) }}" class="list-group-item list-group-item-action list-group-item-warning">Edit Group</a>
+	 </div>
+	
+  </div>
+  </main>
+{% endblock %}
+

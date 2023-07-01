@@ -1,0 +1,64 @@
+{% extends "memory_module/base.html" %}
+
+{% block extraheader %}
+{% endblock %}
+
+{% block content%}
+
+{% macro render_field(field, placeholder=None) %}
+<div class="form-group">
+    {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+
+    {{ field.label }}
+
+    {% if field.errors %}
+        {% set css_class = css_class + ' is-invalid' %}
+
+        {% for error in field.errors %}
+            
+            <small id="{{ field.label.text }}" class="text-danger">
+                {{ error }}
+          </small>
+
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+</div>
+{% endmacro %}
+
+  <main>
+  <br>
+  <div class="row g-5">
+
+    <div class="col-md-12">
+      <div class="py-5 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
+        <h2>People INC</h2>
+
+        
+      </div>
+    </div>
+    <div class="d-grid gap-2">
+
+      <div>
+        <legend>Import Notes</legend>
+
+        <form method="POST" action="{{ url_for('memory_module.memory_import') }}" accept-charset="UTF-8" role="form"enctype="multipart/form-data">
+          {{ form.csrf_token }}
+          {{ render_field(form.import_file) }}
+          
+          <div class="form-group">
+            {{ form.submit(class="form-control btn btn-primary mb-2") }}
+            </div>
+        </form>
+      </div>
+
+    </div>
+
+	
+  </div>
+  </main>
+{% endblock %}
+

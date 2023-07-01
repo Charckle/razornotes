@@ -1,0 +1,99 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+{% block nav_index %}active{% endblock nav_index %}
+
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2">
+
+
+      <div class="card text-white bg-dark mb-3" style="max-width: 18rem;">
+        <div class="card-header">Pinned Notes</div>
+
+          {% for note in pinned_notes %}
+              <div class="media" style="font-size: 12px;border-radius: 5px;margin-bottom: 5px;">
+                <a class="btn align-self-center mr-3" href="{{ url_for('main_page_module.view_note', note_id=note['id'] ) }}"><img src="/static/icons/pinned.svg" height="32" width="32"></a>
+                <div class="media-body text-white bg-dark"><h6 class="mt-0">{{ note['title'] }}
+                  {% for i in Tag.get_all_of_note(note['id'])%}
+                    {% if i["tag_color"] == 0 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-primary">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 1 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-secondary">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 2 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-success">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 3 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-danger">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 4 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-warning">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 5 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-info">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 6 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-light">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 7 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-dark">{{ i["tag_name"] }}</span></a>
+                    {% endif %}
+                  {% endfor %}
+                  </h6>
+                  <p>{{ note['text'] }} ...</p>
+                </div>
+              </div>
+
+          {% endfor %}
+      </div>
+        
+
+    </div>
+    <div class="col-md-10">
+      <div class="row">
+      {% for note in notes %}
+       <div class="col-md-4">
+    
+        
+            <div class="container">
+              <div class="media" style="font-size: 12px;background-image: linear-gradient(to bottom right, hsl(64, 100%, 86%), rgb(255, 243, 181));border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;">
+                <a class="btn align-self-center mr-3" href="{{ url_for('main_page_module.view_note', note_id=note['id'] ) }}"><img src="/static/icons/note.svg" height="32" width="32"></a>
+                <div class="media-body"><h6 class="mt-0">{{ note['title'] }}
+                  {% for i in Tag.get_all_of_note(note['id'])%}
+                    {% if i["tag_color"] == 0 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-primary">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 1 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-secondary">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 2 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-success">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 3 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-danger">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 4 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-warning">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 5 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-info">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 6 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-light">{{ i["tag_name"] }}</span></a>
+                      {% elif i["tag_color"] == 7 %}
+                      <a href="{{ url_for('main_page_module.view_tag', tag_id=i["t_id"]) }}"><span class="badge badge-pill badge-dark">{{ i["tag_name"] }}</span></a>
+                    {% endif %}
+                  {% endfor %}
+                  </h6>
+                  <p>{{ note['text'] }} ...</p>
+                </div>
+              </div>
+            </div>
+  
+        
+      </div>
+      {% endfor %}
+    </div>
+      
+      
+    </div>
+
+  </div>
+
+</div>
+{% endblock content %}
