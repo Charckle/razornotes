@@ -16,6 +16,8 @@ from app import app, clipboard
 from wrappers import login_required
 from app.pylavor import Pylavor
 from app.main_page_module.argus import WSearch
+from app.main_page_module.other import Randoms
+
 #import os
 import re
 import os
@@ -270,6 +272,24 @@ def change_note():
     return render_template("main_page_module/notes/edit_note.html", note=note, form=form, tags=tags, 
                            all_tags=all_tags)  
 
+
+@main_page_module.route('/download_note/<note_id>', methods=['GET'])
+@login_required
+def download_note(note_id):
+    note = Notes.get_one(note_id)
+    
+    if note is None:
+        flash('No entrie found or you do not have permissions to edit the note.', 'error')
+        
+        return redirect(url_for("main_page_module.all_notes"))
+    
+    n_title = Randoms.get_valid_filename(note["title"])
+    markdown_text = note["text"]
+    # Set headers for the downloadable file
+    response = Response(markdown_text, content_type='text/markdown')
+    response.headers['Content-Disposition'] = f'attachment; filename={n_title}.md'
+
+    return response
 
 
 @main_page_module.route('/create_tag/', methods=['POST'])

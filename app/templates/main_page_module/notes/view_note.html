@@ -29,6 +29,7 @@
           <div class="btn-group btn-group-sm" role="group" aria-label="...">
             <a href="{{ url_for('main_page_module.edit_note', note_id=note_id) }}" class="btn btn-info" role="button">Edit Note</a>
             <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#TrashNote">Trash</button>
+            <a href="{{ url_for('main_page_module.download_note', note_id=note_id) }}" class="btn btn-success" role="button">Download MD file</a>
           </div>
           <hr>
           {% for i in tags%}

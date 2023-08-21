@@ -1,3 +1,6 @@
+from unidecode import unidecode
+import re
+
 class Randoms():
     @staticmethod
     def zerodivision(n, d):
@@ -6,7 +9,7 @@ class Randoms():
         
         return n / d if d else 0
     
-    #Randoms
+    # Randoms
     #sanitize the code for saving to a file on the OS
     def get_valid_filename(s):
     
