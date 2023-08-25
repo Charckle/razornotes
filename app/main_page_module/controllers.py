@@ -578,7 +578,11 @@ def login():
     try:
         if(session['user_id']):
             return redirect(url_for("main_page_module.index"))
-    
+
+    for error in form.errors:
+        print(error)
+        flash(f'Invalid Data: {error}', 'error')            
+
     except:
         return render_template("main_page_module/auth/login.html", form=form)
 
