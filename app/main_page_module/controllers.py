@@ -589,9 +589,9 @@ def login():
 @main_page_module.route('/logout/')
 @login_required
 def logout():
-    session.pop("user_id", None)
-    session.permanent = False
-    
+    #session.pop("user_id", None)
+    #session.permanent = False
+    session.clear()
     flash('You have been logged out. Have a nice day!', 'success')
 
     return redirect(url_for("main_page_module.login"))

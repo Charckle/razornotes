@@ -316,6 +316,18 @@ class DBcreate:
                 DBcreate.create_base_user()
 
 
+def check_database_active():
+    db = DB()
+    sql_command = f"""SELECT 1;"""
+    
+    result = db.q_r_one(sql_command, ())
+    
+    if result["1"] == 1:
+        return True
+    else:
+        return False
+
+
     
 def check_table_exists(table_name):
     db = DB()
