@@ -7,7 +7,7 @@ def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if ('user_id' in session):
-            user_access = UserM.get_one(session["user_id"])["status"]
+            user_access = UserM.get_one(session["access"])
             if user_access != 0:
                 return f(*args, **kwargs)
 
