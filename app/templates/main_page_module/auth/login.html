@@ -9,7 +9,7 @@
     <!-- Bootstrap CSS -->
     <link href="{{ url_for('static', filename='main_page_module/dist/css/bootstrap.min.css') }}" rel="stylesheet">
 
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename=Randoms.icon_name(config)) }}">
     
     <!-- Custom styles for this template -->
     <style>
@@ -19,18 +19,34 @@
       }
       
       body {
-        display: -ms-flexbox;
-        display: -webkit-box;
-        display: flex;
-        -ms-flex-align: center;
-        -ms-flex-pack: center;
-        -webkit-box-align: center;
-        align-items: center;
-        -webkit-box-pack: center;
-        justify-content: center;
-        padding-top: 40px;
-        padding-bottom: 40px;
-        background-color: #f5f5f5;
+            margin: 0;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(-45deg, #EE7752, #c40b0b, #dbcf1c);
+            background-size: 400% 400%;
+            animation: gradientBG 25s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+      .login-container {
+          padding: 20px;
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 8px;
+          box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
       }
       
       .form-signin {
@@ -65,7 +81,7 @@
 
     </style>
 
-    <title>Razor Notes</title>
+    <title>{{ config['APP_NAME'] }}</title>
 
   </head>
 
@@ -75,70 +91,75 @@
 {% block content%}
 
 {% macro render_field(field, placeholder=None) %}
-<div class="form-group">
-    {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
 
-    {{ field.label }}
+  <div class="form-group">
+      {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
 
-    {% if field.errors %}
-        {% set css_class = css_class + ' is-invalid' %}
+      {{ field.label }}
 
-        {% for error in field.errors %}
-            
-            <small id="{{ field.label.text }}" class="text-danger">
-                {{ error }}
-          </small>
+      {% if field.errors %}
+          {% set css_class = css_class + ' is-invalid' %}
 
-        {% endfor %}
-        </ul>
-    {% endif %}
+          {% for error in field.errors %}
+              
+              <small id="{{ field.label.text }}" class="text-danger">
+                  {{ error }}
+            </small>
 
-    {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
-</div>
-{% endmacro %}
+          {% endfor %}
+          </ul>
+      {% endif %}
 
-
-<div>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div>
-        {% for category, message in messages %}
-          {% if category == "error" %}
-            <div class="alert alert-danger" role="alert">
-              {{ message }}
-            </div>
-            <br>
-          {% else %}
-            <div class="alert alert-success" role="alert">
-              {{ message }}
-            </div>
-            <br>
-          {% endif %}
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-  <div>
-    <img class="mb-4" src="{{ url_for('static', filename='brand/bootstrap-solid.svg') }}" alt="" width="72" height="72">
-    <legend>Sign in</legend>
-
-    <form method="POST" action="." accept-charset="UTF-8" role="form">
-      {{ form.csrf_token }}
-      {{ render_field(form.username_or_email, placeholder="Your Email Address",
-                                  autofocus="") }}
-      {{ render_field(form.password, placeholder="Password") }}
-      <div>
-      <label>
-        <input type="checkbox" name="remember"> Remember Me
-      </label>
-      <a role="button" href="">Forgot your password?</a><span class="clearfix"></span>
-      </div>
-      <div class="form-group">
-        {{ form.submit(class="form-control btn btn-primary mb-2") }}
-        </div>
-    </form>
+      {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
   </div>
-</div>
+  {% endmacro %}
+
+
+  <div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div>
+          {% for category, message in messages %}
+            {% if category == "error" %}
+              <div class="alert alert-danger" role="alert">
+                {{ message }}
+              </div>
+              <br>
+            {% else %}
+              <div class="alert alert-success" role="alert">
+                {{ message }}
+              </div>
+              <br>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    <div>
+      <img class="mb-4" src="{{ url_for('static', filename='brand/bootstrap-solid.svg') }}" alt="" width="72" height="72">
+      <legend>{{ config['APP_NAME'] }} - Sign in</legend>
+      <hr>
+      <div class="login-container">
+      <form method="POST" action="." accept-charset="UTF-8" role="form">
+        {{ form.csrf_token }}
+        {{ render_field(form.username_or_email, placeholder="Your Email Address",
+                                    autofocus="") }}
+        {{ render_field(form.password, placeholder="Password") }}
+        <div>
+        <label>
+          <input type="checkbox" name="remember"> Remember Me
+        </label>
+        <a role="button" href="">Forgot your password?</a><span class="clearfix"></span>
+        </div>
+        <div class="form-group">
+          {{ form.submit(class="form-control btn btn-primary mb-2") }}
+          </div>
+      </form>
+    </div>
+
+
+    </div>
+  </div>
 {% endblock %}
 
 </body>

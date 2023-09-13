@@ -1,0 +1,39 @@
+version: "3.8"
+services:
+  razornotes:
+    container_name: razor_notes
+    image: charckle/razornotes:1.0.9
+    depends_on:
+      - db_razor_notes
+    ports:
+      - "3108:8000"
+    environment:
+        ENVCONFIG: PROD
+        SECRET_KEY: ${SECRET_KEY}
+        DB_HOST: db_razor_notes
+        DB_NAME: ${DB_NAME}
+        DB_USERNAME: ${DB_USERNAME}
+        DB_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - db_net
+    restart: unless-stopped
+
+  db_razor_notes:
+    image: linuxserver/mariadb:10.11.5
+    container_name: db_razor_notes
+    ports:
+      - "8181:3306"
+    environment:
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - ./mariadb:/config
+      - ./db:/config/initdb.d/:ro
+    networks:
+      - db_net
+    restart: unless-stopped
+
+networks:
+  db_net:

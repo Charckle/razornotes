@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename=Randoms.icon_name(config)) }}">
 
 
     <!-- Bootstrap CSS -->
@@ -25,12 +25,12 @@
     {% block extraheader %}
     {% endblock extraheader %}
 
-    <title>Razor Notes</title>
+    <title>{{ config['APP_NAME'] }}</title>
   </head>
     
   <body style="height: 100%;background-image: linear-gradient(to bottom right, rgb(255, 248, 214), rgb(218, 206, 148));background-repeat: no-repeat;">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <a class="navbar-brand" href="{{ url_for('main_page_module.index') }}">Razor Notes</a>
+            <a class="navbar-brand" href="{{ url_for('main_page_module.index') }}">{{ config['APP_NAME'] }}</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -73,7 +73,9 @@
                         Other
                       </a>
                       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        {% if config['MODULE_MEMORY'] %}
                         <a class="dropdown-item" href="{{ url_for('memory_module.index') }}">Memory</a>
+                        {% endif %}
                     </li>
                     <li class="nav-item">
                         <button class="nav-link btn btn-outline-warning" onclick="set_clip()">Set Clipboard </button>

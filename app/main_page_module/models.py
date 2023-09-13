@@ -360,7 +360,7 @@ class Tag:
         results = db1.q_r_all(sql_command, (tag_id,))
         
         #if not, delete it
-        if (len(results) is 0):
+        if (len(results) == 0):
             sql_command = f"DELETE FROM tags WHERE id = %s;"
             
             sql_command = f"DELETE FROM note_tags WHERE note_id = %s AND tag_id = %s;"        

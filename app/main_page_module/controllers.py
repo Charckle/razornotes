@@ -36,7 +36,7 @@ main_page_module = Blueprint('main_page_module', __name__, url_prefix='/')
 @app.context_processor
 def inject_to_every_page():
     
-    return dict(Notes=Notes, Tag=Tag, markdown2=markdown2)
+    return dict(Randoms=Randoms, Notes=Notes, Tag=Tag, markdown2=markdown2)
 
 
 # Set the route and accepted methods

@@ -11,6 +11,7 @@ class Randoms():
     
     # Randoms
     #sanitize the code for saving to a file on the OS
+    @staticmethod
     def get_valid_filename(s):
     
         """
@@ -26,6 +27,19 @@ class Randoms():
         s = unidecode(str(s).strip().replace(' ', '_'))
     
         return re.sub(r'(?u)[^-\w.]', '', s)
+    
+    @staticmethod
+    def icon_name(config):
+        env_color = config['ICON_COLOR']
+        
+        colors = {"RED": "favicon_RED.ico"}
+        
+        try:
+            name_ = colors[env_color]
+        except:
+            name_ = colors["RED"]
+        
+        return name_
 
 class NotesS():
     # NotesS
