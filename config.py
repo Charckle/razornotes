@@ -21,7 +21,7 @@ class Config(object):
     CSRF_ENABLED = environ.get('CSRF_ENABLED', True)
     
     # App name
-    APP_NAME = environ.get('APP_NAME', "Razor Notess")
+    APP_NAME = environ.get('APP_NAME', "Razor Notes")
     # Enable modules
     MODULE_MEMORY = environ.get('MODULE_MEMORY', False)
     

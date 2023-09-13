@@ -6,11 +6,11 @@ from app.pylavor import Pylavor
 
 from datetime import date
 
-sql_host = environ.get('DB_HOST', "10.108.29.34")
+sql_host = environ.get('DB_HOST', "127.0.0.1")
 sql_user = environ.get('DB_USERNAME', "rooty")
-sql_passwrd = environ.get('DB_PASSWORD', "sdf2345!34sdf#")
+sql_passwrd = environ.get('DB_PASSWORD', "")
 sql_db = environ.get('DB_NAME', "razor_notes")
-sql_db_port = environ.get('DB_PORT', "8181")
+sql_db_port = environ.get('DB_PORT', 3306)
 
 #the class allowsyou to execute single querries, or segmented ones
 #single querries can rollback, if an error accures
@@ -44,7 +44,7 @@ class DB:
                                     passwd = sql_passwrd,
                                     db = sql_db,
                                     cursorclass=DictCursor,
-                                    port=8181)
+                                    port=sql_db_port)
     
     #rollbackable querry segment
     def q_exe_segment_new(self, sql, variables):

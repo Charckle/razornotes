@@ -2,18 +2,23 @@ version: "3.8"
 services:
   razornotes:
     container_name: razor_notes
-    image: charckle/razornotes:1.0.9
+    image: charckle/razornotes:1.0.10
     depends_on:
       - db_razor_notes
     ports:
       - "3108:8000"
     environment:
         ENVCONFIG: PROD
-        SECRET_KEY: ${SECRET_KEY}
-        DB_HOST: db_razor_notes
-        DB_NAME: ${DB_NAME}
+        APP_NAME: "Razor Notes"
         DB_USERNAME: ${DB_USERNAME}
         DB_PASSWORD: ${DB_PASSWORD}
+        DB_HOST: db_razor_notes
+        DB_NAME: ${DB_NAME}
+        DB_PORT: 3306
+        CSRF_ENABLED: True
+        SECRET_KEY: ${SECRET_KEY}
+        MODULE_MEMORY: True
+        ICON_COLOR: "RED"
     networks:
       - db_net
     restart: unless-stopped
@@ -21,8 +26,8 @@ services:
   db_razor_notes:
     image: linuxserver/mariadb:10.11.5
     container_name: db_razor_notes
-    ports:
-      - "8181:3306"
+    #ports:
+    #  - "8181:3306"
     environment:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
