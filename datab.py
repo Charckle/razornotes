@@ -10,7 +10,7 @@ sql_host = environ.get('DB_HOST', "127.0.0.1")
 sql_user = environ.get('DB_USERNAME', "rooty")
 sql_passwrd = environ.get('DB_PASSWORD', "")
 sql_db = environ.get('DB_NAME', "razor_notes")
-sql_db_port = environ.get('DB_PORT', 3306)
+sql_db_port = int(environ.get('DB_PORT', 3306))
 
 #the class allowsyou to execute single querries, or segmented ones
 #single querries can rollback, if an error accures
