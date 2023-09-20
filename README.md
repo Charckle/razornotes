@@ -18,3 +18,5 @@
 
 #### To DO
 - cli installer: make it detect missing requirements (pip, etc)
+- cli installer: https automatic setting
+- change theme for different instances
