@@ -1,5 +1,6 @@
 from pylavor import Pylavor
 import os
+import re
 from os.path import exists
 from os.path import abspath
 from inspect import getsourcefile
@@ -20,6 +21,7 @@ class Gears:
             print("Config file not found, please follow the steps to configure it:")
             print("----")
             server_addr = input("Razor Notes server address: ")
+            server_addr = re.sub(r'^https?://', '', server_addr)
             server_port = input("Razor Notes server port (default 80): ")
             if server_port == "":
                 server_port = 80
