@@ -17,7 +17,9 @@ class Notes:
         headers = {'x-access-tokens': configs_["api_key"]}
         
         try:
-            r = post(f"{configs_['server_addr']}/api/search", data = {'key': search_term}, headers=headers)
+            server_address = configs_['server_addr']
+            server_port = configs_['server_port']            
+            r = post(f"{server_address}:{server_port}/api/search", data = {'key': search_term}, headers=headers)
         except:
             print("----")
             print("Server unreachable. ¯\(ツ)/¯")
@@ -89,8 +91,8 @@ class Notes:
                     print("----")
                     print("Changes found, saving to server")
                     #print(edited_message)
-                    data_ = {"note_id": n_id, "note_text": edited_message}
-                    r = put(f"{configs_['server_addr']}/api/note/{n_id}", data = data_, headers=headers)
+                    data_ = {"note_id": n_id, "note_text": edited_message}                  
+                    r = put(f"{server_address}:{server_port}/api/note/{n_id}", data = data_, headers=headers)
                     print("Saved")
                     print("----")
 
