@@ -17,6 +17,9 @@
     - Possible: RED, .....
 
 #### To DO
+- make index alseo search the name of the note
+- make search not suck
+- make it not generate the whole index each time you save a note
 - cli installer: make it detect missing requirements (pip, etc)
 - cli installer: https automatic setting
 - change theme for different instances
