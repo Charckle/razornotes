@@ -20,7 +20,7 @@ class Notes:
             r = post(f"{configs_['server_addr']}/api/search", data = {'key': search_term}, headers=headers)
         except:
             print("----")
-            print("Server unreachable. :|")
+            print("Server unreachable. ¯\(ツ)/¯")
             print("----")
             quit()
         
@@ -57,7 +57,9 @@ class Notes:
     @staticmethod
     def get_(n_id):
         headers = {'x-access-tokens': configs_["api_key"]}
-        r = get(f"{configs_['server_addr']}/api/note/{n_id}", headers=headers)
+        server_address = configs_['server_addr']
+        server_port = configs_['server_port']
+        r = get(f"{server_address}:{server_port}/api/note/{n_id}", headers=headers)
         
         if r.status_code != 200:
             print(r.text)        

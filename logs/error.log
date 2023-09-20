@@ -6,3 +6,7 @@
 2023-09-20 08:43:01,095 DEBUG: System CSRF None [in C:\Users\andrejz\code\python\razornotes\app\main_page_module\controllers.py:555]
 2023-09-20 08:43:06,234 DEBUG: Posted CSRF IjJmOWYxNWYwMTI3MWY4YjIwMGUwNDIwOGUzMGYzMTBhYjM2YjBjZmYi.ZQqUdQ.gSz0AjJRwovG6M3_GaRjzhbvKAw [in C:\Users\andrejz\code\python\razornotes\app\main_page_module\controllers.py:554]
 2023-09-20 08:43:06,236 DEBUG: System CSRF None [in C:\Users\andrejz\code\python\razornotes\app\main_page_module\controllers.py:555]
+2023-09-20 09:03:59,020 INFO: Application startup [in C:\Users\andrejz\code\python\razornotes\app\__init__.py:67]
+2023-09-20 09:04:00,096 INFO: Application startup [in C:\Users\andrejz\code\python\razornotes\app\__init__.py:67]
+2023-09-20 09:04:02,274 DEBUG: Posted CSRF IjJmOWYxNWYwMTI3MWY4YjIwMGUwNDIwOGUzMGYzMTBhYjM2YjBjZmYi.ZQqUeg.3F55F_SSgq1-OSFNB9jPgFFdKOY [in C:\Users\andrejz\code\python\razornotes\app\main_page_module\controllers.py:554]
+2023-09-20 09:04:02,275 DEBUG: System CSRF None [in C:\Users\andrejz\code\python\razornotes\app\main_page_module\controllers.py:555]

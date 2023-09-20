@@ -20,12 +20,17 @@ class Gears:
             print("Config file not found, please follow the steps to configure it:")
             print("----")
             server_addr = input("Razor Notes server address: ")
+            server_port = input("Razor Notes server port (default 80): ")
+            if server_port == "":
+                server_port = 80
+                
             api_key = input("Api key: ")
             
             #salt = Pylavor.gen_passwd(14)
             #token = "bang3w4svdffg32tz"#jwt.encode({"status": "OK", "saltz": salt}, api_encrypt_key, algorithm="HS256")
             
             configs_ ={"server_addr": server_addr,
+                       "server_port": server_port,
                        "api_key": api_key}
             
             Pylavor.json_write(path_, confs_file, configs_)
