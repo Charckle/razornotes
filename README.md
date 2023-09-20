@@ -15,3 +15,6 @@
 - `MODULE_MEMORY` - Default False. Activates the menu item for the module
 - `ICON_COLOR` - Default "RED". Color of the title icon, so to differentiate between instances in use.
     - Possible: RED, .....
+
+#### To DO
+- cli installer: make it detect missing requirements (pip, etc)

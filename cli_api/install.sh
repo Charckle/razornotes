@@ -29,7 +29,7 @@ mkdir -p "$lib_dir"
 mkdir -p "$bin_dir"
 
 echo "Installing Unidecode library in Python"
-pip install unidecode
+pip install unidecode requests==2.31.0
 
 echo "Creating an Uninstall file"
 rm -f uninstall.sh
