@@ -1,6 +1,8 @@
 # Import flask and template operators
 from flask import Flask, render_template, jsonify
-from os import environ 
+from os import path, mkdir, environ 
+import logging
+from logging.handlers import RotatingFileHandler
 
 from datab import DBcreate, check_database_active
 from app.main_page_module.models import UserM, Notes, Tag
@@ -29,6 +31,7 @@ def static_file():
     else:
         return jsonify(status="not healthy"), 500
 
+
 # Import a module / component using its blueprint handler variable (mod_auth)
 from app.main_page_module.controllers import main_page_module as main_module
 from app.main_page_module.controllers_api import razor_api as api_module
@@ -50,3 +53,15 @@ notes = Notes.get_all_active()
 new_index = WSearch()
 new_index.index_create(notes)
 
+# activate logging
+
+if not path.exists('logs'):
+    mkdir('logs')
+file_handler = RotatingFileHandler('logs/error.log', maxBytes=10240,
+                                   backupCount=5)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+file_handler.setLevel(logging.DEBUG)
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.DEBUG)
+app.logger.info('Application startup')

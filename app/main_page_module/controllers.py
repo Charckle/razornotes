@@ -551,6 +551,8 @@ def login():
 
     # If sign in form is submitted
     form = form_dicts["Login"]()
+    app.logger.debug(f"Posted CSRF {form['csrf_token'].data}")
+    app.logger.debug(f"System CSRF {session.get('_csrf_token')}")
 
     # Verify the sign in form
     if form.validate_on_submit():
@@ -582,8 +584,8 @@ def login():
     except:
         for error in form.errors:
             print(error)
-            flash(f'Invalid Data: {error}', 'error')          
-            
+            flash(f'Invalid Data: {error}', 'error')
+        
         return render_template("main_page_module/auth/login.html", form=form)
 
 @main_page_module.route('/logout/')

@@ -12,9 +12,9 @@ sql_passwrd = environ.get('DB_PASSWORD', "")
 sql_db = environ.get('DB_NAME', "razor_notes")
 sql_db_port = int(environ.get('DB_PORT', 3306))
 
-#the class allowsyou to execute single querries, or segmented ones
-#single querries can rollback, if an error accures
-#segmented ones are build such, that allows stacking them, and if one fails, all get rolled back
+# the class allows you to execute single querries, or segmented ones
+# single querries can rollback, if an error accures
+# segmented ones are build such, that allows stacking them, and if one fails, all get rolled back
 
 def error_log_(sql, variables):
     logging.error(f"""Error while working on a sql querry, and error accured.

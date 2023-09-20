@@ -18,7 +18,7 @@ class Config(object):
     THREADS_PER_PAGE = 2
     
     # Enable protection agains *Cross-site Request Forgery (CSRF)*
-    CSRF_ENABLED = environ.get('CSRF_ENABLED', True)
+    # CSRF_ENABLED = environ.get('CSRF_ENABLED', False)
     
     # App name
     APP_NAME = environ.get('APP_NAME', "Razor Notes")
