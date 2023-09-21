@@ -14,7 +14,7 @@
 - `SECRET_KEY` - Secret key for CSRF
 - `MODULE_MEMORY` - Default False. Activates the menu item for the module
 - `ICON_COLOR` - Default "RED". Color of the title icon, so to differentiate between instances in use.
-    - Possible: RED, .....
+    - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
 - make index alseo search the name of the note

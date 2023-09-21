@@ -1,5 +1,6 @@
 from unidecode import unidecode
 import re
+import os
 
 class Randoms():
     @staticmethod
@@ -31,15 +32,14 @@ class Randoms():
     @staticmethod
     def icon_name(config):
         env_color = config['ICON_COLOR']
+        favicon_name = f"favicon_{env_color}.ico"
+        static_path = "app/static"
+        file_path = f"{static_path}/{favicon_name}"
+        print(file_path)
+        if not os.path.exists(file_path):
+            favicon_name = f"favicon_RED.ico"
         
-        colors = {"RED": "favicon_RED.ico"}
-        
-        try:
-            name_ = colors[env_color]
-        except:
-            name_ = colors["RED"]
-        
-        return name_
+        return favicon_name
 
 class NotesS():
     # NotesS

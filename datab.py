@@ -6,11 +6,11 @@ from app.pylavor import Pylavor
 
 from datetime import date
 
-sql_host = environ.get('DB_HOST', "10.108.29.34") #127.0.0.1")
-sql_user = environ.get('DB_USERNAME', "razor_u") #"rooty")
-sql_passwrd = environ.get('DB_PASSWORD', "sdf2345!34sdf") #"")
+sql_host = environ.get('DB_HOST', "127.0.0.1")
+sql_user = environ.get('DB_USERNAME', "razornotes")
+sql_passwrd = environ.get('DB_PASSWORD', "")
 sql_db = environ.get('DB_NAME', "razor_notes")
-sql_db_port = int(environ.get('DB_PORT', 8181)) #3306))
+sql_db_port = int(environ.get('DB_PORT', 3306))
 
 # the class allows you to execute single querries, or segmented ones
 # single querries can rollback, if an error accures
