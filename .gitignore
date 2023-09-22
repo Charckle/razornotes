@@ -5,3 +5,5 @@ database.db
 to-do.txt
 .vs
 .index/
+logs/
+*.log

@@ -17,7 +17,8 @@
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
-- make index alseo search the name of the note
+- new note templates: for certain tasks. Make it modular
+- make index also search the name of the note
 - make search not suck
 - make it not generate the whole index each time you save a note
 - cli installer: make it detect missing requirements (pip, etc)
