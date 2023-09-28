@@ -10,7 +10,7 @@ from app.main_page_module.forms import form_dicts
 from app.main_page_module.r_proc import Import_Ex, HL_proc
 
 # Import module models (i.e. User)
-from app.main_page_module.models import UserM, Notes, Tag
+from app.main_page_module.models import UserM, Notes, Tag, Tmpl
 
 from app import app, clipboard
 from wrappers import login_required
@@ -36,7 +36,7 @@ main_page_module = Blueprint('main_page_module', __name__, url_prefix='/')
 @app.context_processor
 def inject_to_every_page():
     
-    return dict(Randoms=Randoms, Notes=Notes, Tag=Tag, markdown2=markdown2)
+    return dict(Randoms=Randoms, Notes=Notes, Tag=Tag, Tmpl=Tmpl, markdown2=markdown2)
 
 
 # Set the route and accepted methods
@@ -172,16 +172,16 @@ def all_notes_trashed():
     return render_template("main_page_module/notes/all_notes_trashed.html", notes=notes)
 
 
-@main_page_module.route('/new_note', methods=['GET', 'POST'])
+@main_page_module.route('/new_note/<tmpl_id>', methods=['GET', 'POST'])
 @login_required
-def new_note():
+def new_note(tmpl_id=None):
     # If sign in form is submitted
     form = form_dicts["Note"]()
     
     # Verify the sign in form
     if form.validate_on_submit():
         note_title = str(form.title.data).strip()
-        note_id = Notes.create(note_title, form.note_text.data)
+        note_id = Notes.create(note_title, form.note_text.data, form.task.data)
         
         #create argus index
         notes = Notes.get_all_active()
@@ -192,7 +192,11 @@ def new_note():
         flash('Argus index successfully updated', 'success')
         
         return redirect(url_for("main_page_module.view_note", note_id=note_id))
-
+    
+    if tmpl_id != None:
+        tmpl = Tmpl.get_one(tmpl_id)
+        form.note_text.data = tmpl["text_"]
+    
     return render_template("main_page_module/notes/new_note.html", form=form)
 
 @main_page_module.route('/all_notes/')
@@ -202,7 +206,7 @@ def all_notes():
 
     return render_template("main_page_module/notes/all_notes.html", notes=notes)
 
-@main_page_module.route('/view_note/<note_id>', methods=['GET', 'POST'])
+@main_page_module.route('/view_note/<note_id>', methods=['GET'])
 @login_required
 def view_note(note_id):
     note = Notes.get_one(note_id)
@@ -228,6 +232,7 @@ def edit_note(note_id):
     form = form_dicts["Note"]()
     form.process(id = note["id"],
                  title = note["title"],
+                 note_type = note["note_type"],
                  note_text = note["text"],
                  relevant = note["relevant"],
                  pinned = note["pinned"])
@@ -252,7 +257,7 @@ def change_note():
         return redirect(url_for("main_page_module.all_notes"))    
     
     if form.validate_on_submit():
-        Notes.update_one(note_id, form.title.data, form.note_text.data, 
+        Notes.update_one(note_id, form.title.data, form.note_type.data, form.note_text.data, 
                                   form.relevant.data, form.pinned.data)
         
         #create argus index
@@ -290,6 +295,35 @@ def download_note(note_id):
     response.headers['Content-Disposition'] = f'attachment; filename={n_title}.md'
 
     return response
+
+
+@main_page_module.route('/all_templates/')
+@login_required
+def tmpl_all():
+    tmpls = Tmpl.get_all()
+   
+    return render_template("main_page_module/notes/tmpl_all.html", tmpls=tmpls)
+
+
+@main_page_module.route('/create_template/', methods=['GET', 'POST'])
+@login_required
+def tmpl_new():
+    form = form_dicts["Note_tmpl"]()
+    
+    # Verify the sign in form
+    if form.validate_on_submit():
+        tmpl_id = Tmpl.new(form.title.data, form.tmpl_text.data)
+        
+        flash('Template successfully added!', 'success')
+        
+        return redirect(url_for("main_page_module.tmpl_view", tmpl_id=tmpl_id))
+    
+    for error in form.errors:
+        print(error)
+    
+        flash(f'Invalid Data: {error}', 'error')    
+    
+    return render_template("main_page_module/notes/templates/tmpl_new.html", form=form)
 
 
 @main_page_module.route('/create_tag/', methods=['POST'])

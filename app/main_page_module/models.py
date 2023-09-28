@@ -139,21 +139,21 @@ class UserM:
 
 class Notes:
     @staticmethod
-    def create(title, text):
+    def create(title, text, note_type):
         db = DB()
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         v_hash = hashlib.md5(text.encode()).hexdigest()
         
-        sql_command = f"""INSERT INTO notes (title, text, v_hash, date_mod)
-                      VALUES (%s, %s, %s, %s);"""
+        sql_command = f"""INSERT INTO notes (title, note_type, text, v_hash, date_mod)
+                      VALUES (%s, %s, %s, %s, %s);"""
         
-        return db.q_exe_new(sql_command, (title, text, v_hash, timestamp))
+        return db.q_exe_new(sql_command, (title, note_type,  text, v_hash, timestamp))
 
     # Notes
     @staticmethod
     def get_one(note_id):
         db = DB()
-        sql_command = f"""SELECT id, title, text, date_mod, active, relevant, pinned
+        sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned
         FROM notes WHERE id = %s;"""
 
         return db.q_r_one(sql_command, (note_id, ))
@@ -163,7 +163,7 @@ class Notes:
     @staticmethod
     def get_one_w_hash(v_hash):
         db = DB()
-        sql_command = f"""SELECT id, title, text, date_mod, active, relevant, pinned, v_hash
+        sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned, v_hash
         FROM notes WHERE v_hash = %s;"""
 
         return db.q_r_one(sql_command, (v_hash, ))    
@@ -172,7 +172,7 @@ class Notes:
     @staticmethod
     def get_all():
         db = DB()
-        sql_command = f"""SELECT id, title, text, date_mod, active, relevant, pinned, v_hash
+        sql_command = f"""SELECT id, title, text, note_type, date_mod, active, relevant, pinned, v_hash
         FROM notes"""
 
         return db.q_r_all(sql_command, ())        
@@ -181,7 +181,7 @@ class Notes:
     @staticmethod    
     def get_all_active():
         db = DB()
-        sql_command = f"""SELECT id, title, text, active, relevant, pinned, v_hash 
+        sql_command = f"""SELECT id, title, note_type, text, active, relevant, pinned, v_hash 
         FROM notes WHERE active = 1;"""
         
         return db.q_r_all(sql_command, ())      
@@ -190,7 +190,7 @@ class Notes:
     @staticmethod    
     def get_all_active_for_index():
         db = DB()
-        sql_command = f"""SELECT id, title, LEFT(notes.text, 50) as text FROM notes 
+        sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text FROM notes 
         WHERE notes.relevant = 1 AND notes.active = 1 AND notes.pinned = 0
         ORDER BY notes.date_mod DESC LIMIT 15 ;"""
         
@@ -200,7 +200,7 @@ class Notes:
     @staticmethod    
     def get_all_active_index_pinned():
         db = DB()
-        sql_command = f"""SELECT id, title, LEFT(notes.text, 50) as text FROM notes 
+        sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text FROM notes 
         WHERE active = 1 AND notes.relevant = 1 AND notes.pinned = 1 
         ORDER BY date_mod DESC;"""
         
@@ -210,7 +210,7 @@ class Notes:
     @staticmethod    
     def get_all_trashed():
         db = DB()
-        sql_command = f"""SELECT id, title, date_mod, active, relevant, pinned
+        sql_command = f"""SELECT id, title, note_type, date_mod, active, relevant, pinned
         FROM notes WHERE active = 0;"""
 
         return db.q_r_all(sql_command, ())
@@ -258,16 +258,16 @@ class Notes:
     
     # Notes
     @staticmethod    
-    def update_one(note_id, title, text, relevant, pinned):
+    def update_one(note_id, title, note_type, text, relevant, pinned):
         db = DB()
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         v_hash = hashlib.md5(text.encode()).hexdigest()
         
         sql_command = f"""UPDATE notes 
-        SET title = %s, text = %s, relevant = %s, pinned = %s, v_hash = %s, date_mod = %s 
+        SET title = %s, note_type = %s, text = %s, relevant = %s, pinned = %s, v_hash = %s, date_mod = %s 
         WHERE id = %s;"""
         
-        db.q_exe(sql_command, (title, text, relevant, pinned, v_hash, timestamp, note_id))
+        db.q_exe(sql_command, (title, note_type, text, relevant, pinned, v_hash, timestamp, note_id))
         
     # Notes
     @staticmethod    
@@ -282,6 +282,28 @@ class Notes:
         
         db.q_exe(sql_command, (text, v_hash, timestamp, note_id))        
 
+class Tmpl:
+    def new(name, text_):
+        db = DB()
+        sql_command = f"""INSERT INTO tmpl (name, text_)
+                      VALUES (%s, %s);"""                
+            
+        return db.q_exe_new(sql_command, (name, text_))
+    
+    # Tmpl
+    def get_all():
+        db = DB()
+        sql_command = f"""SELECT id, name FROM tmpl;"""  
+
+        return db.q_r_all(sql_command, ())
+    
+    # Tmpl
+    def get_one(tmpl_id):
+        db = DB()
+        sql_command = f"""SELECT id, name, text_ FROM tmpl WHERE id = %s ;"""
+        
+        return db.q_r_one(sql_command, (tmpl_id,))    
+
 class Tag:
     def add(tagName, tagColor):
         db = DB()
@@ -293,7 +315,7 @@ class Tag:
     # Tag
     def get_one(tag_id):
         db = DB()
-        sql_command = f"SELECT id, name, color FROM tags WHERE id = %s ;"
+        sql_command = f"""SELECT id, name, color FROM tags WHERE id = %s ;"""
         
         return db.q_r_one(sql_command, (tag_id, ))
     

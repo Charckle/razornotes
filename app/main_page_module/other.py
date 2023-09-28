@@ -54,4 +54,12 @@ class NotesS():
                     6: "Light",
                     7: "Dark"}
         
-        return colors        
+        return colors
+    
+    # NotesS
+    @staticmethod
+    def n_types(note_type):    
+        colors = {0: ["Note","Warning"],
+                    1: ["Task", "Dark"]}
+        
+        return colors[note_type]

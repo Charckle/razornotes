@@ -24,7 +24,7 @@
 
         <br>
         <div class="form-group">
-          <input type="text" class="form-control " id="title" name="title" placeholder="Title" value="{{ note["title"] }}"  aria-describedby="titlenotehelp" required>
+          <input type="text" class="form-control " id="title" name="title" placeholder="Title" value="{{ note['title'] }}"  aria-describedby="titlenotehelp" required>
           <small id="titlenotehelp" class="form-text text-muted">Note title</small>
         </div>
         
@@ -66,6 +66,11 @@
           </div>
           <div class="col-md-2">
             <a href="https://daringfireball.net/projects/markdown/syntax#list" target="_blank">> Syntax Help</a>
+          </div>
+          <div class="col-md-2">
+            <div class="form-group">
+              {{ render_field(form.note_type) }}
+            </div>
           </div>
         </div>
         

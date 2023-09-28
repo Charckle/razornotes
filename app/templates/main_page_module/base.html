@@ -27,6 +27,8 @@
 
     <title>{{ config['APP_NAME'] }}</title>
   </head>
+
+  {% set templates = Tmpl.get_all() %}
     
   <body style="height: 100%;background-image: linear-gradient(to bottom right, rgb(255, 248, 214), rgb(218, 206, 148));background-repeat: no-repeat;">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -44,15 +46,27 @@
                     <li class="nav-item {% block nav_search %}{% endblock nav_search %}">
                         <a class="nav-link" href="{{ url_for('main_page_module.search') }}">Search </a>
                     </li>
-                    <li class="nav-item {% block nav_new_note %}{% endblock nav_new_note %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.new_note') }}">New Note </a>
+                    <li class="nav-item dropdown {% block nav_new_note %}{% endblock nav_new_note %}">
+                      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        New Note
+                      </a>
+                      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="{{ url_for('main_page_module.new_note') }}">Blank Note</a>
+                        <div class="dropdown-divider"></div>
+                        {% for tmpl in templates %}
+                        <a class="dropdown-item" href="{{ url_for('main_page_module.new_note', tmpl_id={{ tmpl['id'] }}) }}">{{ tmpl['name'] }}</a>
+                        {% endfor %}
+                      </div>
                     </li>
                     <li class="nav-item {% block nav_all_notes %}{% endblock nav_all_notes %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.all_notes') }}">View All Notes </a>
+                        <a class="nav-link" href="{{ url_for('main_page_module.all_notes') }}">All Notes </a>
                     </li>
                     <li class="nav-item {% block nav_all_tags %}{% endblock nav_all_tags %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.all_tags') }}">View All Tags </a>
+                        <a class="nav-link" href="{{ url_for('main_page_module.all_tags') }}">All Tags </a>
                     </li>
+                    <li class="nav-item {% block nav_new_tmpl %}{% endblock nav_new_tmpl %}">
+                      <a class="nav-link" href="{{ url_for('main_page_module.all_tags') }}">All Templates </a>
+                  </li>
                     <li class="nav-item {% block nav_all_users %}{% endblock nav_all_users %}">
                         <a class="nav-link" href="{{ url_for('main_page_module.users_all') }}">Users </a>
                     </li>

@@ -282,6 +282,17 @@ class DBcreate:
             )
             ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
             db.q_exe(sql_command, ())
+            
+        if not check_table_exists("notes_tmpl"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE notes_tmpl (
+            `id` INT NOT NULL AUTO_INCREMENT,
+            `name` VARCHAR(100) NOT NULL,
+            `text_` TEXT NOT NULL,
+            PRIMARY KEY (`id`)
+            )"""            
+            db.q_exe(sql_command, ())
    
 
     @staticmethod

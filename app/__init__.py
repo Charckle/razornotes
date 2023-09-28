@@ -5,7 +5,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from datab import DBcreate, check_database_active
-from app.main_page_module.models import UserM, Notes, Tag
+from app.main_page_module.p_objects import DB_upgrade
 from app.main_page_module.argus import WSearch
 
 # Define the WSGI application object
@@ -46,6 +46,7 @@ app.register_blueprint(memory_module)
 
 # Check if database exists. if not, create it
 DBcreate.check_all_db_OK()
+DB_upgrade.update_database()
 
 # create search index
 # this is very much NOT OK, but...I have to stop somewhere, or else I wont have time for my real job :D

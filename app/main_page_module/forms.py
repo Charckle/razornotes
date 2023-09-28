@@ -30,8 +30,21 @@ class Note(FlaskForm):
     
     pinned = BooleanField('Pin the note?')
     
+    note_type = SelectField(u'Type of note', choices=[(str(0), "Note"), (str(1), "Task")]) 
+    
     submit = SubmitField('Submit changes')
+    
+    
+class Note_tmpl(FlaskForm):
+    id = HiddenField('id', [validators.InputRequired(message='Dont fiddle around with the code!')])
+    
+    title = StringField('Template title', [validators.InputRequired(message='You need to specify a title'),
+                                             validators.Length(max=100)])    
 
+    tmpl_text = TextAreaField('Enter Template', [validators.InputRequired(message='You need to fill something.')])
+    
+    
+    submit = SubmitField('Submit changes')    
 
 
 class Login(FlaskForm):
@@ -127,5 +140,6 @@ form_dicts = {"Note": Note,
               "User": UserF,
               "Register": Register,
               "Tag": Tag,
-              "ImportNotes": ImportNotes
+              "ImportNotes": ImportNotes,
+              "Note_tmpl": Note_tmpl
               } 

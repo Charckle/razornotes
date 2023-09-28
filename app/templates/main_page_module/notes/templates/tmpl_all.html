@@ -1,0 +1,70 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+{% block nav_tmpl %}active{% endblock nav_tmpl %}
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md text-center">
+      <h5>Options</h5>
+      
+      
+    </div>
+    <div class="col-md-6">
+
+      <legend>All Templates</legend>
+      <div id="all_entries" class="container">
+        {% for i in tmpls %}
+        <div class="media" style="font-size: 12px;background-color: hsl(64, 100%, 86%);border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;">
+            <div class="btn-group btn-group-sm align-self-center mr-3" role="group" aria-label="...">
+              <a href="{{ url_for('main_page_module.tmpl_edit', tmpl_id=i['id']) }}" class="btn btn-warning" role="button">Edit Tempalate</a>
+              <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ i['id'] }}">Delete</button>
+            </div>
+          <div class="media-body">
+            <h6 class="mt-0">{{ i["name"] }}</h6>
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="{{ 'for_modal' ~ i['id'] }}" tabindex="-1" role="dialog" aria-labelledby="{{ i['id'] ~ 'for_modaltext' }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="{{ i['id'] ~ 'for_modaltext' }}">Trash the note</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                Do you really want to Delete the template "{{ i["name"] }}" ?
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                
+                <form method="POST" action="{{ url_for('main_page_module.tmpl_delete') }}" accept-charset="UTF-8" role="form">
+                  <input type="hidden" id="id" name="id" value="{{ i['id'] }}">
+                  <button type="submit" class="btn btn-danger">Delete template</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% endfor %}
+      </div>
+
+      <hr>
+
+    </div>
+    <div class="col-md">
+      <!-- insert column here -->
+    </div>
+  </div>
+
+</div>
+{% endblock content %}
