@@ -17,6 +17,7 @@
 
 #### To DO
 - new note templates: for certain tasks. Make it modular
+- change the font of the displayed headers, to make them not so big
 - make index also search the name of the note
 - make search not suck
 - make it not generate the whole index each time you save a note
