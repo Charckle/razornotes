@@ -16,7 +16,7 @@ from app import app, clipboard
 from wrappers import login_required
 from app.pylavor import Pylavor
 from app.main_page_module.argus import WSearch
-from app.main_page_module.other import Randoms
+from app.main_page_module.other import Randoms, NotesS
 
 #import os
 import re
@@ -36,7 +36,8 @@ main_page_module = Blueprint('main_page_module', __name__, url_prefix='/')
 @app.context_processor
 def inject_to_every_page():
     
-    return dict(Randoms=Randoms, Notes=Notes, Tag=Tag, Tmpl=Tmpl, markdown2=markdown2)
+    return dict(Randoms=Randoms, Notes=Notes, Tag=Tag, Tmpl=Tmpl,
+                NotesS=NotesS, markdown2=markdown2)
 
 
 # Set the route and accepted methods
@@ -173,6 +174,7 @@ def all_notes_trashed():
 
 
 @main_page_module.route('/new_note/<tmpl_id>', methods=['GET', 'POST'])
+@main_page_module.route('/new_note', methods=['GET', 'POST'])
 @login_required
 def new_note(tmpl_id=None):
     # If sign in form is submitted
@@ -181,7 +183,7 @@ def new_note(tmpl_id=None):
     # Verify the sign in form
     if form.validate_on_submit():
         note_title = str(form.title.data).strip()
-        note_id = Notes.create(note_title, form.note_text.data, form.task.data)
+        note_id = Notes.create(note_title, form.note_text.data, form.note_type.data)
         
         #create argus index
         notes = Notes.get_all_active()
@@ -302,7 +304,7 @@ def download_note(note_id):
 def tmpl_all():
     tmpls = Tmpl.get_all()
    
-    return render_template("main_page_module/notes/tmpl_all.html", tmpls=tmpls)
+    return render_template("main_page_module/notes/templates/tmpl_all.html", tmpls=tmpls)
 
 
 @main_page_module.route('/create_template/', methods=['GET', 'POST'])
@@ -312,11 +314,11 @@ def tmpl_new():
     
     # Verify the sign in form
     if form.validate_on_submit():
-        tmpl_id = Tmpl.new(form.title.data, form.tmpl_text.data)
+        tmpl_id = Tmpl.new(form.name.data, form.text_.data)
         
         flash('Template successfully added!', 'success')
         
-        return redirect(url_for("main_page_module.tmpl_view", tmpl_id=tmpl_id))
+        return redirect(url_for("main_page_module.tmpl_edit", tmpl_id=tmpl_id))
     
     for error in form.errors:
         print(error)
@@ -324,6 +326,68 @@ def tmpl_new():
         flash(f'Invalid Data: {error}', 'error')    
     
     return render_template("main_page_module/notes/templates/tmpl_new.html", form=form)
+
+@main_page_module.route('/tmpl_edit/<tmpl_id>', methods=['GET', 'POST'])
+@login_required
+def tmpl_edit(tmpl_id):
+    tmpl = Tmpl.get_one(tmpl_id)
+    
+    if tmpl is None:
+        flash('No entrie found or you do not have permissions to edit the template.', 'error')
+        
+        return redirect(url_for("main_page_module.tmpl_all"))
+    
+    form = form_dicts["Note_tmpl"]()
+    form.process(id = tmpl["id"],
+                 name = tmpl["name"],
+                 text_ = tmpl["text_"])
+    
+    
+    return render_template("main_page_module/notes/templates/tmpl_edit.html", tmpl=tmpl, form=form)
+
+
+@main_page_module.route('/tmpl_change/', methods=['POST'])
+@login_required
+def tmpl_change():
+    form = form_dicts["Note_tmpl"]()
+    tmpl_id = form.id.data
+    
+    tmpl = Tmpl.get_one(tmpl_id)
+    
+    if tmpl is None:
+        flash('No entrie found or you do not have permissions to edit the template.', 'error')
+        
+        return redirect(url_for("main_page_module.tmpl_all"))    
+    
+    if form.validate_on_submit():
+        Tmpl.update_one(tmpl_id, form.name.data, form.text_.data)
+        
+        flash('Template successfully Eddited!', 'success')
+        
+        return redirect(url_for("main_page_module.tmpl_edit", tmpl_id=form.id.data))
+    
+    for error in form.errors:
+        print(error)
+        flash(f'Invalid Data: {error}', 'error')
+    
+    return render_template("main_page_module/notes/templates/tmpl_edit.html", tmpl=tmpl, form=form)  
+
+
+@main_page_module.route('/tmpl_delete/<tmpl_id>', methods=['GET'])
+@login_required
+def tmpl_delete(tmpl_id):
+    tmpl = Tmpl.get_one(tmpl_id)
+    
+    if tmpl is None:
+        flash('No entries with this ID found to delete.', 'error')
+        
+        return redirect(url_for("main_page_module.tmpl_all"))  
+    
+    Tmpl.delete_one(tmpl_id)
+    
+    flash(f'Template {tmpl["name"]} successfully deleted.', 'success')  
+    
+    return redirect(url_for("main_page_module.tmpl_all"))   
 
 
 @main_page_module.route('/create_tag/', methods=['POST'])
@@ -623,7 +687,6 @@ def login():
         return render_template("main_page_module/auth/login.html", form=form)
 
 @main_page_module.route('/logout/')
-@login_required
 def logout():
     #session.pop("user_id", None)
     #session.permanent = False

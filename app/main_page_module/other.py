@@ -45,21 +45,21 @@ class NotesS():
     # NotesS
     @staticmethod
     def list_tag_colors():    
-        colors = {0: "Primary",
-                    1: "Secondary",
-                    2: "Success",
-                    3: "Danger",
-                    4: "Warning",
-                    5: "Info",
-                    6: "Light",
-                    7: "Dark"}
+        colors = {0: "primary",
+                    1: "secondary",
+                    2: "success",
+                    3: "danger",
+                    4: "warning",
+                    5: "info",
+                    6: "light",
+                    7: "dark"}
         
         return colors
     
     # NotesS
     @staticmethod
     def n_types(note_type):    
-        colors = {0: ["Note","Warning"],
-                    1: ["Task", "Dark"]}
+        colors = {0: ["Note","warning"],
+                    1: ["Task", "dark"]}
         
         return colors[note_type]

@@ -1,4 +1,4 @@
-from datab import DB, check_column_exists
+from datab import DB, check_column_exists, check_table_exists
 from app.main_page_module.models import Notes
 
 
@@ -15,7 +15,7 @@ class DB_upgrade:
         if not check_column_exists("notes", "note_type"):
             db = DB()
             sql_command = f"""
-            ALTER TABLE `notes` ADD `vat` note_type NOT NULL DEFAULT 0; """
+            ALTER TABLE `notes` ADD `note_type` INT NOT NULL DEFAULT 0; """
             db.q_exe_segment(sql_command, ())
             
             db.finish_()

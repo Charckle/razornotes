@@ -54,7 +54,7 @@
                         <a class="dropdown-item" href="{{ url_for('main_page_module.new_note') }}">Blank Note</a>
                         <div class="dropdown-divider"></div>
                         {% for tmpl in templates %}
-                        <a class="dropdown-item" href="{{ url_for('main_page_module.new_note', tmpl_id={{ tmpl['id'] }}) }}">{{ tmpl['name'] }}</a>
+                        <a class="dropdown-item" href="{{ url_for('main_page_module.new_note', tmpl_id=tmpl['id']) }}">{{ tmpl['name'] }}</a>
                         {% endfor %}
                       </div>
                     </li>
@@ -65,7 +65,7 @@
                         <a class="nav-link" href="{{ url_for('main_page_module.all_tags') }}">All Tags </a>
                     </li>
                     <li class="nav-item {% block nav_new_tmpl %}{% endblock nav_new_tmpl %}">
-                      <a class="nav-link" href="{{ url_for('main_page_module.all_tags') }}">All Templates </a>
+                      <a class="nav-link" href="{{ url_for('main_page_module.tmpl_all') }}">All Templates </a>
                   </li>
                     <li class="nav-item {% block nav_all_users %}{% endblock nav_all_users %}">
                         <a class="nav-link" href="{{ url_for('main_page_module.users_all') }}">Users </a>

@@ -5,8 +5,9 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from datab import DBcreate, check_database_active
-from app.main_page_module.p_objects import DB_upgrade
+from app.main_page_module.p_objects.db_migration import DB_upgrade
 from app.main_page_module.argus import WSearch
+from app.main_page_module.models import Notes
 
 # Define the WSGI application object
 app = Flask(__name__)

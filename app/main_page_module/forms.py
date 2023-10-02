@@ -38,10 +38,10 @@ class Note(FlaskForm):
 class Note_tmpl(FlaskForm):
     id = HiddenField('id', [validators.InputRequired(message='Dont fiddle around with the code!')])
     
-    title = StringField('Template title', [validators.InputRequired(message='You need to specify a title'),
+    name = StringField('Template title', [validators.InputRequired(message='You need to specify a title'),
                                              validators.Length(max=100)])    
 
-    tmpl_text = TextAreaField('Enter Template', [validators.InputRequired(message='You need to fill something.')])
+    text_ = TextAreaField('Enter Template', [validators.InputRequired(message='You need to fill something.')])
     
     
     submit = SubmitField('Submit changes')    

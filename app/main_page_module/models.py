@@ -268,7 +268,7 @@ class Notes:
         WHERE id = %s;"""
         
         db.q_exe(sql_command, (title, note_type, text, relevant, pinned, v_hash, timestamp, note_id))
-        
+    
     # Notes
     @staticmethod    
     def edit_api(note_id, text):
@@ -285,7 +285,7 @@ class Notes:
 class Tmpl:
     def new(name, text_):
         db = DB()
-        sql_command = f"""INSERT INTO tmpl (name, text_)
+        sql_command = f"""INSERT INTO notes_tmpl (name, text_)
                       VALUES (%s, %s);"""                
             
         return db.q_exe_new(sql_command, (name, text_))
@@ -293,16 +293,35 @@ class Tmpl:
     # Tmpl
     def get_all():
         db = DB()
-        sql_command = f"""SELECT id, name FROM tmpl;"""  
+        sql_command = f"""SELECT id, name FROM notes_tmpl;"""  
 
         return db.q_r_all(sql_command, ())
     
     # Tmpl
     def get_one(tmpl_id):
         db = DB()
-        sql_command = f"""SELECT id, name, text_ FROM tmpl WHERE id = %s ;"""
+        sql_command = f"""SELECT id, name, text_ FROM notes_tmpl WHERE id = %s ;"""
         
-        return db.q_r_one(sql_command, (tmpl_id,))    
+        return db.q_r_one(sql_command, (tmpl_id,))
+    
+    # Tmpl
+    @staticmethod    
+    def update_one(tmpl_id, name, text_):
+        db = DB()
+        print(text_)
+        sql_command = f"""UPDATE notes_tmpl 
+        SET name = %s, text_ = %s
+        WHERE id = %s;"""
+        
+        db.q_exe(sql_command, (name, text_, tmpl_id))    
+    
+    # Tmpl
+    @staticmethod    
+    def delete_one(tmpl_id):
+        db = DB()
+        sql_command = f"""DELETE FROM notes_tmpl WHERE id = %s;"""
+        
+        db.q_exe(sql_command, (tmpl_id, ))        
 
 class Tag:
     def add(tagName, tagColor):

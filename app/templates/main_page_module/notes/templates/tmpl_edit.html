@@ -44,12 +44,12 @@
 
       <div>
         <div>
-          <legend>New Template</legend>
+          <legend>Edit Template</legend>
           <a href="https://daringfireball.net/projects/markdown/syntax#list" target="_blank">> Syntax Help</a>
 
-          <form method="POST" action="{{ url_for('main_page_module.tmpl_new') }}" accept-charset="UTF-8" role="form">
+          <form method="POST" action="{{ url_for('main_page_module.tmpl_change') }}" accept-charset="UTF-8" role="form">
             {{ form.csrf_token }}
-            <input type="hidden" id="id" name="id" value="999">
+            {{ form.id }}
 
             <div class="row">
               <div class="col-md-8">

@@ -14,6 +14,31 @@
   <div class="row">
     <div class="col-md-1">
       
+                
+
+      {% macro render_field(field, placeholder=None) %}
+      <div class="form-group">
+          {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+
+          {{ field.label }}
+
+          {% if field.errors %}
+              {% set css_class = css_class + ' is-invalid' %}
+
+              {% for error in field.errors %}
+                  
+                  <small id="{{ field.label.text }}" class="text-danger">
+                      {{ error }}
+                </small>
+
+              {% endfor %}
+              </ul>
+          {% endif %}
+
+          {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+      </div>
+      {% endmacro %}
+
 
     </div>
     <div class="col-md-10">
@@ -23,35 +48,19 @@
         {{ form.id }}
 
         <br>
-        <div class="form-group">
-          <input type="text" class="form-control " id="title" name="title" placeholder="Title" value="{{ note['title'] }}"  aria-describedby="titlenotehelp" required>
-          <small id="titlenotehelp" class="form-text text-muted">Note title</small>
-        </div>
+        <div class="row">
+          <div class="col-md-8">
+            <div class="form-group">
+              <input type="text" class="form-control " id="title" name="title" placeholder="Title" value="{{ note['title'] }}"  aria-describedby="titlenotehelp" required>
+              <small id="titlenotehelp" class="form-text text-muted">Note title</small>
+            </div>
+          </div>
         
-          
-
-        {% macro render_field(field, placeholder=None) %}
-        <div class="form-group">
-            {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
-
-            {{ field.label }}
-
-            {% if field.errors %}
-                {% set css_class = css_class + ' is-invalid' %}
-
-                {% for error in field.errors %}
-                    
-                    <small id="{{ field.label.text }}" class="text-danger">
-                        {{ error }}
-                  </small>
-
-                {% endfor %}
-                </ul>
-            {% endif %}
-
-            {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+          <div class="col-md-4">
+            {{ render_field(form.note_type) }}
+          </div>
         </div>
-        {% endmacro %}
+
         <div class="row">
           <div class="col-md-2">
               <div class="form-group">
@@ -68,9 +77,7 @@
             <a href="https://daringfireball.net/projects/markdown/syntax#list" target="_blank">> Syntax Help</a>
           </div>
           <div class="col-md-2">
-            <div class="form-group">
-              {{ render_field(form.note_type) }}
-            </div>
+           
           </div>
         </div>
         
@@ -133,47 +140,12 @@
   
             <ul id="tags_list">
             {% for i in tags%}
+              {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
               {% if i["tag_color"] == 0 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-primary">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span>
+                  <button type="button" id="{{ i['t_id'] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
                     <span aria-hidden="true">&times;</span>
                   </button></li>
-                
-              {% elif i["tag_color"] == 1 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-secondary">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                    <span aria-hidden="true">&times;</span>
-                  </button></li>
-              {% elif i["tag_color"] == 2 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-success">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 3 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-danger">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 4 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-warning">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 5 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-info">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 6 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-light">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 7 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-dark">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
               {% endif %}
             {% endfor %}
           </ul>
