@@ -49,7 +49,7 @@
 
                 var newBodyLink = document.createElement("a")
                 newBodyLink.setAttribute('class', 'btn align-self-center mr-3');
-                newBodyLink.setAttribute('href', '/view_note/' + key);
+                newBodyLink.setAttribute('href', '/note_view/' + key);
 
                 var newBodyImage = document.createElement("img")
                 newBodyImage.setAttribute('src', "{{ url_for('static', filename='icons/note.svg') }}");
@@ -83,7 +83,7 @@
               searchResults.appendChild(noResults);
               var new_note = document.createElement("a")
               new_note.textContent = "Make One";
-              new_note.setAttribute('href', "{{ url_for('main_page_module.new_note') }}");
+              new_note.setAttribute('href', "{{ url_for('main_page_module.note_new') }}");
               searchResults.appendChild(new_note);
 
             }

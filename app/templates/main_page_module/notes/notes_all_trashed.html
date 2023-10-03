@@ -43,9 +43,9 @@
         <hr>
         <div class="media">
             <div class="btn-group btn-group-sm align-self-center mr-3" role="group" aria-label="...">
-              <a href="{{ url_for('main_page_module.view_note', note_id=i['id']) }}" class="btn btn-secondary" role="button">View Note</a>
+              <a href="{{ url_for('main_page_module.note_view', note_id=i['id']) }}" class="btn btn-secondary" role="button">View Note</a>
               <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ i['id'] }}">Delete</button>
-              <a href="{{ url_for('main_page_module.reactivate_note', note_id=i['id']) }}" class="btn btn-success" role="button">ReActivate</a>
+              <a href="{{ url_for('main_page_module.note_reactivate', note_id=i['id']) }}" class="btn btn-success" role="button">ReActivate</a>
             </div>
           <div class="media-body">
             <h4 class="mt-0">{{ i["title"] }}</h4>
@@ -68,7 +68,7 @@
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 
-                <form method="POST" action="{{ url_for('main_page_module.delete_note') }}" accept-charset="UTF-8" role="form">
+                <form method="POST" action="{{ url_for('main_page_module.note_delete') }}" accept-charset="UTF-8" role="form">
                   <input type="hidden" id="id" name="id" value="{{ i['id'] }}">
                   <button type="submit" class="btn btn-danger">Delete Note</button>
                 </form>

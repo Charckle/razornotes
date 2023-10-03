@@ -42,7 +42,7 @@
 
     </div>
     <div class="col-md-10">
-      <form method="POST" action="{{ url_for('main_page_module.change_note') }}" accept-charset="UTF-8" role="form">
+      <form method="POST" action="{{ url_for('main_page_module.note_change') }}" accept-charset="UTF-8" role="form">
         {{ form.csrf_token }}
 
         {{ form.id }}

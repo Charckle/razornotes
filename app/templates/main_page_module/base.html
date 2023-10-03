@@ -51,18 +51,18 @@
                         New Note
                       </a>
                       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{{ url_for('main_page_module.new_note') }}">Blank Note</a>
+                        <a class="dropdown-item" href="{{ url_for('main_page_module.note_new') }}">Blank Note</a>
                         <div class="dropdown-divider"></div>
                         {% for tmpl in templates %}
-                        <a class="dropdown-item" href="{{ url_for('main_page_module.new_note', tmpl_id=tmpl['id']) }}">{{ tmpl['name'] }}</a>
+                        <a class="dropdown-item" href="{{ url_for('main_page_module.note_new', tmpl_id=tmpl['id']) }}">{{ tmpl['name'] }}</a>
                         {% endfor %}
                       </div>
                     </li>
                     <li class="nav-item {% block nav_all_notes %}{% endblock nav_all_notes %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.all_notes') }}">All Notes </a>
+                        <a class="nav-link" href="{{ url_for('main_page_module.notes_all') }}">All Notes </a>
                     </li>
                     <li class="nav-item {% block nav_all_tags %}{% endblock nav_all_tags %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.all_tags') }}">All Tags </a>
+                        <a class="nav-link" href="{{ url_for('main_page_module.tags_all') }}">All Tags </a>
                     </li>
                     <li class="nav-item {% block nav_new_tmpl %}{% endblock nav_new_tmpl %}">
                       <a class="nav-link" href="{{ url_for('main_page_module.tmpl_all') }}">All Templates </a>

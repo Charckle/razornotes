@@ -77,42 +77,16 @@ def search_results():
     return jsonify(results)
 
 
-@main_page_module.route('/all_tags/')
+@main_page_module.route('/note_delete/', methods=['POST'])
 @login_required
-def all_tags():
-    tags = Tag.get_all()
-   
-    return render_template("main_page_module/tags/all_tags.html", tags=tags)
-
-
-@main_page_module.route('/view_tag/<tag_id>')
-@login_required
-def view_tag(tag_id):
-    
-    tag = Tag.get_one(tag_id)
-    
-    if (tag is None):
-        
-        flash('The tag does not exist !', 'error')
-        
-        return redirect(url_for("main_page_module.all_locations"))        
-    
-    notes = Tag.notes_get_all_of_tag(tag_id)
-    
-
-    return render_template("main_page_module/tags/view_tag.html", tag=tag, notes=notes)
-
-
-@main_page_module.route('/delete_note/', methods=['POST'])
-@login_required
-def delete_note():
+def note_delete():
     note_id = request.form["id"]
     note = Notes.get_one(note_id)
     
     if note is None:
         flash('No entries with this ID found to delete.', 'error')
         
-        return redirect(url_for("main_page_module.all_notes"))  
+        return redirect(url_for("main_page_module.notes_all"))  
     
     Notes.delete_one(note_id)
     
@@ -128,55 +102,55 @@ def notes_delete_all_trashed():
     
     flash(f'All trashed notes deleted.', 'success')  
     
-    return redirect(url_for("main_page_module.all_notes_trashed"))      
+    return redirect(url_for("main_page_module.notes_all_trashed"))      
     
-@main_page_module.route('/trash_note/', methods=['POST'])
+@main_page_module.route('/note_trash/', methods=['POST'])
 @login_required
-def trash_note():
+def note_trash():
     note_id = request.form["id"]
     note = Notes.get_one(note_id)
     
     if note is None:
         flash('No notes with this ID found to trash.', 'error')
         
-        return redirect(url_for("main_page_module.all_notes"))  
+        return redirect(url_for("main_page_module.notes_all"))  
     
     Notes.trash_one(note_id)     
     
     flash(f'Note -{note["title"]}- successfully trashed.', 'success')  
     
-    return redirect(url_for("main_page_module.all_notes"))  
+    return redirect(url_for("main_page_module.notes_all"))  
 
-@main_page_module.route('/reactivate_note/<note_id>', methods=['get'])
+@main_page_module.route('/note_reactivate/<note_id>', methods=['get'])
 @login_required
-def reactivate_note(note_id):
+def note_reactivate(note_id):
     note = Notes.get_one(note_id)
     
     if note is None:
         flash('No notes with this ID found to reactivate.', 'error')
         
-        return redirect(url_for("main_page_module.all_notes_trashed"))  
+        return redirect(url_for("main_page_module.notes_all_trashed"))  
     
     
     Notes.reactivate_one(note_id)     
     
     flash(f'Note -{note["title"]}- successfully reActivated!', 'success')  
     
-    return redirect(url_for("main_page_module.all_notes"))  
+    return redirect(url_for("main_page_module.notes_all"))  
 
 
-@main_page_module.route('/all_notes_trashed/')
+@main_page_module.route('/notes_all_trashed/')
 @login_required
-def all_notes_trashed():
+def notes_all_trashed():
     notes = Notes.get_all_trashed()
    
-    return render_template("main_page_module/notes/all_notes_trashed.html", notes=notes)
+    return render_template("main_page_module/notes/notes_all_trashed.html", notes=notes)
 
 
-@main_page_module.route('/new_note/<tmpl_id>', methods=['GET', 'POST'])
-@main_page_module.route('/new_note', methods=['GET', 'POST'])
+@main_page_module.route('/note_new/<tmpl_id>', methods=['GET', 'POST'])
+@main_page_module.route('/note_new', methods=['GET', 'POST'])
 @login_required
-def new_note(tmpl_id=None):
+def note_new(tmpl_id=None):
     # If sign in form is submitted
     form = form_dicts["Note"]()
     
@@ -193,24 +167,24 @@ def new_note(tmpl_id=None):
         flash('Entry successfully created!', 'success')
         flash('Argus index successfully updated', 'success')
         
-        return redirect(url_for("main_page_module.view_note", note_id=note_id))
+        return redirect(url_for("main_page_module.note_view", note_id=note_id))
     
     if tmpl_id != None:
         tmpl = Tmpl.get_one(tmpl_id)
         form.note_text.data = tmpl["text_"]
     
-    return render_template("main_page_module/notes/new_note.html", form=form)
+    return render_template("main_page_module/notes/note_new.html", form=form)
 
-@main_page_module.route('/all_notes/')
+@main_page_module.route('/notes_all/')
 @login_required
-def all_notes():
+def notes_all():
     notes = Notes.get_all_active()
 
-    return render_template("main_page_module/notes/all_notes.html", notes=notes)
+    return render_template("main_page_module/notes/notes_all.html", notes=notes)
 
-@main_page_module.route('/view_note/<note_id>', methods=['GET'])
+@main_page_module.route('/note_view/<note_id>', methods=['GET'])
 @login_required
-def view_note(note_id):
+def note_view(note_id):
     note = Notes.get_one(note_id)
     
     if note is None:
@@ -219,17 +193,17 @@ def view_note(note_id):
         return redirect(url_for("main_page_module.index"))
     
 
-    return render_template("main_page_module/notes/view_note.html", note=note)
+    return render_template("main_page_module/notes/note_view.html", note=note)
 
-@main_page_module.route('/edit_note/<note_id>', methods=['GET', 'POST'])
+@main_page_module.route('/note_edit/<note_id>', methods=['GET', 'POST'])
 @login_required
-def edit_note(note_id):
+def note_edit(note_id):
     note = Notes.get_one(note_id)
     
     if note is None:
         flash('No entrie found or you do not have permissions to edit the note.', 'error')
         
-        return redirect(url_for("main_page_module.all_notes"))
+        return redirect(url_for("main_page_module.notes_all"))
     
     form = form_dicts["Note"]()
     form.process(id = note["id"],
@@ -242,12 +216,12 @@ def edit_note(note_id):
     tags = Tag.get_all_of_note(note_id)
     all_tags = Tag.get_all()
     
-    return render_template("main_page_module/notes/edit_note.html", note=note, form=form, tags=tags, 
+    return render_template("main_page_module/notes/note_edit.html", note=note, form=form, tags=tags, 
                            all_tags=all_tags)
 
-@main_page_module.route('/change_note/', methods=['POST'])
+@main_page_module.route('/note_change/', methods=['POST'])
 @login_required
-def change_note():
+def note_change():
     form = form_dicts["Note"]()
     note_id = form.id.data
     
@@ -256,7 +230,7 @@ def change_note():
     if note is None:
         flash('No entrie found or you do not have permissions to edit the note.', 'error')
         
-        return redirect(url_for("main_page_module.all_notes"))    
+        return redirect(url_for("main_page_module.notes_all"))    
     
     if form.validate_on_submit():
         Notes.update_one(note_id, form.title.data, form.note_type.data, form.note_text.data, 
@@ -270,25 +244,25 @@ def change_note():
         flash('Entry successfully Eddited!', 'success')
         #flash('Argus index successfully updated', 'success')
         
-        return redirect(url_for("main_page_module.view_note", note_id=form.id.data))
+        return redirect(url_for("main_page_module.note_view", note_id=form.id.data))
     
     for error in form.errors:
         print(error)
         flash(f'Invalid Data: {error}', 'error')
     
-    return render_template("main_page_module/notes/edit_note.html", note=note, form=form, tags=tags, 
+    return render_template("main_page_module/notes/note_edit.html", note=note, form=form, tags=tags, 
                            all_tags=all_tags)  
 
 
-@main_page_module.route('/download_note/<note_id>', methods=['GET'])
+@main_page_module.route('/note_download/<note_id>', methods=['GET'])
 @login_required
-def download_note(note_id):
+def note_download(note_id):
     note = Notes.get_one(note_id)
     
     if note is None:
         flash('No entrie found or you do not have permissions to edit the note.', 'error')
         
-        return redirect(url_for("main_page_module.all_notes"))
+        return redirect(url_for("main_page_module.notes_all"))
     
     n_title = Randoms.get_valid_filename(note["title"])
     markdown_text = note["text"]
@@ -390,9 +364,34 @@ def tmpl_delete(tmpl_id):
     return redirect(url_for("main_page_module.tmpl_all"))   
 
 
-@main_page_module.route('/create_tag/', methods=['POST'])
+@main_page_module.route('/tags_all/')
 @login_required
-def create_tag():
+def tags_all():
+    tags = Tag.get_all()
+   
+    return render_template("main_page_module/tags/tags_all.html", tags=tags)
+
+
+@main_page_module.route('/tag_view/<tag_id>')
+@login_required
+def tag_view(tag_id):
+    
+    tag = Tag.get_one(tag_id)
+    
+    if (tag is None):
+        
+        flash('The tag does not exist !', 'error')
+        
+        return redirect(url_for("main_page_module.all_locations"))        
+    
+    notes = Tag.notes_get_all_of_tag(tag_id)
+    
+    return render_template("main_page_module/tags/tag_view.html", tag=tag, notes=notes)
+
+
+@main_page_module.route('/tag_create/', methods=['POST'])
+@login_required
+def tag_create():
 
     note_id = request.form["note_id"]
     tagName = request.form["tagName"]
@@ -418,9 +417,9 @@ def create_tag():
     return "Limona"
 
 
-@main_page_module.route('/add_tag/', methods=['POST'])
+@main_page_module.route('/tag_add/', methods=['POST'])
 @login_required
-def add_tag():
+def tag_add():
 
     note_id = request.form["note_id"]
     tag_id = request.form["tag_id"]
@@ -446,9 +445,9 @@ def add_tag():
     return "Limona"
 
 
-@main_page_module.route('/remove_tag/', methods=['POST'])
+@main_page_module.route('/tag_remove/', methods=['POST'])
 @login_required
-def remove_tag():
+def tag_remove():
     note_id = request.form["note_id"]
     tag_id = request.form["tag_id"]
     
@@ -458,7 +457,7 @@ def remove_tag():
     if (note is None) or (tag is None):
         flash('No note found or you do not have permissions to edit the note.', 'error')
         
-        return redirect(url_for("main_page_module.all_notes"))    
+        return redirect(url_for("main_page_module.notes_all"))    
     
     Tag.remove_note_tag(note_id, tag_id)
     
@@ -621,7 +620,7 @@ def user_edit(user_id=None):
 
 @main_page_module.route('/admin/delete/', methods=['POST'])
 @login_required
-def delete_user():
+def user_delete():
     user = UserM.get_one(request.form["id"])
     
     if not user:

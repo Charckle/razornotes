@@ -26,7 +26,7 @@
       {% for i in notes%}
         <hr>
         <div class="media">
-          <a href="{{ url_for('main_page_module.view_note', note_id=i["n_id"]) }}">
+          <a href="{{ url_for('main_page_module.note_view', note_id=i["n_id"]) }}">
             <img class="mr-3" id="icon_image" src="{{ url_for('static', filename='icons/note.svg') }}" class="rounded float-left" alt="..." style="width: 50px; height: 50px;">
           </a>
           <div class="media-body">

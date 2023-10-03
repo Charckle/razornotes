@@ -29,14 +29,14 @@
       <legend>{{ note["title"] }}
          - <span class="badge badge-pill badge-{{ note_type[1] }}">{{ note_type[0] }}</span> - 
           <div class="btn-group btn-group-sm" role="group" aria-label="...">
-            <a href="{{ url_for('main_page_module.edit_note', note_id=note_id) }}" class="btn btn-info" role="button">Edit Note</a>
+            <a href="{{ url_for('main_page_module.note_edit', note_id=note_id) }}" class="btn btn-info" role="button">Edit Note</a>
             <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#TrashNote">Trash</button>
-            <a href="{{ url_for('main_page_module.download_note', note_id=note_id) }}" class="btn btn-success" role="button">Download MD file</a>
+            <a href="{{ url_for('main_page_module.note_download', note_id=note_id) }}" class="btn btn-success" role="button">Download MD file</a>
           </div>
           <hr>
           {% for i in tags%}
             {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
-            <a href="{{ url_for('main_page_module.view_tag', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
+            <a href="{{ url_for('main_page_module.tag_view', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
           {% endfor %}
 
       </legend>
@@ -64,7 +64,7 @@
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               
-              <form method="POST" action="{{ url_for('main_page_module.trash_note') }}" accept-charset="UTF-8" role="form">
+              <form method="POST" action="{{ url_for('main_page_module.note_trash') }}" accept-charset="UTF-8" role="form">
                 <input type="hidden" id="id" name="id" value="{{ note_id }}">
                 <button type="submit" class="btn btn-danger">Trash note</button>
               </form>
@@ -92,48 +92,12 @@
   
             <ul id="tags_list">
             {% for i in tags%}
-              {% if i["tag_color"] == 0 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-primary">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
+            {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
+                <li id="t{{ i['t_id'] }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i['tag_name'] }}</span>
+                  <button type="button" id="{{ i['t_id'] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
                     <span aria-hidden="true">&times;</span>
-                  </button></li>
-                
-              {% elif i["tag_color"] == 1 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-secondary">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                    <span aria-hidden="true">&times;</span>
-                  </button></li>
-              {% elif i["tag_color"] == 2 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-success">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 3 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-danger">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 4 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-warning">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 5 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-info">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 6 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-light">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% elif i["tag_color"] == 7 %}
-                <li id="t{{ i["t_id"] }}"><span class="badge badge-pill badge-dark">{{ i["tag_name"] }}</span>
-                  <button type="button" id="{{ i["t_id"] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                      <span aria-hidden="true">&times;</span>
-                    </button></li>
-              {% endif %}
+                  </button>
+                </li>
             {% endfor %}
           </ul>
         </div>
@@ -193,7 +157,7 @@
   function remove_tag(tag_id){
     var note_id = document.getElementById("id").value;
 
-    $.post('/remove_tag/', {"note_id": note_id, "tag_id": tag_id}, function(data, textStatus) {
+    $.post('/tag_remove/', {"note_id": note_id, "tag_id": tag_id}, function(data, textStatus) {
       //console.log(data["a"]);
       var snackbar = document.getElementById("snackbar");
 
@@ -219,7 +183,7 @@
       var tagName = document.getElementById("tagName").value;
       var tagColor = document.getElementById("tagColor").value;
 
-      $.post('/create_tag/', {"note_id": note_id, "tagName": tagName, "tagColor": tagColor}, function(data, textStatus) {
+      $.post('/tag_create/', {"note_id": note_id, "tagName": tagName, "tagColor": tagColor}, function(data, textStatus) {
         //console.log(data["a"]);
         var snackbar = document.getElementById("snackbar");
 
@@ -285,7 +249,7 @@
       var note_id = document.getElementById("id").value;
       var tag_id = document.getElementById("choosen_tag").value;
 
-      $.post('/add_tag/', {"note_id": note_id, "tag_id": tag_id}, function(data, textStatus) {
+      $.post('/tag_add/', {"note_id": note_id, "tag_id": tag_id}, function(data, textStatus) {
         //console.log(data["a"]);
         var snackbar = document.getElementById("snackbar");
 

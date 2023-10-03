@@ -23,11 +23,11 @@
                 {% if note["note_type"] != 0 %}
                   <span class="badge badge badge-{{ note_type[1] }}">{{ note_type[0] }}</span>
                 {% endif %}
-                <a class="btn align-self-center mr-3" href="{{ url_for('main_page_module.view_note', note_id=note['id'] ) }}"><img src="/static/icons/pinned.svg" height="32" width="32"></a>
+                <a class="btn align-self-center mr-3" href="{{ url_for('main_page_module.note_view', note_id=note['id'] ) }}"><img src="/static/icons/pinned.svg" height="32" width="32"></a>
                 <div class="media-body text-white bg-dark"><h6 class="mt-0">{{ note['title'] }}
                   {% for i in Tag.get_all_of_note(note['id'] )%}
                     {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
-                     <a href="{{ url_for('main_page_module.view_tag', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
+                     <a href="{{ url_for('main_page_module.tag_view', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
                   {% endfor %}
                   </h6>
                   <p>{{ note['text'] }} ...</p>
@@ -47,11 +47,11 @@
         
             <div class="container">
               <div class="media" style="font-size: 12px;background-image: linear-gradient(to bottom right, hsl(64, 100%, 86%), rgb(255, 243, 181));border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;">
-                <a class="btn align-self-center mr-3" href="{{ url_for('main_page_module.view_note', note_id=note['id'] ) }}"><img src="/static/icons/note.svg" height="32" width="32"></a>
+                <a class="btn align-self-center mr-3" href="{{ url_for('main_page_module.note_view', note_id=note['id'] ) }}"><img src="/static/icons/note.svg" height="32" width="32"></a>
                 <div class="media-body"><h6 class="mt-0">{{ note['title'] }}
                   {% for i in Tag.get_all_of_note(note['id'])%}
                     {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
-                     <a href="{{ url_for('main_page_module.view_tag', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
+                     <a href="{{ url_for('main_page_module.tag_view', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
                   {% endfor %}
                   </h6>
                   <p>{{ note['text'] }} ...</p>

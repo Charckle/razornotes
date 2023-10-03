@@ -102,7 +102,7 @@
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               
-              <form method="POST" action="{{ url_for('main_page_module.delete_user') }}" accept-charset="UTF-8" role="form">
+              <form method="POST" action="{{ url_for('main_page_module.user_delete') }}" accept-charset="UTF-8" role="form">
                 <input type="hidden" id="id" name="id" value="{{ form.id.data }}">
                 <button type="submit" class="btn btn-danger">Delete entry</button>
               </form>
