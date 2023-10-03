@@ -403,8 +403,8 @@ def create_tag():
     if note is not None:
         try:        
             tag_id = Tag.add(tagName, tagColor)
-                       
-            connect_tag(note_id, tag_id)
+            
+            Tag.connect_tag(note_id, tag_id)
             result_concatinate = str(tagName) + "++++__++++++" + str(tagColor) + "++++__++++++" + str(tag_id)
            
             json_response = {"a": result_concatinate}        
@@ -425,13 +425,13 @@ def add_tag():
     note_id = request.form["note_id"]
     tag_id = request.form["tag_id"]
 
-    
     note = Notes.get_one(note_id)
     
     if note is not None:
         try:        
             tag = Tag.get_one(tag_id)
-                       
+            if Tag.note_tag_get_one(note_id, tag_id) is not None:
+                return "Limona"
             Tag.connect_tag(note_id, tag_id)
             result_concatinate = str(tag["name"]) + "++++__++++++" + str(tag["color"]) + "++++__++++++" + str(tag_id)
            
