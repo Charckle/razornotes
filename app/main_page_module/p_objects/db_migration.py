@@ -7,6 +7,7 @@ class DB_upgrade:
     def update_database():
         DB_upgrade.add_task_basics()
         DB_upgrade.create_template_table()
+        DB_upgrade.create_note_files_table()
     
     # DB_upgrade
     @staticmethod
@@ -39,3 +40,20 @@ class DB_upgrade:
             db.q_exe_segment(sql_command, ())
             
             db.finish_()
+    
+    # DB_upgrade
+    @staticmethod
+    def create_note_files_table():
+        if not check_table_exists("notes_files"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE notes_files (
+            `note_id` INT NOT NULL,
+            `file_name` VARCHAR(100) NOT NULL,
+            `file_id_name` VARCHAR(50) NOT NULL,
+            PRIMARY KEY (`note_id`),
+            FOREIGN KEY (note_id) REFERENCES notes(id)
+            )"""
+            db.q_exe_segment(sql_command, ())
+            
+            db.finish_()            

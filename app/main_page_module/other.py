@@ -1,6 +1,8 @@
 from unidecode import unidecode
 import re
 import os
+import secrets
+import string
 
 class Randoms():
     @staticmethod
@@ -29,13 +31,24 @@ class Randoms():
     
         return re.sub(r'(?u)[^-\w.]', '', s)
     
+    # Randoms
+    def generate_file_id(length=15):
+        # Define the character set from which to generate the ID
+        characters = string.ascii_letters + string.digits  # You can include other characters if needed
+        
+        # Generate the random ID
+        file_id = ''.join(secrets.choice(characters) for i in range(length))
+        
+        return file_id    
+    
+    # Randoms
     @staticmethod
     def icon_name(config):
         env_color = config['ICON_COLOR']
         favicon_name = f"favicon_{env_color}.ico"
         static_path = "app/static"
         file_path = f"{static_path}/{favicon_name}"
-        print(file_path)
+        
         if not os.path.exists(file_path):
             favicon_name = f"favicon_RED.ico"
         
@@ -63,3 +76,19 @@ class NotesS():
                     1: ["Task", "dark"]}
         
         return colors[note_type]
+    
+    # NotesS
+    @staticmethod
+    def save_file(app, file_u):    
+        filename = Randoms.get_valid_filename(file_u.filename)[:100]
+        path_u = app.config['UPLOAD_FOLDER']
+        
+        while True:
+            file_id_name = Randoms.generate_file_id()
+            file_path = f'{path_u}/{file_id_name}'
+            if not os.path.exists(file_path):
+                break
+        
+        file_u.save(os.path.join(path_u, file_id_name))
+        
+        return filename, file_id_name

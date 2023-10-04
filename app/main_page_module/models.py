@@ -280,7 +280,16 @@ class Notes:
         SET text = %s, v_hash = %s, date_mod = %s 
         WHERE id = %s;"""
         
-        db.q_exe(sql_command, (text, v_hash, timestamp, note_id))        
+        db.q_exe(sql_command, (text, v_hash, timestamp, note_id))
+    
+    # Notes
+    def connect_file(note_id, file_name, file_id_name):
+        db = DB()
+        sql_command = f"""INSERT INTO notes_files (note_id, file_name, file_id_name)
+                      VALUES (%s, %s, %s);"""  
+        
+        db.q_exe(sql_command, (note_id, file_name, file_id_name))
+        
 
 class Tmpl:
     def new(name, text_):
@@ -308,7 +317,7 @@ class Tmpl:
     @staticmethod    
     def update_one(tmpl_id, name, text_):
         db = DB()
-        print(text_)
+        
         sql_command = f"""UPDATE notes_tmpl 
         SET name = %s, text_ = %s
         WHERE id = %s;"""

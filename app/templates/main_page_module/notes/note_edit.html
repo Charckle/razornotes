@@ -42,21 +42,25 @@
 
     </div>
     <div class="col-md-10">
-      <form method="POST" action="{{ url_for('main_page_module.note_change') }}" accept-charset="UTF-8" role="form">
+      <form method="POST" action="{{ url_for('main_page_module.note_change') }}" accept-charset="UTF-8" role="form" enctype="multipart/form-data">
         {{ form.csrf_token }}
 
         {{ form.id }}
 
         <br>
         <div class="row">
-          <div class="col-md-8">
+          <div class="col-md-6">
             <div class="form-group">
               <input type="text" class="form-control " id="title" name="title" placeholder="Title" value="{{ note['title'] }}"  aria-describedby="titlenotehelp" required>
               <small id="titlenotehelp" class="form-text text-muted">Note title</small>
             </div>
           </div>
         
-          <div class="col-md-4">
+          <div class="col-md-3">
+            {{ render_field(form.file_u) }}
+          </div>
+
+          <div class="col-md-3">
             {{ render_field(form.note_type) }}
           </div>
         </div>

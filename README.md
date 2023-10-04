@@ -1,3 +1,18 @@
+#### Functions
+- Note creation
+- Pin notes to front page
+- Hide notes from frontpage
+- Color tags
+- Trash before deletion
+- Fuzzy search
+- Cli app
+- Clipboard save option
+- Note templates
+- Import Export in json
+- Notes downloadable to .md files
+- File attachments
+- A memory subapp
+
 #### Login
 - Username: admin
 - Password: banana

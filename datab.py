@@ -282,7 +282,7 @@ class DBcreate:
             )
             ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
             db.q_exe(sql_command, ())
-            
+        
         if not check_table_exists("notes_tmpl"):
             db = DB()
             sql_command = f"""
@@ -293,6 +293,18 @@ class DBcreate:
             PRIMARY KEY (`id`)
             )"""            
             db.q_exe(sql_command, ())
+        
+        if not check_table_exists("notes_files"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE notes_files (
+            `note_id` INT NOT NULL,
+            `file_name` VARCHAR(100) NOT NULL,
+            `file_id_name` VARCHAR(50) NOT NULL,
+            PRIMARY KEY (`note_id`),
+            FOREIGN KEY (note_id) REFERENCES notes(id)
+            )"""            
+            db.q_exe(sql_command, ())            
    
 
     @staticmethod

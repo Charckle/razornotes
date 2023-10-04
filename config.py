@@ -9,6 +9,8 @@ class Config(object):
     
     API_SECRET = environ.get('API_SECRET', "banana312")
     
+    UPLOAD_FOLDER = environ.get('UPLOAD_FOLDER', "files_u")
+    
     SESSION_COOKIE_SECURE = True
 
     # Application threads. A common general assumption is

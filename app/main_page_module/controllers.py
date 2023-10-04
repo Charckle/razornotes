@@ -236,6 +236,11 @@ def note_change():
         Notes.update_one(note_id, form.title.data, form.note_type.data, form.note_text.data, 
                                   form.relevant.data, form.pinned.data)
         
+        if form.file_u.data != None:
+            file_u = form.file_u.data
+            file_name, file_id_name = NotesS.save_file(app, file_u)
+            Notes.connect_file(note_id, file_name, file_id_name)
+        
         #create argus index
         notes = Notes.get_all_active()
         new_index = WSearch()
@@ -251,7 +256,7 @@ def note_change():
         flash(f'Invalid Data: {error}', 'error')
     
     return render_template("main_page_module/notes/note_edit.html", note=note, form=form, tags=tags, 
-                           all_tags=all_tags)  
+                           all_tags=all_tags)
 
 
 @main_page_module.route('/note_download/<note_id>', methods=['GET'])

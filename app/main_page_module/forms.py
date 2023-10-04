@@ -14,10 +14,8 @@ from app.main_page_module.other import NotesS
 #email verification
 import re
 import os.path
-
-
-# Define the login form (WTForms)
-
+    
+    
 class Note(FlaskForm):
     id = HiddenField('id', [validators.InputRequired(message='Dont fiddle around with the code!')])
     
@@ -30,7 +28,9 @@ class Note(FlaskForm):
     
     pinned = BooleanField('Pin the note?')
     
-    note_type = SelectField(u'Type of note', choices=[(str(0), "Note"), (str(1), "Task")]) 
+    note_type = SelectField(u'Type of note', choices=[(str(0), "Note"), (str(1), "Task")])
+    
+    file_u = FileField("File to upload")   
     
     submit = SubmitField('Submit changes')
     
