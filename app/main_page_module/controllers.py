@@ -259,6 +259,28 @@ def note_change():
                            all_tags=all_tags)
 
 
+@main_page_module.route('/note_delete_file/', methods=['POST'])
+@login_required
+def note_delete_file():
+    file_id_name = request.form["file_id_name"]
+    note_file = Notes.get_one_file(file_id_name)
+    
+    if note_file is None:
+        flash('No note file with this ID found to trash.', 'error')
+        
+        return redirect(url_for("main_page_module.notes_all"))  
+    
+    note_id = note_file["note_id"]
+    # here, make this, but with failsafe
+    Notes.delete_one_file(file_id_name)
+    path_u = app.config['UPLOAD_FOLDER']
+    NotesS.file_delete(path_u, note_file)
+
+    flash(f'{note_file["file_name"]} - File deleted successfully .', 'success')  
+    
+    return redirect(url_for("main_page_module.note_view", note_id=note_id))
+
+
 @main_page_module.route('/note_download/<note_id>', methods=['GET'])
 @login_required
 def note_download(note_id):

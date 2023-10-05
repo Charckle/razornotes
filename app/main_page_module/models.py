@@ -289,7 +289,33 @@ class Notes:
                       VALUES (%s, %s, %s);"""  
         
         db.q_exe(sql_command, (note_id, file_name, file_id_name))
+    
+    # Notes
+    @staticmethod    
+    def get_all_files_of(note_id):
+        db = DB()
+        sql_command = f"""SELECT note_id, file_name, file_id_name
+        FROM notes_files WHERE note_id = %s;"""
+
+        return db.q_r_all(sql_command, (note_id,))
+    
+    # Notes
+    @staticmethod
+    def get_one_file(file_id_name):
+        db = DB()
+        sql_command = f"""SELECT note_id, file_name, file_id_name
+        FROM notes_files WHERE file_id_name = %s;"""
+
+        return db.q_r_one(sql_command, (file_id_name, ))
+    
+    # Notes
+    @staticmethod    
+    def delete_one_file(file_id_name):
+        db = DB()
+        sql_command = f"""DELETE FROM notes_files WHERE file_id_name = %s;"""
         
+        db.q_exe(sql_command, (file_id_name, ))    
+
 
 class Tmpl:
     def new(name, text_):

@@ -81,9 +81,7 @@
     <div class="col-md-1"> 
 
     </div>
-    <div class="col-md-10">
-        <hr>
-        <button class="btn btn-dark btn-block" type="button" data-toggle="collapse" data-target="#collapseTags" aria-expanded="false" aria-controls="collapseTags">
+    <div class="col-md-5">
             Tags
           </button>
         <div class="collapse" id="collapseTags">
@@ -103,9 +101,46 @@
         </div>
         
       </div>
+      <div class="col-md-5">
+        <ul class="list-group">
+          {% for file_u in Notes.get_all_files_of(note_id)%}
+            <li class="list-group-item">
+              {{ file_u["file_name"] }} - <a href="#" class="badge badge-dark" title="Download">{{ NotesS.file_size(config['UPLOAD_FOLDER'], file_u) }}</a>
+              <button type="button" class="badge badge-danger float-right" data-toggle="modal" data-target="#deleteFile">Delete</button>
+
+              <!-- Modal -->
+              <div class="modal fade" id="deleteFile" tabindex="-1" role="dialog" aria-labelledby="deleteFileitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="deleteFileTitle">Delete the File</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      Do you really want to delete the file <b>{{ file_u["file_name"] }}</b> ?
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      
+                      <form method="POST" action="{{ url_for('main_page_module.note_delete_file') }}" accept-charset="UTF-8" role="form">
+                        <input type="hidden" id="file_id_name" name="file_id_name" value="{{ file_u['file_id_name'] }}">
+                        <button type="submit" class="btn btn-danger">Delete File</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
   </div>
   <br>
 
+  
 
   <!-- Modal -->
   <div class="modal fade" id="tagModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
@@ -122,7 +157,7 @@
                 <div class="input-group-append">
                   <select class="custom-select" id="choosen_tag">
                     {% for tag in all_tags %}
-                      <option value="{{ tag["id"] }}">{{ tag["name"] }}</option>
+                      <option value="{{ tag['id'] }}">{{ tag["name"] }}</option>
                     {% endfor %}
                   </select>
                 </div>
