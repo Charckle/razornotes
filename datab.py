@@ -301,7 +301,6 @@ class DBcreate:
             `note_id` INT NOT NULL,
             `file_name` VARCHAR(100) NOT NULL,
             `file_id_name` VARCHAR(50) NOT NULL,
-            PRIMARY KEY (`note_id`),
             FOREIGN KEY (note_id) REFERENCES notes(id)
             )"""            
             db.q_exe(sql_command, ())            

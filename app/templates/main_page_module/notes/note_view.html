@@ -10,9 +10,9 @@
 {% block content%}
 
 {% set note_id = note["id"] %}
+{% set note_o = N_obj(note_id) %}
 {% set all_tags = Tag.get_all() %}
-{% set tags = Tag.get_all_of_note(note_id) %}
-{% set note_type = NotesS.n_types(note["note_type"]) %}
+{% set note_type = note_o.type_() %}
 
 {% set text = markdown2.markdown(note["text"])  %}
 
@@ -83,13 +83,11 @@
     </div>
     <div class="col-md-5">
             Tags
-          </button>
-        <div class="collapse" id="collapseTags">
           <hr>
             <button class="btn btn-outline-success btn-block" title="Tag button" data-toggle="modal" data-target="#tagModal">Add Tags</button>
   
             <ul id="tags_list">
-            {% for i in tags%}
+            {% for i in note_o.tags %}
             {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
                 <li id="t{{ i['t_id'] }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i['tag_name'] }}</span>
                   <button type="button" id="{{ i['t_id'] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
@@ -98,14 +96,14 @@
                 </li>
             {% endfor %}
           </ul>
-        </div>
         
       </div>
       <div class="col-md-5">
+        Notes
         <ul class="list-group">
-          {% for file_u in Notes.get_all_files_of(note_id)%}
+          {% for file_u in note_o.files%}
             <li class="list-group-item">
-              {{ file_u["file_name"] }} - <a href="#" class="badge badge-dark" title="Download">{{ NotesS.file_size(config['UPLOAD_FOLDER'], file_u) }}</a>
+              {{ file_u["file_name"] }} - <a href="#" class="badge badge-dark" title="Download">{{ note_o.file_size(file_u) }}</a>
               <button type="button" class="badge badge-danger float-right" data-toggle="modal" data-target="#deleteFile">Delete</button>
 
               <!-- Modal -->

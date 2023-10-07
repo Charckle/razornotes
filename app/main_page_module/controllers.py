@@ -8,6 +8,7 @@ from flask import Blueprint, request, render_template, \
 # Import module forms
 from app.main_page_module.forms import form_dicts
 from app.main_page_module.r_proc import Import_Ex, HL_proc
+from app.main_page_module.p_objects.note_o import N_obj
 
 # Import module models (i.e. User)
 from app.main_page_module.models import UserM, Notes, Tag, Tmpl
@@ -37,7 +38,7 @@ main_page_module = Blueprint('main_page_module', __name__, url_prefix='/')
 def inject_to_every_page():
     
     return dict(Randoms=Randoms, Notes=Notes, Tag=Tag, Tmpl=Tmpl,
-                NotesS=NotesS, markdown2=markdown2)
+                NotesS=NotesS, N_obj=N_obj, markdown2=markdown2)
 
 
 # Set the route and accepted methods
@@ -88,7 +89,8 @@ def note_delete():
         
         return redirect(url_for("main_page_module.notes_all"))  
     
-    Notes.delete_one(note_id)
+    note_o = N_obj(note_id)
+    note_o.delete()
     
     flash(f'Note {note["title"]} successfully deleted.', 'success')  
     
@@ -232,14 +234,15 @@ def note_change():
         
         return redirect(url_for("main_page_module.notes_all"))    
     
+    note_o = N_obj(note_id)
+    
     if form.validate_on_submit():
         Notes.update_one(note_id, form.title.data, form.note_type.data, form.note_text.data, 
                                   form.relevant.data, form.pinned.data)
         
         if form.file_u.data != None:
             file_u = form.file_u.data
-            file_name, file_id_name = NotesS.save_file(app, file_u)
-            Notes.connect_file(note_id, file_name, file_id_name)
+            note_o.save_file_to_note(file_u)
         
         #create argus index
         notes = Notes.get_all_active()
@@ -263,20 +266,21 @@ def note_change():
 @login_required
 def note_delete_file():
     file_id_name = request.form["file_id_name"]
-    note_file = Notes.get_one_file(file_id_name)
+    file_u = Notes.get_one_file(file_id_name)
     
-    if note_file is None:
+    if file_u is None:
         flash('No note file with this ID found to trash.', 'error')
         
         return redirect(url_for("main_page_module.notes_all"))  
     
-    note_id = note_file["note_id"]
+    note_id = file_u["note_id"]
+    note_o = N_obj(note_id)
     # here, make this, but with failsafe
     Notes.delete_one_file(file_id_name)
     path_u = app.config['UPLOAD_FOLDER']
-    NotesS.file_delete(path_u, note_file)
+    note_o.file_delete(file_u)
 
-    flash(f'{note_file["file_name"]} - File deleted successfully .', 'success')  
+    flash(f'{file_u["file_name"]} - File deleted successfully .', 'success')  
     
     return redirect(url_for("main_page_module.note_view", note_id=note_id))
 

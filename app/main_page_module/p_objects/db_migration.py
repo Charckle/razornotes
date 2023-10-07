@@ -51,7 +51,6 @@ class DB_upgrade:
             `note_id` INT NOT NULL,
             `file_name` VARCHAR(100) NOT NULL,
             `file_id_name` VARCHAR(50) NOT NULL,
-            PRIMARY KEY (`note_id`),
             FOREIGN KEY (note_id) REFERENCES notes(id)
             )"""
             db.q_exe_segment(sql_command, ())
