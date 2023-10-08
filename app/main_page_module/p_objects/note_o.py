@@ -11,6 +11,8 @@ class N_obj:
     qrry = None
     files = None
     tags = None
+    type_ = None
+    type_clr = None
     
     def __init__(self, n_id):
         self.n_id = n_id
@@ -18,8 +20,8 @@ class N_obj:
         self.qrry = Notes.get_one(n_id)
         self.files = Notes.get_all_files_of(n_id)
         self.tags = Tag.get_all_of_note(n_id)
-        note_type = self.type_()
-        
+        self.type_ = self.qrry["note_type"]
+        self.type_clr = self.get_type_clr()
     
 
     def delete(self):
@@ -33,11 +35,11 @@ class N_obj:
         Notes.delete_one(self.n_id)
         
     
-    def type_(self):    
+    def get_type_clr(self):    
         colors = {0: ["Note","warning"],
                     1: ["Task", "dark"]}
         
-        return colors[self.qrry["note_type"]]    
+        return colors[self.type_]    
     
     def save_file_to_note(self, file_u):
         file_name, file_id_name = self.save_file(file_u)

@@ -18,10 +18,11 @@
         <div class="card-header">Pinned Notes</div>
 
           {% for note in pinned_notes %}
-            {% set note_type = NotesS.n_types(note["note_type"]) %}
+          
+            {% set note_obj = N_obj(note["id"]) %}
               <div class="media" style="font-size: 12px;border-radius: 5px;margin-bottom: 5px;">
-                {% if note["note_type"] != 0 %}
-                  <span class="badge badge badge-{{ note_type[1] }}">{{ note_type[0] }}</span>
+                {% if note_obj.note_type != 0 %}
+                  <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr [0] }}</span>
                 {% endif %}
                 <a class="btn align-self-center mr-3" href="{{ url_for('main_page_module.note_view', note_id=note['id'] ) }}"><img src="/static/icons/pinned.svg" height="32" width="32"></a>
                 <div class="media-body text-white bg-dark"><h6 class="mt-0">{{ note['title'] }}
@@ -43,10 +44,14 @@
       <div class="row">
       {% for note in notes %}
        <div class="col-md-4">
-    
+        {% set note_obj = N_obj(note["id"]) %}
+
         
             <div class="container">
               <div class="media" style="font-size: 12px;background-image: linear-gradient(to bottom right, hsl(64, 100%, 86%), rgb(255, 243, 181));border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;">
+                {% if note_obj.note_type != 0 %}
+                  <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr[0] }}</span>
+                {% endif %}
                 <a class="btn align-self-center mr-3" href="{{ url_for('main_page_module.note_view', note_id=note['id'] ) }}"><img src="/static/icons/note.svg" height="32" width="32"></a>
                 <div class="media-body"><h6 class="mt-0">{{ note['title'] }}
                   {% for i in Tag.get_all_of_note(note['id'])%}

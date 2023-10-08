@@ -12,7 +12,6 @@
 {% set note_id = note["id"] %}
 {% set note_o = N_obj(note_id) %}
 {% set all_tags = Tag.get_all() %}
-{% set note_type = note_o.type_() %}
 
 {% set text = markdown2.markdown(note["text"])  %}
 
@@ -27,7 +26,7 @@
 
       
       <legend>{{ note["title"] }}
-         - <span class="badge badge-pill badge-{{ note_type[1] }}">{{ note_type[0] }}</span> - 
+         - <span class="badge badge-pill badge-{{ note_o.type_clr[1] }}">{{ note_o.type_clr[0] }}</span> - 
           <div class="btn-group btn-group-sm" role="group" aria-label="...">
             <a href="{{ url_for('main_page_module.note_edit', note_id=note_id) }}" class="btn btn-info" role="button">Edit Note</a>
             <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#TrashNote">Trash</button>

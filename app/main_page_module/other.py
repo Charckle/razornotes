@@ -57,6 +57,7 @@ class Randoms():
     # Randoms    
     @staticmethod    
     def format_file_size(file_size):
+        file_size = file_size / 1024
         if file_size < 1024:
             return f"{file_size} KB"
         else:
