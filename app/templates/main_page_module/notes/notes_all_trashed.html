@@ -40,17 +40,21 @@
       <legend><span class="badge badge-danger">Trash</span> - All Notes</legend>
       <div id="all_entries" class="container">
         {% for i in notes%}
-        <hr>
-        <div class="media">
-            <div class="btn-group btn-group-sm align-self-center mr-3" role="group" aria-label="...">
-              <a href="{{ url_for('main_page_module.note_view', note_id=i['id']) }}" class="btn btn-secondary" role="button">View Note</a>
-              <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ i['id'] }}">Delete</button>
-              <a href="{{ url_for('main_page_module.note_reactivate', note_id=i['id']) }}" class="btn btn-success" role="button">ReActivate</a>
+          {% set note_obj = N_obj(i["id"]) %}
+          <hr>
+          <div class="media">
+              <div class="btn-group btn-group-sm align-self-center mr-3" role="group" aria-label="...">
+                <a href="{{ url_for('main_page_module.note_view', note_id=i['id']) }}" class="btn btn-secondary" role="button">View Note</a>
+                <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ i['id'] }}">Delete</button>
+                <a href="{{ url_for('main_page_module.note_reactivate', note_id=i['id']) }}" class="btn btn-success" role="button">ReActivate</a>
+                <div class="input-group-append">
+                  <div class="input-group-text" id="btnGroupAddon">{{ note_obj.type_clr [0] }}</div>
+                </div>
+              </div>
+            <div class="media-body">
+              <h4 class="mt-0">{{ i["title"] }}</h4>
             </div>
-          <div class="media-body">
-            <h4 class="mt-0">{{ i["title"] }}</h4>
           </div>
-        </div>
 
         <!-- Modal -->
         <div class="modal fade" id="{{ 'for_modal' ~ i['id'] }}" tabindex="-1" role="dialog" aria-labelledby="{{ i['id'] ~ 'for_modaltext' }}" aria-hidden="true">
