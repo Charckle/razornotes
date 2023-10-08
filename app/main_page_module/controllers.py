@@ -64,18 +64,14 @@ def search():
 def search_results():
     key = request.form["key"]
 
-    banana = WSearch()
     if key == "":
         asterix = ""
     else:
         asterix = "*"
-    res = banana.index_search(key + asterix)
-    
-    #get IDs of the notes the user can access
-    user_notes = [i["id"] for i in Notes.get_all_active()]
-    results = {r[0]: [r[1], r[2]] for r in res if (int(r[0]) in user_notes)}
+        
+    key = key + asterix
 
-    return jsonify(results)
+    return jsonify(N_obj.similar_notes(key))
 
 
 @main_page_module.route('/note_delete/', methods=['POST'])

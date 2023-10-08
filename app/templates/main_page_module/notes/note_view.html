@@ -80,7 +80,7 @@
     <div class="col-md-1"> 
 
     </div>
-    <div class="col-md-5">
+    <div class="col-md-3">
             Tags
           <hr>
             <button class="btn btn-outline-success btn-block" title="Tag button" data-toggle="modal" data-target="#tagModal">Add Tags</button>
@@ -97,8 +97,8 @@
           </ul>
         
       </div>
-      <div class="col-md-5">
-        Notes
+      <div class="col-md-3">
+        Files
         <ul class="list-group">
           {% for file_u in note_o.files%}
             <li class="list-group-item">
@@ -134,6 +134,20 @@
           {% endfor %}
         </ul>
       </div>
+      <div class="col-md-1">
+      </div>
+      <div class="col-md-3">
+          Similar notes
+        <hr>
+        <ul class="list-group">
+          {% for note_id, value in N_obj.similar_notes(note["title"]).items() %}
+          <li class="list-group-item">
+            {{ value[0] }} - <a href="{{ url_for('main_page_module.note_view', note_id=note_id ) }}" class="badge badge-warning" title="Download">View</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
   </div>
   <br>
 

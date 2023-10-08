@@ -3,6 +3,8 @@ import os
 
 from app.main_page_module.models import Notes, Tag
 from app.main_page_module.other import Randoms
+from app.main_page_module.argus import WSearch
+
 
 class N_obj:
     path_u = app.config['UPLOAD_FOLDER']
@@ -77,4 +79,14 @@ class N_obj:
         file_path = f"{self.path_u}/{file_id_name}"
         
         if os.path.exists(file_path):
-            os.remove(file_path)    
+            os.remove(file_path) 
+    
+    @staticmethod
+    def similar_notes(key_):
+        index_n = WSearch()
+        res = index_n.index_search(key_)
+        
+        #get IDs of the notes the user can access
+        user_notes = [i["id"] for i in Notes.get_all_active()]
+        
+        return {r[0]: [r[1], r[2]] for r in res if (int(r[0]) in user_notes)}
