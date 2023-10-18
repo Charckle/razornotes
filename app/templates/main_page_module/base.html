@@ -101,6 +101,9 @@
                     
                 </ul>
                 <ul class="navbar-nav ml-auto">
+                  <li class="nav-item">
+                        <a class="nav-link disabled" style="font-size: 12px; padding-top: 12px;">ver {{ Randoms.get_version() }} </a>
+                        </li>
                     {% if session['user_id'] %}
                         <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main_page_module.logout') }}">Logout </a>

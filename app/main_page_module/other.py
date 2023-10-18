@@ -69,7 +69,15 @@ class Randoms():
     def verify_folder(folder_path):
         if not os.path.exists(folder_path):
             # If it doesn't exist, create it
-            os.makedirs(folder_path)        
+            os.makedirs(folder_path)
+    
+    # Randoms
+    @staticmethod    
+    def get_version():    
+        with open('VERSION') as f:
+            lines = f.readlines()
+        
+        return lines[0]    
 
 class NotesS():
     # NotesS
