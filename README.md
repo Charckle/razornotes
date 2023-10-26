@@ -1,6 +1,6 @@
 #### Functions
 - Note creation
-    - simplemde markdown editor for editing
+    - simplemde markdown editor for editing.
 - Pin notes to front page
 - Hide notes from frontpage
 - Color tags
