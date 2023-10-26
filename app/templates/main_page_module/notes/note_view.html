@@ -15,6 +15,8 @@
 
 {% set text = markdown2.markdown(note["text"])  %}
 
+
+
 <br>
 <div class="container-fluid">
   <div class="row">
@@ -23,7 +25,9 @@
       
     </div>
     <div class="col-md-10">
-
+      {% if note["pinned"] == 1 %}
+        <span class="badge badge badge-dark">Pinned</span>
+      {% endif %}
       
       <legend>{{ note["title"] }}
          - <span class="badge badge-pill badge-{{ note_o.type_clr[1] }}">{{ note_o.type_clr[0] }}</span> - 
@@ -39,6 +43,8 @@
           {% endfor %}
 
       </legend>
+
+      
 
       <hr>
       <div style="background-image: linear-gradient(to bottom, rgb(253, 251, 238), rgb(255, 251, 233));background-repeat: no-repeat;border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;padding: 5px;">
@@ -140,7 +146,7 @@
           Similar notes
         <hr>
         <ul class="list-group">
-          {% for note_id, value in N_obj.similar_notes(note["title"]).items() %}
+          {% for note_id, value in note_o.similar_notes(note["title"]).items() %}
           <li class="list-group-item">
             {{ value[0] }} - <a href="{{ url_for('main_page_module.note_view', note_id=note_id ) }}" class="badge badge-warning" title="Download">View</a>
           </li>
@@ -409,5 +415,9 @@
     }
   </style>
   
+  
   </div>
+
+
+
 {% endblock content %}

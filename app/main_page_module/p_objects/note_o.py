@@ -81,12 +81,11 @@ class N_obj:
         if os.path.exists(file_path):
             os.remove(file_path) 
     
-    @staticmethod
-    def similar_notes(key_):
+    def similar_notes(self, key_):
         index_n = WSearch()
         res = index_n.index_search(key_)
         
         #get IDs of the notes the user can access
-        user_notes = [i["id"] for i in Notes.get_all_active()]
+        user_notes = [i["id"] for i in Notes.get_all_active() if i["id"] != self.n_id]
         
         return {r[0]: [r[1], r[2]] for r in res if (int(r[0]) in user_notes)}

@@ -2,6 +2,9 @@
 
 
 {% block extraheader %}
+<link rel="stylesheet" href="{{ url_for('static', filename='main_page_module/dist/simplemde/simplemde.min.css') }}">
+<script src="{{ url_for('static', filename='main_page_module/dist/simplemde/simplemde.min.js') }}"></script>
+
 {% endblock %}
 
 {% block nav_new_note %}active{% endblock nav_new_note %}
@@ -165,6 +168,13 @@
     mybutton = document.getElementById("myBtn");
     mybutton.style.display = "block";
     */
+
+  var simplemde = new SimpleMDE({ forceSync: true,
+    indentWithTabs: false,
+    promptURLs: true,
+    spellChecker: false,
+    tabSize: 4,
+    element: document.getElementById("note_text") });
    </script>
 
    

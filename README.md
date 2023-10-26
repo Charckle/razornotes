@@ -31,6 +31,7 @@
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
+- related notes: add existing notes to notes, for easiers browsing
 - clustering
 - show if changes were done while editing a note
 - in view note, show if pinned
@@ -38,8 +39,7 @@
 - make environments be taken from .env (carefull with docker compose deployment)
 - sql conn pool
 - make tasks have a deadline and marked as compleeted
-- add version of app to app frontend
-- make the version of the app bit somewhat cconnected with the option to import it, so you do not mess it up if the version is not compatible
+- make the version of the app bit somewhat connected with the option to import it, so you do not mess it up if the version is not compatible
 - change the font of the displayed headers, to make them not so big
 - make index also search the name of the note
 - make search not suck

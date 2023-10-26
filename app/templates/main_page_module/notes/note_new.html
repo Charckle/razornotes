@@ -2,6 +2,9 @@
 
 
 {% block extraheader %}
+<link rel="stylesheet" href="{{ url_for('static', filename='main_page_module/dist/simplemde/simplemde.min.css') }}">
+<script src="{{ url_for('static', filename='main_page_module/dist/simplemde/simplemde.min.js') }}"></script>
+
 {% endblock %}
 
 {% block nav_new_note %}active{% endblock nav_new_note %}
@@ -9,6 +12,9 @@
 
 
 {% block content%}
+
+
+
 <br>
 <div class="container-fluid">
   <div class="row">
@@ -40,7 +46,6 @@
           {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
       </div>
       {% endmacro %}
-
 
       <div>
         <div>
@@ -83,4 +88,14 @@
   </div>
   
 </div>      
+
+<script>
+  var simplemde = new SimpleMDE({ forceSync: true,
+    indentWithTabs: false,
+    promptURLs: true,
+    spellChecker: false,
+    tabSize: 4,
+    element: document.getElementById("note_text") });
+</script>
+
 {% endblock %}
