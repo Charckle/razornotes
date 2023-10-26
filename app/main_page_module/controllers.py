@@ -71,7 +71,7 @@ def search_results():
         
     key = key + asterix
 
-    return jsonify(N_obj.similar_notes(key))
+    return jsonify(N_obj.search(key))
 
 
 @main_page_module.route('/note_delete/', methods=['POST'])

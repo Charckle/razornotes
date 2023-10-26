@@ -82,10 +82,21 @@ class N_obj:
             os.remove(file_path) 
     
     def similar_notes(self, key_):
-        index_n = WSearch()
-        res = index_n.index_search(key_)
+        res, user_notes = N_obj.notes_n_index(key_) 
         
-        #get IDs of the notes the user can access
-        user_notes = [i["id"] for i in Notes.get_all_active() if i["id"] != self.n_id]
+        return {r[0]: [r[1], r[2]] for r in res if (int(r[0]) in user_notes) and int(r[0]) != self.n_id}
+    
+    @staticmethod
+    def search(key_):
+        res, user_notes = N_obj.notes_n_index(key_) 
         
         return {r[0]: [r[1], r[2]] for r in res if (int(r[0]) in user_notes)}
+    
+    @staticmethod
+    def notes_n_index(key_):
+        index_n = WSearch()
+        res = index_n.index_search(key_)
+        #get IDs of the notes the user can access
+        user_notes = [i["id"] for i in Notes.get_all_active()]        
+        
+        return res, user_notes
