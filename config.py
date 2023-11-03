@@ -7,7 +7,7 @@ class Config(object):
     TESTING = False
     SECRET_KEY = environ.get('SECRET_KEY', "B\xb2?.\xdf\x9f\xa7m\xf8\x8a%,\xf7\xc4\xfa\x91")
     
-    API_SECRET = environ.get('API_SECRET', "banana312")
+    JWT_SECRET_KEY = environ.get('JWT_SECRET_KEY', "sdf34tasdft34")
     
     UPLOAD_FOLDER = environ.get('UPLOAD_FOLDER', "files_u")
     

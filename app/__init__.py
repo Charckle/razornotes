@@ -4,6 +4,8 @@ from os import path, mkdir, environ
 import logging
 from logging.handlers import RotatingFileHandler
 
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
+
 from datab import DBcreate, check_database_active
 from app.main_page_module.p_objects.db_migration import DB_upgrade
 from app.main_page_module.argus import WSearch
@@ -19,6 +21,8 @@ if environ.get('ENVCONFIG', "DEV") != 'PROD':
     app.config.from_object("config.DevelopmentConfig")
 else:
     app.config.from_object("config.ProductionConfig")
+
+jwt = JWTManager(app)
 
 # Sample HTTP error handling
 @app.errorhandler(404)
@@ -36,11 +40,13 @@ def static_file():
 # Import a module / component using its blueprint handler variable (mod_auth)
 from app.main_page_module.controllers import main_page_module as main_module
 from app.main_page_module.controllers_api import razor_api as api_module
+from app.main_page_module.controllers_api_v2 import razor_api as api_module_v2
 from app.memory_module.controllers import memory_module
 
 # Register blueprint(s)
 app.register_blueprint(main_module)
 app.register_blueprint(api_module)
+app.register_blueprint(api_module_v2)
 app.register_blueprint(memory_module)
 # app.register_blueprint(xyz_module)
 # ..
