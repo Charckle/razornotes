@@ -40,7 +40,7 @@ def static_file():
 # Import a module / component using its blueprint handler variable (mod_auth)
 from app.main_page_module.controllers import main_page_module as main_module
 from app.main_page_module.controllers_api import razor_api as api_module
-from app.main_page_module.controllers_api_v2 import razor_api as api_module_v2
+from app.main_page_module.controllers_api_jwt import razor_api as api_module_v2
 from app.memory_module.controllers import memory_module
 
 # Register blueprint(s)

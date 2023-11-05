@@ -32,6 +32,7 @@
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
+- read only users
 - related notes: add existing notes to notes, for easiers browsing
 - clustering
 - show if changes were done while editing a note

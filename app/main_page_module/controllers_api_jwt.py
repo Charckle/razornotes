@@ -1,15 +1,16 @@
-from flask import Flask, Blueprint, request
+from flask import Flask, Blueprint, request, jsonify
 import flask_restful
 from flask_restful import Api, url_for, reqparse, abort
 
-import jwt
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+
 from functools import wraps
 from app.main_page_module.argus import WSearch
 from app.main_page_module.models import Notes, Tag, UserM
 
 from app import app
 
-razor_api = Blueprint('api', __name__, url_prefix='/api/v2')
+razor_api = Blueprint('api_2', __name__, url_prefix='/api/v2')
 api = Api(razor_api)
 
 parser = reqparse.RequestParser()
@@ -18,40 +19,12 @@ parser.add_argument('note_id')
 parser.add_argument('note_text')
 
 
-def token_required(f):
-    @wraps(f)
-    def decorator(*args, **kwargs):
-        api_key = None
-        
-        if 'x-access-tokens' in request.headers:
-            api_key = request.headers['x-access-tokens']
-        
-        if not api_key:
-            abort(404, message="A token is required.")
-        
-        try:
-            user = UserM.check_api_access(api_key)
-            
-            if user is None:
-                raise Exception("Wrong access key, or no access granted.")
-            
-        except Exception as e:
-            print(e)
-            abort(404, message="The token is invalid.")
-
-        return f(*args, **kwargs)
-    return decorator
-
-
-
 class Resource(flask_restful.Resource):
-    method_decorators = [token_required]   # applies to all inherited resources
+    method_decorators = [jwt_required()]   # applies to all inherited resources
 
 
 class NoteItem(Resource):
-    @jwt_required()
     def get(self, n_id):
-
         note = Notes.get_one(n_id)
         if note == None:
             abort(404, message="No note found for this id.")
@@ -88,14 +61,16 @@ class SearchNote(Resource):
         
         return results
 
-class LoginM(Resource):    
+class LoginM(flask_restful.Resource):    
     def post(self):
-        username = request.json.get("username", None)
-        password = request.json.get("password", None)
-        if username != "test" or password != "test":
-            password = "redacted" # remove from memory
-            return jsonify({"msg": "Bad username or password"}), 401
-    
+
+        username = request.form["username"]
+        password = request.form["password"]
+        user = UserM.login_check(username, password)
+        
+        if user == False:
+            abort(404, message="Username or password not correct.")
+        
         access_token = create_access_token(identity=username)
         password = "redacted" # remove from memory
         
