@@ -3,7 +3,7 @@ import json
 
 # Import flask dependencies
 from flask import Blueprint, request, render_template, \
-                  flash, g, session, redirect, url_for, jsonify, send_file, Response
+                  flash, g, session, redirect, url_for, jsonify, send_file, Response, abort
 
 # Import module forms
 from app.main_page_module.forms import form_dicts
@@ -298,6 +298,20 @@ def note_download(note_id):
     response.headers['Content-Disposition'] = f'attachment; filename={n_title}.md'
 
     return response
+
+
+@main_page_module.route('/note_download_file/<filename>', methods=['GET'])
+@login_required
+def note_download_file(filename):
+    file_u = Notes.get_one_file(filename)
+    
+    if file_u is None:
+        abort(404)
+    
+    path_u = app.config['UPLOAD_FOLDER'] + "/" +  filename
+    file_name = file_u["file_name"]
+    
+    return send_file(path_u, as_attachment=True, attachment_filename=file_name)
 
 
 @main_page_module.route('/all_templates/')

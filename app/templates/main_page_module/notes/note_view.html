@@ -108,7 +108,7 @@
         <ul class="list-group">
           {% for file_u in note_o.files%}
             <li class="list-group-item">
-              {{ file_u["file_name"] }} - <a href="#" class="badge badge-dark" title="Download">{{ note_o.file_size(file_u) }}</a>
+              {{ file_u["file_name"] }} - <a href="{{ url_for('main_page_module.note_download_file', filename=file_u['file_id_name']) }}" class="badge badge-dark" title="Download">{{ note_o.file_size(file_u) }}</a>
               <button type="button" class="badge badge-danger float-right" data-toggle="modal" data-target="#deleteFile">Delete</button>
 
               <!-- Modal -->

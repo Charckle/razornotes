@@ -7,7 +7,7 @@ from app.main_page_module.argus import WSearch
 
 
 class N_obj:
-    path_u = app.config['UPLOAD_FOLDER']
+    path_u = "app/" + app.config['UPLOAD_FOLDER']
     
     n_id = None
     qrry = None
@@ -72,6 +72,7 @@ class N_obj:
             return Randoms.format_file_size(file_size)
         
         else:
+            print(file_path)
             return "Missing"
     
     def file_delete(self, file_u):

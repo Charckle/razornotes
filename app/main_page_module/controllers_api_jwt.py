@@ -23,6 +23,20 @@ class Resource(flask_restful.Resource):
     method_decorators = [jwt_required()]   # applies to all inherited resources
 
 
+class NoteAllItem(flask_restful.Resource):
+    def get(self, type_n):
+        if type_n  == 1:
+            notes = [{'id':note_["id"], 'title':note_["title"],
+                       'text':note_["text"]} for note_ in Notes.get_all_active_for_index()]
+        elif type_n  == 2:
+            notes = [{'id':note_["id"], 'title':note_["title"],
+                       'text':note_["text"]} for note_ in Notes.get_all_active_index_pinned()]
+        else:
+            notes = [{'id':note_["id"], 'title':note_["title"],
+                       'text':note_["text"]} for note_ in Notes.get_all_active()]
+        
+        return notes
+
 class NoteItem(Resource):
     def get(self, n_id):
         note = Notes.get_one(n_id)
@@ -79,4 +93,7 @@ class LoginM(flask_restful.Resource):
 
 api.add_resource(LoginM, '/login')
 api.add_resource(SearchNote, '/search')
+api.add_resource(NoteAllItem, '/notes/<int:type_n>')
 api.add_resource(NoteItem, '/note/<int:n_id>')
+
+

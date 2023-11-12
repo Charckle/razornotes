@@ -59,7 +59,7 @@ class Randoms():
     def format_file_size(file_size):
         file_size = file_size / 1024
         if file_size < 1024:
-            return f"{file_size} KB"
+            return f"{file_size:.2f} KB"
         else:
             return f"{file_size / 1024:.2f} MB"    
         
