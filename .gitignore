@@ -7,4 +7,7 @@ to-do.txt
 .index/
 logs/
 *.log
-files_u/
+
+app/files_u/*
+# exception to the rule
+!app/files_u/.gitkeep 
