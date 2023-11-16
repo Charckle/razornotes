@@ -145,10 +145,10 @@ def notes_all_trashed():
     return render_template("main_page_module/notes/notes_all_trashed.html", notes=notes)
 
 
-@main_page_module.route('/note_new/<tmpl_id>', methods=['GET', 'POST'])
+@main_page_module.route('/note_new/<int:tmpl_id>', methods=['GET'])
 @main_page_module.route('/note_new', methods=['GET', 'POST'])
 @login_required
-def note_new(tmpl_id=None):
+def note_new(tmpl_id: int =None):   
     # If sign in form is submitted
     form = form_dicts["Note"]()
     
@@ -167,7 +167,9 @@ def note_new(tmpl_id=None):
         
         return redirect(url_for("main_page_module.note_view", note_id=note_id))
     
-    if tmpl_id != None:
+    tmpl = Tmpl.get_one(tmpl_id)
+    
+    if tmpl != None:
         tmpl = Tmpl.get_one(tmpl_id)
         form.note_text.data = tmpl["text_"]
     
@@ -423,7 +425,7 @@ def tag_view(tag_id):
         
         flash('The tag does not exist !', 'error')
         
-        return redirect(url_for("main_page_module.all_locations"))        
+        return redirect(url_for("main_page_module.index"))        
     
     notes = Tag.notes_get_all_of_tag(tag_id)
     

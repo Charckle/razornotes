@@ -12,4 +12,4 @@ COPY . /app
 
 ENTRYPOINT [ "gunicorn" ]
 
-CMD [ "-b", "0.0.0.0:8000", "run:app" ]
+CMD [ "-b", "0.0.0.0:8000", "run:app", "-c", "gunicorn_config.py"]

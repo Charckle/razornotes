@@ -81,7 +81,7 @@ class UserF(FlaskForm):
         if(re.search(regex,email.data)):  
             #if it is, check if there is another user with the same email
         
-            if len(UserM.check_email(email.data)) > 1:
+            if len(UserM.check_email(email.data)) >= 1:
                 raise ValidationError('Please use a different email address.')     
         
         else:  
@@ -131,7 +131,8 @@ class Tag(FlaskForm):
     
 class ImportNotes(FlaskForm):
     import_file = FileField("Note's .RNXF file", validators=[
-        FileAllowed(["rnxf", "RNXF"], "Only RNXF allowed!")])         
+        FileAllowed(["rnxf", "RNXF"], "Only RNXF allowed!"),
+    FileRequired(message="You need to add file")])         
 
     submit = SubmitField('Submit File')
  

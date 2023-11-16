@@ -14,6 +14,7 @@ from app.main_page_module.models import Notes
 # Define the WSGI application object
 app = Flask(__name__)
 
+
 clipboard = {"clipboard": ""}
 
 # Configurations
@@ -35,6 +36,8 @@ def static_file():
         return jsonify(status="healthy"), 200
     else:
         return jsonify(status="not healthy"), 500
+
+
 
 
 # Import a module / component using its blueprint handler variable (mod_auth)

@@ -1,6 +1,8 @@
 import sys
 from os import environ 
+import gunicorn
 
+gunicorn.SERVER = "Guybrush Threepwood"
 
 class Config(object):
     DEBUG = False
@@ -12,6 +14,7 @@ class Config(object):
     UPLOAD_FOLDER = environ.get('UPLOAD_FOLDER', "files_u")
     
     SESSION_COOKIE_SECURE = True
+    
 
     # Application threads. A common general assumption is
     # using 2 per available processor cores - to handle
