@@ -15,10 +15,16 @@ services:
         DB_HOST: db_razor_notes
         DB_NAME: ${DB_NAME}
         DB_PORT: 3306
-        CSRF_ENABLED: True
         SECRET_KEY: ${SECRET_KEY}
         MODULE_MEMORY: True
         ICON_COLOR: "RED"
+    volumes:
+      - ./files_u:/app/app/files_u
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "10"  
     networks:
       - db_net
     restart: unless-stopped

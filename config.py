@@ -1,8 +1,6 @@
 import sys
 from os import environ 
-import gunicorn
 
-gunicorn.SERVER = "Guybrush Threepwood"
 
 class Config(object):
     DEBUG = False
