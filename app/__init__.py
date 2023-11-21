@@ -1,5 +1,6 @@
 # Import flask and template operators
 from flask import Flask, render_template, jsonify
+from flask_cors import CORS
 from os import path, mkdir, environ 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -13,6 +14,10 @@ from app.main_page_module.models import Notes
 
 # Define the WSGI application object
 app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app) #allow any source
+#CORS(app, origins='http://127.0.0.1:4200')  # Replace with your Angular app's URL
 
 
 clipboard = {"clipboard": ""}

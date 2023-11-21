@@ -23,18 +23,18 @@ class Resource(flask_restful.Resource):
     method_decorators = [jwt_required()]   # applies to all inherited resources
 
 
-class NoteAllItem(flask_restful.Resource):
+class NoteAllItem(Resource):
     def get(self, type_n):
         if type_n  == 1:
-            notes = [{'id':note_["id"], 'title':note_["title"],
+            notes = [{'_id':note_["id"], 'title':note_["title"],
                        'text':note_["text"]} for note_ in Notes.get_all_active_for_index()]
         elif type_n  == 2:
-            notes = [{'id':note_["id"], 'title':note_["title"],
+            notes = [{'_id':note_["id"], 'title':note_["title"],
                        'text':note_["text"]} for note_ in Notes.get_all_active_index_pinned()]
         else:
-            notes = [{'id':note_["id"], 'title':note_["title"],
+            notes = [{'_id':note_["id"], 'title':note_["title"],
                        'text':note_["text"]} for note_ in Notes.get_all_active()]
-        
+
         return notes
 
 class NoteItem(Resource):
@@ -85,10 +85,12 @@ class LoginM(flask_restful.Resource):
         if user == False:
             abort(404, message="Username or password not correct.")
         
-        access_token = create_access_token(identity=username)
+        user_id = user["id"]
+        additional_claims = {"username": "username", "_id": "user_id"}
+        access_token = create_access_token(identity=username, additional_claims=additional_claims)
         password = "redacted" # remove from memory
-        
-        return jsonify(access_token=access_token)
+
+        return jsonify(token=access_token)
     
 
 api.add_resource(LoginM, '/login')
