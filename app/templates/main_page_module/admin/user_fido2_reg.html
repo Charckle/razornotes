@@ -12,14 +12,15 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-md">
-      <!-- insert column here -->
+      <hr>
+      <a class="btn btn-warning btn-block" href="{{ url_for('main_page_module.user_edit', user_id=user_sql['id']) }}" role="button">Back</a>
     </div>
     <div class="col-md-6">
 
 
       <legend>Fido2 Authentication Registration</legend>
 
-      <button id="startButton">Register hardware</button>
+      <button id="startButton" class="btn btn-primary btn-block">Register hardware</button>
       
       <script>
 
