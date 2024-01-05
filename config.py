@@ -3,6 +3,7 @@ from os import environ
 
 
 class Config(object):
+    # environmental variables are set in .env, for development purpoises
     DEBUG = False
     TESTING = False
     SECRET_KEY = environ.get('SECRET_KEY', "B\xb2?.\xdf\x9f\xa7m\xf8\x8a%,\xf7\xc4\xfa\x91")

@@ -5,6 +5,8 @@ from os import path, mkdir, environ
 import logging
 from logging.handlers import RotatingFileHandler
 
+from dotenv import load_dotenv
+
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 
 from datab import DBcreate, check_database_active
@@ -21,6 +23,9 @@ CORS(app) #allow any source
 
 
 clipboard = {"clipboard": ""}
+
+# load the .env environment variables
+load_dotenv()
 
 # Configurations
 if environ.get('ENVCONFIG', "DEV") != 'PROD':
@@ -81,3 +86,5 @@ file_handler.setLevel(logging.DEBUG)
 app.logger.addHandler(file_handler)
 app.logger.setLevel(logging.DEBUG)
 app.logger.info('Application startup')
+if app.config['IP_RESTRICTION'] == "1":
+    app.logger.info('Login will be restricted based on IP and network')

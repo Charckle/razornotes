@@ -39,12 +39,10 @@
 #### To DO
 - hash check if the note has changed while the note was being edited
 - read only users
-- related notes: add existing notes to notes, for easiers browsing
+- related notes: add existing notes to notes, for easier browsing
 - clustering
-- show if changes were done while editing a note
 - in view note, show if pinned
 - qr code for note
-- make environments be taken from .env (carefull with docker compose deployment)
 - sql conn pool
 - make tasks have a deadline and marked as compleeted
 - make the version of the app bit somewhat connected with the option to import it, so you do not mess it up if the version is not compatible
