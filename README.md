@@ -28,6 +28,8 @@
 - `DB_PORT` - Database port. Default 3306
 - `JWT_SECRET_KEY` - The secret for jwt api
 - `SECRET_KEY` - Secret key for CSRF
+- `RP_ID` - WebAuthn variable, it is the base domain. When developing localy, use "localhost"
+- `RP_NAME` WebAuthn variable, for identification of the application
 - `MODULE_MEMORY` - Default False. Activates the menu item for the module
 - `ICON_COLOR` - Default "RED". Color of the title icon, so to differentiate between instances in use.
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
