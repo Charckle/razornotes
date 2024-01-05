@@ -9,7 +9,7 @@ from flask import Blueprint, request, render_template, \
 from app.main_page_module.forms import form_dicts
 from app.main_page_module.r_proc import Import_Ex, HL_proc
 from app.main_page_module.p_objects.note_o import N_obj
-from app.main_page_module.p_objects import webauthn_stp
+from app.main_page_module.p_objects import webauthn_stp, ip_restrict
 
 # Import module models (i.e. User)
 from app.main_page_module.models import UserM, Notes, Tag, Tmpl
@@ -756,7 +756,16 @@ def login():
     if form.validate_on_submit():
         user = UserM.login_check(form.username_or_email.data, form.password.data)
         
-        if user is not False:            
+        if user is not False:
+            # check the IP restriction
+            if app.config['IP_RESTRICTION'] == "1":
+                client_ip = request.remote_addr
+                app.logger.info(f"User trying to login from: {client_ip}")
+                
+                if not ip_restrict.is_ip_allowed(client_ip):
+                    flash('Your IP is restricted. Contact an Admin', 'error')
+                    return redirect(url_for("main_page_module.login"))
+            
             session['user_id'] = user["id"]
             
             #set permanent login, if selected
