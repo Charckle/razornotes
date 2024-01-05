@@ -1,0 +1,109 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+{% block nav_all_users %}active{% endblock nav_all_users %}
+
+
+
+{% block content%}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md">
+      <!-- insert column here -->
+    </div>
+    <div class="col-md-6">
+
+
+      <legend>Fido2 Authentication Registration</legend>
+
+      <button id="startButton">Register hardware</button>
+      
+      <script>
+
+        const enc = new TextEncoder();
+        var publicKeyCredentialCreationOptions = {{ json_opt | safe}};
+
+        publicKeyCredentialCreationOptions.user.id = enc.encode(atob(publicKeyCredentialCreationOptions.user.id));
+        publicKeyCredentialCreationOptions.challenge = enc.encode(atob(publicKeyCredentialCreationOptions.challenge));
+        
+        publicKeyCredentialCreationOptions.excludeCredentials[0].id = enc.encode(atob(publicKeyCredentialCreationOptions.excludeCredentials[0].id));
+
+        async function credentialsSetups() {
+          
+          var credential = await navigator.credentials.create({
+              publicKey: publicKeyCredentialCreationOptions
+          });
+
+          //console.log(credential);
+
+          const utf8Decoder = new TextDecoder('utf-8');
+          var decodedClientData = utf8Decoder.decode(
+              credential.response.clientDataJSON)
+          // parse the string as an object
+          const clientDataObj = JSON.parse(decodedClientData);
+
+          var raw_id_b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId)));
+          var clientDataJSON_b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)));
+          var attestationObject_b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject)));
+
+          var dictionary = {
+            'id': credential.id,
+            'rawId': raw_id_b64,
+            'response': {
+              'attestationObject': attestationObject_b64,
+              'clientDataJSON': clientDataJSON_b64,
+              "transports": ["internal"]
+            },
+            "type": credential.type,
+            "clientExtensionResults": {},
+            "authenticatorAttachment": credential.authenticatorAttachment
+          };
+          
+
+          sendJsonnUTH(dictionary);
+
+
+        }
+
+        function sendJsonnUTH(jsonData) {
+          //console.log(jsonData);
+
+          fetch('user_save_registration_fido', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(jsonData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            alert(data["message"]);
+              console.log('Response from server:', data);
+          })
+          .catch(error => {
+              console.error('Error:', error);
+          });
+        }
+        
+
+        const button = document.getElementById("startButton");
+
+        button.addEventListener("click", credentialsSetups)
+
+
+
+
+      </script>
+        
+      <hr>
+
+    </div>
+    <div class="col-md">
+    </div>
+  </div>
+  
+</div>      
+{% endblock content %}

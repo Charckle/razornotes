@@ -31,6 +31,10 @@ class Config(object):
     # Icon color to differentiate between different instances in use
     ICON_COLOR = environ.get('ICON_COLOR', "RED")
     
+    # webauthn settings
+    RP_ID = environ.get('RP_ID', "localhost")
+    RP_NAME = environ.get('RP_NAME', "Razor Notes zubin")
+    
 class ProductionConfig(Config):
     TESTING = False
 

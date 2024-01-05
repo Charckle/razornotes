@@ -27,3 +27,4 @@ Whoosh==2.7.4
 WTForms==3.0.1
 wtforms-html5==0.6.1
 Flask-Cors==4.0.0
+webauthn==1.11.1

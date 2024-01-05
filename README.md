@@ -13,6 +13,7 @@
 - Notes downloadable to .md files
 - File attachments
 - A memory subapp
+- fido2 login
 
 #### Login
 - Username: admin

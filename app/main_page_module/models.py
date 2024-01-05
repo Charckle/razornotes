@@ -136,6 +136,41 @@ class UserM:
         
         db.q_exe(sql_command, (password_hash, user_id,))        
 
+    # UserM
+    @staticmethod
+    def save_fido2_creds(user_id, credential_id_bs64, credential_public_key_bs4):
+        db = DB()
+
+        sql_command = f"""INSERT INTO user_fido2 (user_id, cred_id_bs64, public_key_bs64)
+                      VALUES (%s, %s, %s);"""
+        
+        return db.q_exe_new(sql_command, (user_id, credential_id_bs64, credential_public_key_bs4))
+
+    # UserM
+    @staticmethod
+    def get_fido2(cred_id_bs64):
+        db = DB()
+        sql_command = f"""SELECT user_id, cred_id_bs64, public_key_bs64
+        FROM user_fido2 WHERE cred_id_bs64 = %s;"""
+        
+        return db.q_r_one(sql_command, (cred_id_bs64, ))
+    
+    # UserM
+    @staticmethod
+    def get_all_fido2_of_u(user_id):
+        db = DB()
+        sql_command = f"""SELECT user_id, cred_id_bs64, public_key_bs64 FROM user_fido2
+        WHERE user_id = %s"""
+
+        return db.q_r_all(sql_command, (user_id,)) 
+    
+    # UserM
+    @staticmethod
+    def delete_one_fido2(cred_id_bs64):
+        db = DB()
+        sql_command = f"DELETE FROM user_fido2 WHERE cred_id_bs64 = %s;"
+        
+        db.q_exe(sql_command, (cred_id_bs64,))    
 
 class Notes:
     @staticmethod

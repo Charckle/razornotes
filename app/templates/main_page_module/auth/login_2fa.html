@@ -1,0 +1,173 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="{{ url_for('static', filename='main_page_module/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename=Randoms.icon_name(config)) }}">
+    
+    <!-- Custom styles for this template -->
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      
+      body {
+            margin: 0;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(-45deg, #EE7752, #c40b0b, #dbcf1c);
+            background-size: 400% 400%;
+            animation: gradientBG 25s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+      .login-container {
+          padding: 20px;
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 8px;
+          box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+      }
+      
+
+
+
+       /* Styling for the image button */
+      .image-button {
+        background-image: url("{{ url_for('static', filename='brand/fido_login_button.png') }}"); /* Replace 'path_to_your_image.jpg' with the path to your image */
+        background-size: cover; /* Adjusts the background image size */
+        width: 350px; /* Adjust the width of the button */
+        height: 70px; /* Adjust the height of the button */
+        border: none;
+        cursor: pointer;
+      }
+
+      /* Optional hover effect for the image button */
+      .image-button:hover {
+        opacity: 0.8; /* Adjust the opacity for the hover effect */
+      }
+      
+    </style>
+
+    <title>{{ config['APP_NAME'] }}</title>
+
+  </head>
+
+  <body class="text-center">
+
+
+{% block content%}
+
+
+
+  <div>
+
+    <div>
+      <img class="mb-4" src="{{ url_for('static', filename='brand/bootstrap-solid.svg') }}" alt="" width="72" height="72">
+      <legend>{{ config['APP_NAME'] }} - Fido2 Sign in</legend>
+      <hr>
+      <div class="login-container">
+        Please login with your fido2 registered device
+        <br>
+        <button id="startButton" class="image-button" title="FIDO® is a trademark (registered in numerous countries) of FIDO Alliance, Inc."></button>
+      </div>
+
+
+    </div>
+  </div>
+{% endblock %}
+
+</body>
+<script>
+
+  const enc = new TextEncoder();
+  var publicKeyCredentialRequestOptions = {{ json_opt | safe}};
+
+  publicKeyCredentialRequestOptions.challenge = enc.encode(atob(publicKeyCredentialRequestOptions.challenge));
+  //var test1 = publicKeyCredentialRequestOptions.allowCredentials[0].id.replace(/-/g, '+').replace(/_/g, '/');
+  //publicKeyCredentialRequestOptions.allowCredentials[0].id = enc.encode(atob(test1));
+  //publicKeyCredentialRequestOptions.allowCredentials[1].id = enc.encode(atob(publicKeyCredentialRequestOptions.allowCredentials[1].id ));
+
+  
+
+  async function credentialsVerification() {
+
+    var credential = await navigator.credentials.get({
+      publicKey: publicKeyCredentialRequestOptions
+    });
+
+    //console.log(credential);
+
+    var raw_id_b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId)));
+    var clientDataJSON_b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)));
+    var authenticatorData_b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.authenticatorData)));
+    var signature_b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.signature)));
+    var userHandle_b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.userHandle)));
+
+    var dictionary = {
+      'id': credential.id,
+      'rawId': raw_id_b64,
+      'response': {
+        'authenticatorData': authenticatorData_b64,
+        'clientDataJSON': clientDataJSON_b64,
+        'signature': signature_b64,
+        'userHandle': userHandle_b64
+      },
+      "type": "public-key",
+      "authenticatorAttachment": "cross-platform",
+      "clientExtensionResults": {}
+    };
+
+    console.log(dictionary);
+    
+
+    sendJsonnUTH(dictionary);
+  }
+
+  function sendJsonnUTH(jsonData) {
+    //console.log(jsonData);
+
+    fetch('verify_login_2fa', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jsonData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data["message"]);
+        console.log('Response from server:', data);
+        window.location.href = "{{ url_for('main_page_module.login_2fa') }}";
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+  }
+
+
+  const button = document.getElementById("startButton");
+  button.addEventListener("click", credentialsVerification)
+
+</script>
+</html>

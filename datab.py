@@ -291,7 +291,8 @@ class DBcreate:
             `name` VARCHAR(100) NOT NULL,
             `text_` TEXT NOT NULL,
             PRIMARY KEY (`id`)
-            )"""            
+            )
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
             db.q_exe(sql_command, ())
         
         if not check_table_exists("notes_files"):
@@ -302,7 +303,21 @@ class DBcreate:
             `file_name` VARCHAR(100) NOT NULL,
             `file_id_name` VARCHAR(50) NOT NULL,
             FOREIGN KEY (note_id) REFERENCES notes(id)
-            )"""            
+            )
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
+            db.q_exe(sql_command, ())
+            
+        if not check_table_exists("user_fido2"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE user_fido2 (
+            `cred_id_bs64` VARCHAR(100) NOT NULL,
+            `user_id` INT NOT NULL,
+            `public_key_bs64`  VARCHAR(200) NOT NULL,
+            PRIMARY KEY (`cred_id_bs64`),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+            ) 
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
             db.q_exe(sql_command, ())            
    
 
@@ -332,7 +347,10 @@ class DBcreate:
                            "notes",
                            "note_tags",
                            "m_items",
-                           "m_groups"]
+                           "m_groups",
+                           "notes_files",
+                           "notes_tmpl",
+                           "user_fido2"]
         
         for t in tables_to_exist:
             if not check_table_exists(t):

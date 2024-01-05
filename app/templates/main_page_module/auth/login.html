@@ -79,6 +79,19 @@
         border-top-right-radius: 0;
       }
 
+
+      /* Styling for the image button */
+      .image-button {
+        background-image: url("{{ url_for('static', filename='brand/fido_login_button.png') }}"); /* Replace 'path_to_your_image.jpg' with the path to your image */
+        border: none;
+        cursor: pointer;
+      }
+
+      /* Optional hover effect for the image button */
+      .image-button:hover {
+        opacity: 0.8; /* Adjust the opacity for the hover effect */
+      }
+
     </style>
 
     <title>{{ config['APP_NAME'] }}</title>
@@ -155,6 +168,10 @@
           {{ form.submit(class="form-control btn btn-primary mb-2") }}
           </div>
       </form>
+      FIDO2 Authentication Available
+      <br>
+      <a href="{{ url_for('main_page_module.login_2fa') }}"><img class="image-button mb-4" src="{{ url_for('static', filename='brand/fido_logo.jpg') }}" title="FIDO® is a trademark (registered in numerous countries) of FIDO Alliance, Inc."  width="100"></a>
+
     </div>
 
 
