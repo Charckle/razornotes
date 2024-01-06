@@ -758,7 +758,7 @@ def login():
         
         if user is not False:
             # check the IP restriction
-            if app.config['IP_RESTRICTION'] == "1":
+            if app.config['IP_RESTRICTION'] == True:
                 client_ip = request.remote_addr
                 app.logger.info(f"User trying to login from: {client_ip}")
                 

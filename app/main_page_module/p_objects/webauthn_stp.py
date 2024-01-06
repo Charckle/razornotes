@@ -18,6 +18,8 @@ from webauthn.helpers.structs import (
 )
 from webauthn.helpers.generate_challenge import generate_challenge
 
+from flask import  request
+
 import secrets
 import os
 import base64
@@ -67,6 +69,9 @@ def verify_registration(app, json_data, challenge):
     #print(json.dumps(json_data))
     
     #json_data["rawId"] = base64url_to_bytes(json_data["rawId"])
+    protocol = request.scheme
+    #hostname = request.host.split(":")[0]
+    port = request.host.split(":")[-1]    
 
     
     registration_verification = verify_registration_response(
@@ -75,7 +80,7 @@ def verify_registration(app, json_data, challenge):
         supported_pub_key_algs=[COSEAlgorithmIdentifier.ECDSA_SHA_256],
         expected_challenge = challenge,
         expected_rp_id = app.config['RP_ID'],
-        expected_origin = f"http://{app.config['RP_ID']}:5000"
+        expected_origin = f"{protocol}://{app.config['RP_ID']}:{port}"
     )
     
     #print(registration_verification.model_dump_json(indent=2))
@@ -122,11 +127,15 @@ def verify_verification(app, json_data, challenge, public_key_bs64):
     #public_key = "pQECAyYgASFYIEs7W-Afvk1GRfqiFlyot_b7NHb01gzxrcREm1TmShKrIlggNjYju1cYD6eJLZ1hpHE2z9PuKtXhpDu_YDWmJElF70g"
     public_key_bytes = base64url_to_bytes(public_key_bs64)
     
+    protocol = request.scheme
+    #hostname = request.host.split(":")[0]
+    port = request.host.split(":")[-1]        
+    
     authentication_verification = verify_authentication_response(
         credential = json_data,
         expected_challenge = challenge,
         expected_rp_id = app.config['RP_ID'],
-        expected_origin = f"http://{app.config['RP_ID']}:5000",
+        expected_origin = f"{protocol}://{app.config['RP_ID']}:{port}",
         credential_current_sign_count=0,
         require_user_verification=True,
         credential_public_key=public_key_bytes

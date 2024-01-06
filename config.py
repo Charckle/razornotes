@@ -37,7 +37,7 @@ class Config(object):
     RP_NAME = environ.get('RP_NAME', "Razor Notes zubin")
     
     # ip and network restriction
-    IP_RESTRICTION = environ.get('IP_RESTRICTION', "0")
+    IP_RESTRICTION = environ.get('IP_RESTRICTION', False)
     IPS_NETWORKS = environ.get('IPS_NETWORKS', "127.0.0.1,127.0.0.0/8")
     
 class ProductionConfig(Config):
