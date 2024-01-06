@@ -677,7 +677,6 @@ def user_delete():
         
         return redirect(url_for("main_page_module.users_all"))     
     
-    
     else:
         UserM.delete_one(user["id"])
         
@@ -799,8 +798,6 @@ def logout():
     flash('You have been logged out. Have a nice day!', 'success')
 
     return redirect(url_for("main_page_module.login"))
-
-
 
 
 # Set the route and accepted methods
