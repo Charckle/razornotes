@@ -80,7 +80,7 @@ def verify_registration(app, json_data, challenge):
         supported_pub_key_algs=[COSEAlgorithmIdentifier.ECDSA_SHA_256],
         expected_challenge = challenge,
         expected_rp_id = app.config['RP_ID'],
-        expected_origin = f"{app.config['RP_PROTOCOL']}://{app.config['RP_ID']}:{app.config['RP_PORT']}"
+        expected_origin = f"{app.config['RP_PROTOCOL']}://{app.config['RP_ID']}{app.config['RP_PORT']}"
     )
     
     #print(registration_verification.model_dump_json(indent=2))
