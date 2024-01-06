@@ -131,7 +131,7 @@ def verify_verification(app, json_data, challenge, public_key_bs64):
         credential = json_data,
         expected_challenge = challenge,
         expected_rp_id = app.config['RP_ID'],
-        expected_origin = f"{app.config['RP_PROTOCOL']}://{app.config['RP_ID']}:{app.config['RP_PORT']}",
+        expected_origin = f"{app.config['RP_PROTOCOL']}://{app.config['RP_ID']}{app.config['RP_PORT']}",
         credential_current_sign_count=0,
         require_user_verification=True,
         credential_public_key=public_key_bytes

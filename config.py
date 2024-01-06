@@ -35,7 +35,7 @@ class Config(object):
     # webauthn settings
     RP_ID = environ.get('RP_ID', "localhost")
     RP_NAME = environ.get('RP_NAME', "Razor Notes zubin")
-    RP_PORT = environ.get('RP_PORT', "5000")
+    RP_PORT = environ.get('RP_PORT', ":5000")
     RP_PROTOCOL = environ.get('RP_PROTOCOL', "http")
     
     # ip and network restriction
