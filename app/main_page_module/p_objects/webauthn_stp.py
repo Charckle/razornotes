@@ -80,7 +80,7 @@ def verify_registration(app, json_data, challenge):
         supported_pub_key_algs=[COSEAlgorithmIdentifier.ECDSA_SHA_256],
         expected_challenge = challenge,
         expected_rp_id = app.config['RP_ID'],
-        expected_origin = f"{protocol}://{app.config['RP_ID']}:{port}"
+        expected_origin = f"{app.config['RP_PROTOCOL']}://{app.config['RP_ID']}:{app.config['RP_PORT']}"
     )
     
     #print(registration_verification.model_dump_json(indent=2))
@@ -127,15 +127,11 @@ def verify_verification(app, json_data, challenge, public_key_bs64):
     #public_key = "pQECAyYgASFYIEs7W-Afvk1GRfqiFlyot_b7NHb01gzxrcREm1TmShKrIlggNjYju1cYD6eJLZ1hpHE2z9PuKtXhpDu_YDWmJElF70g"
     public_key_bytes = base64url_to_bytes(public_key_bs64)
     
-    protocol = request.scheme
-    #hostname = request.host.split(":")[0]
-    port = request.host.split(":")[-1]        
-    
     authentication_verification = verify_authentication_response(
         credential = json_data,
         expected_challenge = challenge,
         expected_rp_id = app.config['RP_ID'],
-        expected_origin = f"{protocol}://{app.config['RP_ID']}:{port}",
+        expected_origin = f"{app.config['RP_PROTOCOL']}://{app.config['RP_ID']}:{app.config['RP_PORT']}",
         credential_current_sign_count=0,
         require_user_verification=True,
         credential_public_key=public_key_bytes
