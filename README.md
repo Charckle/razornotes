@@ -29,7 +29,7 @@
 - `JWT_SECRET_KEY` - The secret for jwt api
 - `SECRET_KEY` - Secret key for CSRF
 - `RP_ID` - WebAuthn variable, it is the base domain. When developing localy, use "localhost"
-- `RP_NAME` - WebAuthn variable, for identification of the application
+- `RP_NAME` - WebAuthn variable, for identification of the application.
 - `RP_PORT` - WebAuthn requires also the port, so we configure it here. Insert "" for 443 or 80, otherwise ":5000" or the other port. The column is required.
 - `RP_PROTOCOL` - WebAuthn requires the protocol
 - `IP_RESTRICTION` - If set to 1, it activates the restriction based on ip and networks defined in the next variable. Fibo2 login will not be restricted.
