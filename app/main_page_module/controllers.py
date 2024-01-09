@@ -759,8 +759,12 @@ def login():
             # check the IP restriction
             if app.config['IP_RESTRICTION'] == "1":
                 client_ip = request.remote_addr
+                headers = request.headers
+                for key, value in headers.items():
+                    print(f"{key}: {value}")
+                    app.logger.info(f"{key}: {value}")
                 if "X-Forwarded-For" in request.headers:
-                    app.logger.info(f"User trying to login from: {equest.headers['X-Forwarded-For']}")
+                    app.logger.info(f"User trying to login from: {request.headers['X-Forwarded-For']}")
                 app.logger.info(f"User trying to login from: {client_ip}")
                 
                 if not ip_restrict.is_ip_allowed(client_ip):
