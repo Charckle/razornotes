@@ -41,6 +41,7 @@
 #### To DO
 - mysql replication
 - add OTP verification
+- fuzzy search
 - ip restriction from web browser instead of environment
 - create a user profile page where the user can change the fido2 thingy, becase atm, you can only change the logged users fido2 credentials, no matter if you change for other users.
 - hash check if the note has changed while the note was being edited
