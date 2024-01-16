@@ -40,6 +40,7 @@
 
 #### To DO
 - mysql replication
+- create sql pooling for connections
 - add OTP verification
 - fuzzy search
 - ip restriction from web browser instead of environment
