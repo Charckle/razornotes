@@ -40,6 +40,7 @@
 
 #### To DO
 - mysql replication
+- pagination for all notes
 - create sql pooling for connections
 - add OTP verification
 - fuzzy search
