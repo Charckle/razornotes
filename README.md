@@ -39,6 +39,7 @@
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
+- password sharer
 - mysql replication
 - pagination for all notes
 - create sql pooling for connections
