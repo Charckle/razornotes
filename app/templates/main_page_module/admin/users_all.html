@@ -6,28 +6,6 @@
 {% block nav_all_users %}active{% endblock nav_all_users %}
 
 
-{% block flashes %}
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div>
-        {% for category, message in messages %}
-          {% if category == "error" %}
-            <div class="alert alert-danger" role="alert">
-              {{ message }}
-            </div>
-          {% else %}
-            <div class="alert alert-success" role="alert">
-              {{ message }}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-      <br>
-    {% endif %}
-  {% endwith %}
-{% endblock flashes %}
-
-
 {% block content%}
 <br>
 <div class="container-fluid">

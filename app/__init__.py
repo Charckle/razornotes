@@ -23,6 +23,11 @@ CORS(app) #allow any source
 
 
 clipboard = {"clipboard": ""}
+secrets = {"af": {"secret_name": "secret_name",
+                                      "secret": "secret_string2",
+                                      "expiry_date": "expiry_date",
+                                      "onetime_view": "onetime_view",
+                                      "base64_secret": "base64_secret"}}
 
 # load the .env environment variables
 load_dotenv()
@@ -55,12 +60,14 @@ from app.main_page_module.controllers import main_page_module as main_module
 from app.main_page_module.controllers_api import razor_api as api_module
 from app.main_page_module.controllers_api_jwt import razor_api as api_module_v2
 from app.memory_module.controllers import memory_module
+from app.secrets_module.controllers import secrets_module
 
 # Register blueprint(s)
 app.register_blueprint(main_module)
 app.register_blueprint(api_module)
 app.register_blueprint(api_module_v2)
 app.register_blueprint(memory_module)
+app.register_blueprint(secrets_module)
 # app.register_blueprint(xyz_module)
 # ..
 
