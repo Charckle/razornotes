@@ -23,11 +23,7 @@ CORS(app) #allow any source
 
 
 clipboard = {"clipboard": ""}
-secrets = {"af": {"secret_name": "secret_name",
-                                      "secret": "secret_string2",
-                                      "expiry_date": "expiry_date",
-                                      "onetime_view": "onetime_view",
-                                      "base64_secret": "base64_secret"}}
+secrets = {}
 
 # load the .env environment variables
 load_dotenv()

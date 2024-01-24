@@ -42,9 +42,10 @@ def secrets_create():
     if request.is_json:
         try:
             json_data = request.get_json()
+            print(type(json_data))
             #print(json_data["response"])
-            secret_name = str(session['secret_name']) 
-            secret_string = str(session['secret_string']) 
+            secret_name = str(json_data['secret_name']) 
+            secret_string = str(json_data['secret_string']) 
             expiry_date = json_data["expiry_date"]
             onetime_view = json_data["onetime_view"]
             
@@ -65,11 +66,11 @@ def secrets_create():
                             "secret": secrets[base64_secret] }), 200
         
         except ValueError as e:
-            app.logger.info(e)
+            app.logger.error(e)
             return jsonify({f"message": "{e}"}), 500
         
         except Exception as e:
-            app.logger.info(e)
+            app.logger.error(e)
             return jsonify({"message": "Error on the server side"}), 500
 
     else:
