@@ -42,7 +42,7 @@ def secrets_create():
     if request.is_json:
         try:
             json_data = request.get_json()
-            print(type(json_data))
+            #print(type(json_data))
             #print(json_data["response"])
             secret_name = str(json_data['secret_name']) 
             secret_string = str(json_data['secret_string']) 
@@ -55,15 +55,18 @@ def secrets_create():
                 raise ValueError(f"The string is too long. Maximum allowed length is {max_length}.")
             
             base64_secret = base64.b64encode(secret_string.encode("utf-8")).decode("utf-8")
+            secret_id = generate_unique_string(secrets=secrets)
             
-            secrets[base64_secret] = {"secret_name": secret_name,
+            expiry_date = get_expiry_date(expiry_date)
+            
+            secrets[secret_id] = {"secret_name": secret_name,
                                       "secret": secret_string,
                                       "expiry_date": expiry_date,
                                       "onetime_view": onetime_view,
                                       "base64_secret": base64_secret}
             
             return jsonify({"message": "Creation successfull!",
-                            "secret": secrets[base64_secret] }), 200
+                            "secret": secrets[secret_id] }), 200
         
         except ValueError as e:
             app.logger.error(e)
@@ -76,3 +79,57 @@ def secrets_create():
     else:
         return jsonify({"message": "Invalid JSON data"}), 400
 
+
+@secrets_module.route('/delete/<secret_id>', methods=['DELETE'])
+@login_required
+def secrets_delete(secret_id):    
+    if (secret_id in secrets):
+        del secrets[secret_id]
+            
+        return jsonify({"message": "Deletion successfull!"}), 200
+
+    else:
+        return jsonify({"message": "Secret does not exist"}), 400
+    
+
+from datetime import datetime, timedelta
+
+def get_expiry_date(expiry_date_var: str) -> datetime:
+    expiry_date_var = int(expiry_date_var)
+    
+    if expiry_date_var == 2:
+        current_time = datetime.now()
+        expiry_date = current_time + timedelta(hours=8)
+        
+    elif expiry_date_var == 3:
+        current_time = datetime.now()
+        expiry_date = current_time + timedelta(days=1)
+        
+    elif expiry_date_var == 4:
+        current_time = datetime.now()
+        expiry_date = current_time + timedelta(days=7)
+        
+    elif expiry_date_var == 5:
+        current_time = datetime.now()
+        expiry_date = current_time + timedelta(days=30)
+        
+    else:
+        current_time = datetime.now()
+        expiry_date = current_time + timedelta(hours=1)
+        
+    
+    return expiry_date
+
+import random
+import string
+
+def generate_unique_string(secrets, length=9):
+    while True:
+        # Generate a string of random letters and numbers
+        random_chars = string.ascii_letters + string.digits
+        unique_string = ''.join(random.choice(random_chars) for _ in range(length))
+        
+        if (unique_string not in secrets):
+            break
+    
+    return unique_string
