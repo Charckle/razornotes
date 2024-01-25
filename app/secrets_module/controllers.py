@@ -21,6 +21,7 @@ def inject_to_every_page():
 
 @secrets_module.route('/<secret_id>', methods=['GET'])
 def secrets_one(secret_id):
+    cleanup_secrets(secrets)
     
     if (secret_id in secrets):
         secret = secrets[secret_id]
@@ -40,6 +41,7 @@ def secrets_one(secret_id):
 @secrets_module.route('/all', methods=['GET'])
 @login_required
 def secrets_all():
+    cleanup_secrets(secrets)
 
     return render_template("secrets_module/secrets_all.html", secrets=secrets, request=request)
 
@@ -156,3 +158,17 @@ def generate_unique_string(secrets, length=9):
             break
     
     return unique_string
+
+def cleanup_secrets(secrets):
+    items_to_clean = []
+    current_time = datetime.now()
+    
+    for secret_id, value in secrets.items():
+        if value["expiry_date"] < current_time:
+            secrets[secret_id]["secret"] = "NONE"
+            secrets[secret_id]["base64_secret"] = "NONE"
+            items_to_clean.append(secret_id)
+        
+    for secret_id in items_to_clean:
+        del secrets[secret_id]
+        app.logger.info('Secret Deleted')

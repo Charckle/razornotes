@@ -27,7 +27,8 @@ class Config(object):
     # App name
     APP_NAME = environ.get('APP_NAME', "Razor Notes")
     # Enable modules
-    MODULE_MEMORY = environ.get('MODULE_MEMORY', "0")
+    MODULE_MEMORY = environ.get('MODULE_MEMORY', None)
+    MODULE_SECRETS= environ.get('MODULE_SECRETS', None)
     
     # Icon color to differentiate between different instances in use
     ICON_COLOR = environ.get('ICON_COLOR', "RED")
@@ -41,10 +42,7 @@ class Config(object):
     # ip and network restriction
     IP_RESTRICTION = environ.get('IP_RESTRICTION', "1")
     IPS_NETWORKS = environ.get('IPS_NETWORKS', "127.0.0.1,127.0.0.0/8")
-    
-    # app hostname for secrets module
-    SECRETS_HOSTNAME = environ.get('SECRETS_HOSTNAME', "127.0.0.1")
-    
+
     
 class ProductionConfig(Config):
     TESTING = False

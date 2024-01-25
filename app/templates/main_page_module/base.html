@@ -88,6 +88,9 @@
                         Other
                       </a>
                       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        {% if config['MODULE_SECRETS'] %}
+                        <a class="dropdown-item" href="{{ url_for('secrets_module.secrets_all') }}">Secrets</a>
+                        {% endif %}
                         {% if config['MODULE_MEMORY'] %}
                         <a class="dropdown-item" href="{{ url_for('memory_module.index') }}">Memory</a>
                         {% endif %}

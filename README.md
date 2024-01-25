@@ -13,6 +13,7 @@
 - Notes downloadable to .md files
 - File attachments
 - A memory subapp
+- A secrets sharing subapp, for passwords etc
 - fido2 login
 
 #### Login
@@ -35,11 +36,11 @@
 - `IP_RESTRICTION` - If set to 1, it activates the restriction based on ip and networks defined in the next variable. Fibo2 login will not be restricted.
 - `IPS_NETWORKS` - IPs and networks that the users are allowed to login from, delimited by a comma. Default is set to "127.0.0.1,127.0.0.0/8"
 - `MODULE_MEMORY` - Default 0. Activates the menu item for the module
+- `MODULE_SECRETS` - Default 0. Activates the menu item for the module
 - `ICON_COLOR` - Default "RED". Color of the title icon, so to differentiate between instances in use.
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
-- password sharer
 - mysql replication
 - pagination for all notes
 - create sql pooling for connections
