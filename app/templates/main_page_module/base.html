@@ -90,6 +90,7 @@
                       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                         {% if config['MODULE_SECRETS'] %}
                         <a class="dropdown-item" href="{{ url_for('secrets_module.secrets_all') }}">Secrets</a>
+                        <div class="dropdown-divider"></div>
                         {% endif %}
                         {% if config['MODULE_MEMORY'] %}
                         <a class="dropdown-item" href="{{ url_for('memory_module.index') }}">Memory</a>
