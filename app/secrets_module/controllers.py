@@ -16,14 +16,19 @@ secrets_module = Blueprint('secrets_module', __name__, url_prefix='/secrets')
 @app.context_processor
 def inject_to_every_page():
     
-    return dict(Pylavor=Pylavor)
+    return dict(Pylavor=Pylavor, app=app)
 
 
 @secrets_module.route('/<secret_id>', methods=['GET'])
 def secrets_one(secret_id):
     
     if (secret_id in secrets):
-        return render_template("secrets_module/secrets_one.html", secrets=secrets)
+        secret = secrets[secret_id]
+        
+        if secret["onetime_view"] == 1:
+            del secrets[secret_id]
+        
+        return render_template("secrets_module/secrets_one.html", secret=secret)
     
     else:
         return render_template('404.html'), 404
@@ -33,7 +38,7 @@ def secrets_one(secret_id):
 @login_required
 def secrets_all():
 
-    return render_template("secrets_module/secrets_all.html", secrets=secrets)
+    return render_template("secrets_module/secrets_all.html", secrets=secrets, request=request)
 
 @secrets_module.route('/create', methods=['POST'])
 @login_required
@@ -90,7 +95,19 @@ def secrets_delete(secret_id):
 
     else:
         return jsonify({"message": "Secret does not exist"}), 400
-    
+
+
+@secrets_module.route('/view_secret/<secret_id>', methods=['GET'])
+@login_required
+def view_secret(secret_id):    
+    if (secret_id in secrets):
+        secret =  secrets[secret_id]
+        base64_secret = secret["base64_secret"]
+            
+        return jsonify({"message": base64_secret}), 200
+
+    else:
+        return jsonify({"message": "Secret does not exist"}), 400
 
 from datetime import datetime, timedelta
 

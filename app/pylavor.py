@@ -104,6 +104,7 @@ class Pylavor:
         except IOError:
             return False
         """
+        
     @staticmethod
     def gen_passwd(len_):
         choices_list = string.ascii_letters + string.digits + "?!"
