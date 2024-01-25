@@ -26,6 +26,9 @@ def secrets_one(secret_id):
         secret = secrets[secret_id]
         
         if secret["onetime_view"] == 1:
+            # write over the secrets to be more secure
+            secrets[secret_id]["secret"] = "NONE"
+            secrets[secret_id]["base64_secret"] = "NONE"
             del secrets[secret_id]
         
         return render_template("secrets_module/secrets_one.html", secret=secret)
@@ -89,6 +92,9 @@ def secrets_create():
 @login_required
 def secrets_delete(secret_id):    
     if (secret_id in secrets):
+        # write over the secrets to be more secure
+        secrets[secret_id]["secret"] = "NONE"
+        secrets[secret_id]["base64_secret"] = "NONE"        
         del secrets[secret_id]
             
         return jsonify({"message": "Deletion successfull!"}), 200
