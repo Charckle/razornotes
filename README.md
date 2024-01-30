@@ -41,6 +41,7 @@
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
+- add IAA (I am alive) ping to central razor server once a day
 - fix multi ip in ip restriction
 - mysql replication
 - pagination for all notes
