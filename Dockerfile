@@ -9,8 +9,9 @@ WORKDIR /app
 RUN pip install -r requirements.txt
 
 # Add Tini, that will take care of handling the main process
-RUN apt update && apt install tini -y
-ENTRYPOINT ["/sbin/tini", "--"]
+RUN apt update && apt install tini -y && rm -rf /var/lib/apt/lists/*
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
 
 COPY . /app
 
