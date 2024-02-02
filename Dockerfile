@@ -8,8 +8,10 @@ WORKDIR /app
 
 RUN pip install -r requirements.txt
 
+# Add Tini, that will take care of handling the main process
+RUN apk add --no-cache tini
+ENTRYPOINT ["/sbin/tini", "--"]
+
 COPY . /app
 
-ENTRYPOINT [ "gunicorn" ]
-
-CMD [ "-b", "0.0.0.0:8000", "run:app", "-c", "gunicorn_config.py"]
+CMD ["gunicorn",  "-b", "0.0.0.0:8000", "run:app", "-c", "gunicorn_config.py"]
