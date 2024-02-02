@@ -9,7 +9,7 @@ WORKDIR /app
 RUN pip install -r requirements.txt
 
 # Add Tini, that will take care of handling the main process
-RUN apt install tini
+RUN apt install tini -y
 ENTRYPOINT ["/sbin/tini", "--"]
 
 COPY . /app
