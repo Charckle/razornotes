@@ -32,6 +32,14 @@
 {% block content%}
 <br>
 <div class="container-fluid">
+
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('main_page_module.users_all') }}">Users</a></li>
+      <li class="breadcrumb-item active" aria-current="page">New User</li>
+    </ol>
+  </nav>
+
   <div class="row">
     <div class="col-md">
       <!-- insert column here -->
