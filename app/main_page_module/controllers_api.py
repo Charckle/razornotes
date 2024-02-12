@@ -92,3 +92,4 @@ class SearchNote(Resource):
 
 api.add_resource(SearchNote, '/search')
 api.add_resource(NoteItem, '/note/<int:n_id>')
+
