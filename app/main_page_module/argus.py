@@ -38,7 +38,7 @@ class WSearch():
         file_names = []
         with ix.searcher() as searcher:
             results = searcher.search(myquery)
-            print(f"Found {len(results)} results.")
+            # print(f"Found {len(results)} results.")
             for found in results:
                 file_names.append([found["note_id"], found["note_name"], found.highlights("content")])
                 #print(found.highlights("content"))
