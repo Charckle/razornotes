@@ -134,7 +134,9 @@ class UserM:
         SET password = %s
         WHERE id = %s"""
         
-        db.q_exe(sql_command, (password_hash, user_id,))        
+        db.q_exe(sql_command, (password_hash, user_id,))       
+        
+        password = None
 
     # UserM
     @staticmethod

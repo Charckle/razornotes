@@ -253,9 +253,10 @@ def note_change():
         
         return redirect(url_for("main_page_module.note_view", note_id=form.id.data))
     
-    for error in form.errors:
-        print(error)
-        flash(f'Invalid Data: {error}', 'error')
+    for field, errors in form.errors.items():
+        print(f'Field: {field}')
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')
     
     return render_template("main_page_module/notes/note_edit.html", note=note, form=form, tags=tags, 
                            all_tags=all_tags)
@@ -338,10 +339,10 @@ def tmpl_new():
         
         return redirect(url_for("main_page_module.tmpl_edit", tmpl_id=tmpl_id))
     
-    for error in form.errors:
-        print(error)
-    
-        flash(f'Invalid Data: {error}', 'error')    
+    for field, errors in form.errors.items():
+        print(f'Field: {field}')
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')
     
     return render_template("main_page_module/notes/templates/tmpl_new.html", form=form)
 
@@ -384,9 +385,10 @@ def tmpl_change():
         
         return redirect(url_for("main_page_module.tmpl_edit", tmpl_id=form.id.data))
     
-    for error in form.errors:
-        print(error)
-        flash(f'Invalid Data: {error}', 'error')
+    for field, errors in form.errors.items():
+        print(f'Field: {field}')
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')
     
     return render_template("main_page_module/notes/templates/tmpl_edit.html", tmpl=tmpl, form=form)  
 
@@ -548,9 +550,10 @@ def notes_import():
         
         return redirect(url_for("main_page_module.index"))
     
-    for error in form.errors:
-        print(error)
-        flash(f'Invalid Data: {error}', 'error')    
+    for field, errors in form.errors.items():
+        print(f'Field: {field}')
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')
     
     return render_template("main_page_module/notes_import.html", form=form)
 
@@ -604,9 +607,10 @@ def user_new():
         return redirect(url_for("main_page_module.user_edit", user_id=u_id))
     
     
-    for error in form.errors:
-        print(error)
-        flash(f'Invalid Data: {error}', 'error')
+    for field, errors in form.errors.items():
+        print(f'Field: {field}')
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')
     
     return render_template("main_page_module/admin/user_new.html", form=form, Pylavor=Pylavor)
 
@@ -654,9 +658,10 @@ def user_edit(user_id=None):
         
         return redirect(url_for("main_page_module.user_edit", user_id=form.id.data))
     
-    for error in form.errors:
-        print(error)
-        flash(f'Invalid Data: {error}', 'error')        
+    for field, errors in form.errors.items():
+        print(f'Field: {field}')
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')    
     
     
     return render_template("main_page_module/admin/user_edit.html", form=form, user=user)
@@ -788,9 +793,10 @@ def login():
     
         flash('Wrong email or password', 'error')
 
-    for error in form.errors:
-        print(error)
-        flash(f'Invalid Data: {error}', 'error')
+    for field, errors in form.errors.items():
+        print(f'Field: {field}')
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')
         
     return render_template("main_page_module/auth/login.html", form=form)
         

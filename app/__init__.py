@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 
 from dotenv import load_dotenv
 
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
+from flask_jwt_extended import JWTManager
 
 from datab import DBcreate, check_database_active
 from app.main_page_module.p_objects.db_migration import DB_upgrade
