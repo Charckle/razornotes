@@ -49,7 +49,7 @@ class UserM:
         db = DB()
         sql_command = f"SELECT id, email FROM users WHERE (%s = email);"
 
-        return db.q_r_all(sql_command, (email,))
+        return db.q_r_one(sql_command, (email,))
     
     # UserM
     @staticmethod

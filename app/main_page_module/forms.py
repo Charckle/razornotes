@@ -81,7 +81,7 @@ class UserF(FlaskForm):
         if(re.search(regex,email.data)):  
             #if it is, check if there is another user with the same email
         
-            if len(UserM.check_email(email.data)) >= 1:
+            if UserM.check_email(email.data):
                 raise ValidationError('Please use a different email address.')     
         
         else:  
@@ -98,7 +98,7 @@ class Register(FlaskForm):
     
     #When you add any methods that match the pattern validate_<field_name>, WTForms takes those as custom validators and invokes them in addition to the stock validators
     def validate_username(self, username):
-            if UserM.check_username(username.data) is not False:
+            if UserM.check_username(username.data):
                 raise ValidationError('Please use a different username.')
     
     def validate_email(self, email):
@@ -109,7 +109,7 @@ class Register(FlaskForm):
         if(re.search(regex,email.data)):  
             #if it is, check if there is another user with the same email
         
-            if UserM.check_username(email.data) is not False:
+            if UserM.check_email(email.data):
                 raise ValidationError('Please use a different email address.')     
         
         else:  
