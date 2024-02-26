@@ -41,6 +41,8 @@
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
+- business mode: for personal use, the notes could be used for private and business settings. Add a mode to only show one or the other
+     - as in, if you are at work and you use this app, you do not want people near you seeing you your personal notes poping up
 - recently viewed notes with option to remove specific ones
 - add file reader, for attachments
 - make it so that if the database is not accessible, healthcheck works
