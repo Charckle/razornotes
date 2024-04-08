@@ -334,9 +334,18 @@ def tmpl_new():
     
     return render_template("main_page_module/notes/templates/tmpl_new.html", form=form)
 
+
 @notes_module.route('/tmpl_edit/<tmpl_id>', methods=['GET', 'POST'])
+@notes_module.route('/tmpl_edit/', methods=['POST', 'GET'])
 @access_required()
-def tmpl_edit(tmpl_id):
+def tmpl_edit(tmpl_id=None):
+    form = form_dicts["Note_tmpl"]()
+    
+    if tmpl_id == None:
+        tmpl_id = form.id.data
+    else:
+        form.id.data = tmpl_id
+        
     tmpl = Tmpl.get_one(tmpl_id)
     
     if tmpl is None:
@@ -344,28 +353,13 @@ def tmpl_edit(tmpl_id):
         
         return redirect(url_for("notes_module.tmpl_all"))
     
-    form = form_dicts["Note_tmpl"]()
-    form.process(id = tmpl["id"],
-                 name = tmpl["name"],
-                 text_ = tmpl["text_"])
+    # GET
+    if request.method == 'GET':       
+        form.process(id = tmpl["id"],
+                     name = tmpl["name"],
+                     text_ = tmpl["text_"])
     
-    
-    return render_template("main_page_module/notes/templates/tmpl_edit.html", tmpl=tmpl, form=form)
-
-
-@notes_module.route('/tmpl_change/', methods=['POST'])
-@access_required()
-def tmpl_change():
-    form = form_dicts["Note_tmpl"]()
-    tmpl_id = form.id.data
-    
-    tmpl = Tmpl.get_one(tmpl_id)
-    
-    if tmpl is None:
-        flash('No entrie found or you do not have permissions to edit the template.', 'error')
-        
-        return redirect(url_for("notes_module.tmpl_all"))    
-    
+    # POST    
     if form.validate_on_submit():
         Tmpl.update_one(tmpl_id, form.name.data, form.text_.data)
         
@@ -376,9 +370,9 @@ def tmpl_change():
     for field, errors in form.errors.items():
         print(f'Field: {field}')
         for error in errors:
-            flash(f'Invalid Data for {field}: {error}', 'error')
+            flash(f'Invalid Data for {field}: {error}', 'error')    
     
-    return render_template("main_page_module/notes/templates/tmpl_edit.html", tmpl=tmpl, form=form)  
+    return render_template("main_page_module/notes/templates/tmpl_edit.html", tmpl=tmpl, form=form)
 
 
 @notes_module.route('/tmpl_delete/<tmpl_id>', methods=['GET'])
@@ -424,6 +418,7 @@ def tag_edit(tag_id=None):
     
         return redirect(url_for("notes_module.tags_all"))    
     
+    # GET
     if request.method == 'GET':        
         form.process(id = tag_sql["id"],
                      name = tag_sql["name"],
