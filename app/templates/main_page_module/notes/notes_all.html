@@ -12,7 +12,7 @@
   <div class="row">
     <div class="col-md text-center">
       <h5>Options</h5>
-      <a href="{{ url_for('main_page_module.notes_all_trashed') }}" class="btn btn-warning btn-sm" role="button">View Trash</a>
+      <a href="{{ url_for('notes_module.notes_all_trashed') }}" class="btn btn-warning btn-sm" role="button">View Trash</a>
       
       
     </div>
@@ -25,7 +25,7 @@
           <div class="media" style="font-size: 12px;background-color: hsl(64, 100%, 86%);border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;">
               <div class="btn-group btn-group-sm align-self-center mr-3" role="group" aria-label="...">
                 
-                <a href="{{ url_for('main_page_module.note_view', note_id=i['id']) }}" class="btn btn-warning" role="button">View Note</a>
+                <a href="{{ url_for('notes_module.note_view', note_id=i['id']) }}" class="btn btn-warning" role="button">View Note</a>
                 <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ i['id'] }}">Trash</button>
                 <div class="input-group-append">
                   <div class="input-group-text" id="btnGroupAddon">{{ note_obj.type_clr [0] }} {% if (note_obj.files | length) > 0 %} - files: {{ note_obj.files | length }}{% endif %}</div>
@@ -52,7 +52,7 @@
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 
-                <form method="POST" action="{{ url_for('main_page_module.note_trash') }}" accept-charset="UTF-8" role="form">
+                <form method="POST" action="{{ url_for('notes_module.note_trash') }}" accept-charset="UTF-8" role="form">
                   <input type="hidden" id="id" name="id" value="{{ i['id'] }}">
                   <button type="submit" class="btn btn-danger">Trash note</button>
                 </form>

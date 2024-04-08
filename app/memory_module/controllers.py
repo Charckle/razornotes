@@ -10,7 +10,7 @@ from app.memory_module.models import Grp_, Mem_
 from app.memory_module.forms import f_d
 from app.memory_module.r_proc import Export_im
 
-from wrappers import login_required
+from wrappers import access_required
 
 # Define the blueprint: 'auth', set its url prefix: app.url/auth
 memory_module = Blueprint('memory_module', __name__, url_prefix='/memory/')
@@ -23,14 +23,14 @@ def inject_to_every_page():
     
 # Set the route and accepted methods
 @memory_module.route('/', methods=['GET'])
-@login_required
+@access_required()
 def index():
 
     return render_template("memory_module/index.html")
 
 
 @memory_module.route('/game/<group_id>', methods=['GET'])
-@login_required
+@access_required()
 def game(group_id):
     if group_id == "99999999":
         m_items = list(Mem_.get_all())
@@ -51,7 +51,7 @@ def game(group_id):
 
 @memory_module.route('/m_item_edit/<mi_id>', methods=['GET', 'POST'])
 @memory_module.route('/m_item_edit/', methods=['POST'])
-@login_required
+@access_required()
 def m_item_edit(mi_id=None):
     form = f_d["Memory"]()
     mi_id = mi_id if request.method == 'GET' else form.id.data
@@ -85,7 +85,7 @@ def m_item_edit(mi_id=None):
 
 @memory_module.route('/m_item_new/<g_id>', methods=['GET'])
 @memory_module.route('/m_item_new', methods=['POST'])
-@login_required
+@access_required()
 def m_item_new(g_id=None):
     form = f_d["Memory"]()
     # Verify the sign in form
@@ -112,7 +112,7 @@ def m_item_new(g_id=None):
 
 
 @memory_module.route('/m_item_delete/<mi_id>/', methods=['get'])
-@login_required
+@access_required()
 def m_item_delete(mi_id):
     m_item = Mem_.get_one(mi_id)
     
@@ -130,7 +130,7 @@ def m_item_delete(mi_id):
     
     
 @memory_module.route('/group_new', methods=['GET', 'POST'])
-@login_required
+@access_required()
 def group_new():
     form = f_d["Group"]()
     
@@ -152,14 +152,14 @@ def group_new():
     return render_template("memory_module/groups/group_new.html", form=form)    
 
 @memory_module.route('/group_all/', methods=['GET'])
-@login_required
+@access_required()
 def group_all():
 
     return render_template("memory_module/groups/group_all.html")
 
 
 @memory_module.route('/group_view/<g_id>', methods=['GET'])
-@login_required
+@access_required()
 def group_view(g_id):
 
     return render_template("memory_module/groups/group_view.html", g_id=g_id)
@@ -167,7 +167,7 @@ def group_view(g_id):
 
 @memory_module.route('/group_edit/<g_id>', methods=['GET', 'POST'])
 @memory_module.route('/group_edit/', methods=['POST'])
-@login_required
+@access_required()
 def group_edit(g_id=None):
     form = f_d["Group"]()
     g_id = g_id if request.method == 'GET' else form.id.data
@@ -202,7 +202,7 @@ def group_edit(g_id=None):
 
 
 @memory_module.route('/group_delete/<g_id>/', methods=['get'])
-@login_required
+@access_required()
 def group_delete(g_id):
     group = Grp_.get_one(g_id)
     
@@ -219,7 +219,7 @@ def group_delete(g_id):
 
 
 @memory_module.route('/memory_import/', methods=['GET', 'POST'])
-@login_required
+@access_required()
 def memory_import():    
     form = f_d["ImportMemories"]()
     

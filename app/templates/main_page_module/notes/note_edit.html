@@ -45,7 +45,7 @@
 
     </div>
     <div class="col-md-10">
-      <form method="POST" action="{{ url_for('main_page_module.note_change') }}" accept-charset="UTF-8" role="form" enctype="multipart/form-data">
+      <form method="POST" action="{{ url_for('notes_module.note_change') }}" accept-charset="UTF-8" role="form" enctype="multipart/form-data">
         {{ form.csrf_token }}
 
         {{ form.id }}
@@ -117,7 +117,7 @@
           </style>
 
           <button  id="saveBtn">Save</button>
-          {{ form.submit(class="form-control btn btn-primary mb-2", value="Submit eddits") }}
+          {{ form.submit(class="form-control btn btn-dark mb-2", value="Submit eddits") }}
 
 
           <script>

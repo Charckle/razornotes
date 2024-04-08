@@ -32,14 +32,14 @@
       <legend>{{ note["title"] }}
          - <span class="badge badge-pill badge-{{ note_o.type_clr[1] }}">{{ note_o.type_clr[0] }}</span> - 
           <div class="btn-group btn-group-sm" role="group" aria-label="...">
-            <a href="{{ url_for('main_page_module.note_edit', note_id=note_id) }}" class="btn btn-info" role="button">Edit Note</a>
+            <a href="{{ url_for('notes_module.note_edit', note_id=note_id) }}" class="btn btn-info" role="button">Edit Note</a>
             <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#TrashNote">Trash</button>
-            <a href="{{ url_for('main_page_module.note_download', note_id=note_id) }}" class="btn btn-success" role="button">Download MD file</a>
+            <a href="{{ url_for('notes_module.note_download', note_id=note_id) }}" class="btn btn-success" role="button">Download MD file</a>
           </div>
           <hr>
           {% for i in tags%}
             {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
-            <a href="{{ url_for('main_page_module.tag_view', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
+            <a href="{{ url_for('notes_module.tag_view', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
           {% endfor %}
 
       </legend>
@@ -69,7 +69,7 @@
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               
-              <form method="POST" action="{{ url_for('main_page_module.note_trash') }}" accept-charset="UTF-8" role="form">
+              <form method="POST" action="{{ url_for('notes_module.note_trash') }}" accept-charset="UTF-8" role="form">
                 <input type="hidden" id="id" name="id" value="{{ note_id }}">
                 <button type="submit" class="btn btn-danger">Trash note</button>
               </form>
@@ -108,7 +108,7 @@
         <ul class="list-group">
           {% for file_u in note_o.files%}
             <li class="list-group-item">
-              {{ file_u["file_name"] }} - <a href="{{ url_for('main_page_module.note_download_file', filename=file_u['file_id_name']) }}" class="badge badge-dark" title="Download">{{ note_o.file_size(file_u) }}</a>
+              {{ file_u["file_name"] }} - <a href="{{ url_for('notes_module.note_download_file', filename=file_u['file_id_name']) }}" class="badge badge-dark" title="Download">{{ note_o.file_size(file_u) }}</a>
               <button type="button" class="badge badge-danger float-right" data-toggle="modal" data-target="#deleteFile-{{file_u['file_id_name']}}">Delete</button>
 
               <!-- Modal -->
@@ -127,7 +127,7 @@
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                       
-                      <form method="POST" action="{{ url_for('main_page_module.note_delete_file') }}" accept-charset="UTF-8" role="form">
+                      <form method="POST" action="{{ url_for('notes_module.note_delete_file') }}" accept-charset="UTF-8" role="form">
                         <input type="hidden" id="file_id_name" name="file_id_name" value="{{ file_u['file_id_name'] }}">
                         <button type="submit" class="btn btn-danger">Delete File</button>
                       </form>
@@ -148,7 +148,7 @@
         <ul class="list-group">
           {% for note_id, value in note_o.similar_notes(note["title"]).items() %}
           <li class="list-group-item">
-            {{ value[0] }} - <a href="{{ url_for('main_page_module.note_view', note_id=note_id ) }}" class="badge badge-warning" title="Download">View</a>
+            {{ value[0] }} - <a href="{{ url_for('notes_module.note_view', note_id=note_id ) }}" class="badge badge-warning" title="Download">View</a>
           </li>
           {% endfor %}
         </ul>

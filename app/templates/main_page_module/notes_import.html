@@ -46,7 +46,7 @@
         <div>
           <legend>Import Notes</legend>
 
-          <form method="POST" action="{{ url_for('main_page_module.notes_import') }}" accept-charset="UTF-8" role="form"enctype="multipart/form-data">
+          <form method="POST" action="{{ url_for('admin_module.notes_import') }}" accept-charset="UTF-8" role="form"enctype="multipart/form-data">
             {{ form.csrf_token }}
             {{ render_field(form.import_file) }}
             

@@ -47,7 +47,7 @@
           <legend>Edit Template</legend>
           <a href="https://daringfireball.net/projects/markdown/syntax#list" target="_blank">> Syntax Help</a>
 
-          <form method="POST" action="{{ url_for('main_page_module.tmpl_change') }}" accept-charset="UTF-8" role="form">
+          <form method="POST" action="{{ url_for('notes_module.tmpl_change') }}" accept-charset="UTF-8" role="form">
             {{ form.csrf_token }}
             {{ form.id }}
 

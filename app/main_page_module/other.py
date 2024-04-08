@@ -4,6 +4,15 @@ import os
 import secrets
 import string
 
+from enum import Enum
+
+
+class UserRole(Enum):
+    ADMIN = 1
+    READWRITE = 2
+    READ = 3
+    
+
 class Randoms():
     @staticmethod
     def zerodivision(n, d):
@@ -82,7 +91,7 @@ class Randoms():
 class NotesS():
     # NotesS
     @staticmethod
-    def list_tag_colors():    
+    def list_tag_colors(id_=None):    
         colors = {0: "primary",
                     1: "secondary",
                     2: "success",
@@ -92,7 +101,10 @@ class NotesS():
                     6: "light",
                     7: "dark"}
         
-        return colors
+        if id_ == None:
+            return colors
+        else:
+            return colors[int(id_)]
     
     
     

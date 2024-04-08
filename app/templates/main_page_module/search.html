@@ -83,7 +83,7 @@
               searchResults.appendChild(noResults);
               var new_note = document.createElement("a")
               new_note.textContent = "Make One";
-              new_note.setAttribute('href', "{{ url_for('main_page_module.note_new') }}");
+              new_note.setAttribute('href', "{{ url_for('notes_module.note_new') }}");
               searchResults.appendChild(new_note);
 
             }

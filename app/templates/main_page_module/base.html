@@ -45,42 +45,42 @@
                         <a class="nav-link" href="{{ url_for('main_page_module.index') }}">Home </a>
                     </li>
                     <li class="nav-item {% block nav_search %}{% endblock nav_search %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.search') }}">Search </a>
+                        <a class="nav-link" href="{{ url_for('notes_module.search') }}">Search </a>
                     </li>
                     <li class="nav-item dropdown {% block nav_new_note %}{% endblock nav_new_note %}">
                       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         New Note
                       </a>
                       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{{ url_for('main_page_module.note_new') }}">Blank Note</a>
+                        <a class="dropdown-item" href="{{ url_for('notes_module.note_new') }}">Blank Note</a>
                         <div class="dropdown-divider"></div>
                         {% for tmpl in templates %}
-                        <a class="dropdown-item" href="{{ url_for('main_page_module.note_new', tmpl_id=tmpl['id']) }}">{{ tmpl['name'] }}</a>
+                        <a class="dropdown-item" href="{{ url_for('notes_module.note_new', tmpl_id=tmpl['id']) }}">{{ tmpl['name'] }}</a>
                         {% endfor %}
                       </div>
                     </li>
                     <li class="nav-item {% block nav_all_notes %}{% endblock nav_all_notes %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.notes_all') }}">All Notes </a>
+                        <a class="nav-link" href="{{ url_for('notes_module.notes_all') }}">All Notes </a>
                     </li>
                     <li class="nav-item {% block nav_all_tags %}{% endblock nav_all_tags %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.tags_all') }}">All Tags </a>
+                        <a class="nav-link" href="{{ url_for('notes_module.tags_all') }}">All Tags </a>
                     </li>
                     <li class="nav-item {% block nav_new_tmpl %}{% endblock nav_new_tmpl %}">
-                      <a class="nav-link" href="{{ url_for('main_page_module.tmpl_all') }}">All Templates </a>
+                      <a class="nav-link" href="{{ url_for('notes_module.tmpl_all') }}">All Templates </a>
                   </li>
                     <li class="nav-item {% block nav_all_users %}{% endblock nav_all_users %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.users_all') }}">Users </a>
+                        <a class="nav-link" href="{{ url_for('admin_module.users_all') }}">Users </a>
                     </li>
                     <li class="nav-item dropdown {% block notes_import %}{% endblock notes_import %}">
                       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Database
                       </a>
                       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{{ url_for('main_page_module.notes_export') }}">Export</a>
+                        <a class="dropdown-item" href="{{ url_for('admin_module.notes_export') }}">Export</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="{{ url_for('main_page_module.create_hashes') }}">Create Hashes</a>
+                        <a class="dropdown-item" href="{{ url_for('admin_module.create_hashes') }}">Create Hashes</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="{{ url_for('main_page_module.notes_import') }}">Import</a>
+                        <a class="dropdown-item" href="{{ url_for('admin_module.notes_import') }}">Import</a>
                       </div>
                     </li>
                     <li class="nav-item dropdown">

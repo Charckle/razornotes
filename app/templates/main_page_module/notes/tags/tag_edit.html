@@ -1,0 +1,137 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+
+{% macro render_field(field, placeholder=None) %}
+<div class="form-group">
+    {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+
+    {{ field.label }}
+
+    {% if field.errors %}
+        {% set css_class = css_class + ' is-invalid' %}
+
+        {% for error in field.errors %}
+            
+            <small id="{{ field.label.text }}" class="text-danger">
+                {{ error }}
+          </small>
+
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+</div>
+{% endmacro %}
+
+
+{% block content%}
+
+{% set tag_id = form.id.data %}
+
+<br>
+<div class="container-fluid">
+  <br>  
+
+  <div class="row">
+    <div class="col-md">
+
+      <legend>Options</legend>
+      <hr>
+
+      <button type="button" class="btn btn-block btn-danger" data-toggle="modal" data-target="#deleteTag">Delete</button>
+
+
+
+        <!-- Modal -->
+        <div class="modal fade" id="deleteTag" tabindex="-1" role="dialog" aria-labelledby="deleteTagTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="deleteTagTitle">Delete the Tag</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                Do you really want to delete the tag <b>{{ form.name.data }}</b> ?
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                
+                <form method="POST" action="{{ url_for('notes_module.tag_delete') }}" accept-charset="UTF-8" role="form">
+                  <input type="hidden" id="tag_id" name="tag_id" value="{{ tag_id }}">
+                  <button type="submit" class="btn btn-danger">Delete Tag</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+    </div>
+    <div class="col-md-4">
+      <legend>Edit<legend>
+        <hr>
+
+        <form method="POST" action="{{ url_for('notes_module.tag_edit') }}" accept-charset="UTF-8" role="form">
+          {{ form.csrf_token }}
+          {{ form.id }}
+
+          <div class="row">
+            <div class="col-md-8">
+              {{ render_field(form.name, placeholder="Enter the name of the tag",
+              autofocus="") }}
+            </div>
+            <div class="col-md-4">
+              {{ render_field(form.color) }}
+            </div>
+          </div>
+
+          
+          
+          <div class="form-group">
+            {{ form.submit(class="form-control btn btn-dark mb-2") }}
+            </div>
+        </form>
+
+    </div>
+    <div class="col-md-4">
+      <legend>All Notes with the tag</legend>
+      <hr>
+
+     
+      {% set notes = Tag.notes_get_all_of_tag(tag_id) %}
+
+      {% for i in notes%}
+        <hr>
+        <div class="media">
+          <a href="{{ url_for('notes_module.note_view', note_id=i['n_id']) }}">
+            <img class="mr-3" id="icon_image" src="{{ url_for('static', filename='icons/note.svg') }}" class="rounded float-left" alt="..." style="width: 50px; height: 50px;">
+          </a>
+          <div class="media-body">
+            <h4 class="mt-0">{{ i["n_title"] }}</h4>
+            <p>{{ i["n_text"] }}</p>
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </div>
+    <div class="col-md">
+      <legend>Name: {{ form.name.data }}</legend>
+      <hr>
+
+      <span class="badge badge-pill badge-{{ NotesS.list_tag_colors(form.color.data) }}">Color: {{ NotesS.list_tag_colors(form.color.data) }}</span>
+      
+
+    </div>
+  </div>
+  
+  </div>
+{% endblock content %}

@@ -35,7 +35,7 @@
 
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('main_page_module.users_all') }}">Users</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('admin_module.users_all') }}">Users</a></li>
       <li class="breadcrumb-item active" aria-current="page">New User</li>
     </ol>
   </nav>
@@ -49,7 +49,7 @@
 
       <legend>New User</legend>
 
-        <form method="POST" action="{{ url_for('main_page_module.user_new') }}" accept-charset="UTF-8" role="form">
+        <form method="POST" action="{{ url_for('admin_module.user_new') }}" accept-charset="UTF-8" role="form">
           {{ form.csrf_token }}
           <input type="hidden" id="id" name="id" value="999">
 

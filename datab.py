@@ -217,7 +217,30 @@ class DBcreate:
             )
             ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
             db.q_exe(sql_command, ())
+            
+        if not check_table_exists("group_access"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE group_access (
+            `id` INT NOT NULL AUTO_INCREMENT,
+            `name` VARCHAR(20) NOT NULL,
+            PRIMARY KEY (`id`)
+            ) 
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
+            db.q_exe(sql_command, ())        
         
+        if not check_table_exists("users_group_conn"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE users_group_conn (
+            `group_a_id` INT NOT NULL,
+            `user_id` INT NOT NULL,
+            PRIMARY KEY (group_a_id, user_id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (group_a_id) REFERENCES group_access(id)
+            ) 
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
+            db.q_exe(sql_command, ())        
         
         if not check_table_exists("notes"):
             db = DB()
@@ -331,7 +354,24 @@ class DBcreate:
         # banana
         api_key = Pylavor.gen_passwd(20)
         sql_command = f"""INSERT INTO `users` VALUES (1,'admin','admin','','pbkdf2:sha256:260000$vnE6xPAiuRLVweYe$986824300bfc489a4274bcb604cee7eaf9bc77838e4c90ed04f2d38ca6edae7f',1,%s, %s)"""
-        db.q_exe(sql_command, (today, api_key))    
+        db.q_exe(sql_command, (today, api_key))
+        
+        
+    @staticmethod
+    def create_base_groups():
+        db = DB()
+
+        sql_command = f"""INSERT INTO `group_access` (id, name)
+        VALUES (1,'Admin'), (2,'Read Write'), (3,'Read')"""
+        db.q_exe(sql_command, ())
+
+        
+        db = DB()
+        
+        #add the admin
+        sql_command = f"""INSERT INTO `users_group_conn` VALUES (1, 1)"""
+        db.q_exe(sql_command, ())   
+   
 
     # DBcreate
     @staticmethod
@@ -350,12 +390,15 @@ class DBcreate:
                            "m_groups",
                            "notes_files",
                            "notes_tmpl",
-                           "user_fido2"]
+                           "user_fido2"
+                           "group_access",
+                           "users_group_conn"]
         
         for t in tables_to_exist:
             if not check_table_exists(t):
                 DBcreate.create_tables()
                 DBcreate.create_base_user()
+                DBcreate.create_base_groups()
 
 
 def check_database_active():

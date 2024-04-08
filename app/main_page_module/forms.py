@@ -43,8 +43,21 @@ class Note_tmpl(FlaskForm):
 
     text_ = TextAreaField('Enter Template', [validators.InputRequired(message='You need to fill something.')])
     
-    
     submit = SubmitField('Submit changes')    
+    
+class Note_tag(FlaskForm):
+    id = HiddenField('id', [validators.InputRequired(message='Dont fiddle around with the code!')])
+    
+    name = StringField('Tag name', [validators.InputRequired(message='You need to specify a name'),
+                                             validators.Length(max=50)])
+    
+    colors = [(str(id_), val) for id_, val in NotesS.list_tag_colors().items()]
+    
+    color = SelectField(u'Tag color', [
+        validators.InputRequired(message='You need to specify the color')], 
+                         choices=colors)      
+
+    submit = SubmitField('Submit changes')        
 
 
 class Login(FlaskForm):
@@ -74,15 +87,15 @@ class UserF(FlaskForm):
     submit = SubmitField('Submit changes')
     
     def validate_email(self, email):
-        
         regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
         
         #check if it is a real email
         if(re.search(regex,email.data)):  
-            #if it is, check if there is another user with the same email
-        
-            if UserM.check_email(email.data):
-                raise ValidationError('Please use a different email address.')     
+             #if it is, check if there is another user with the same email
+            user_sql = UserM.check_email(email.data) 
+            if user_sql != None:
+                if user_sql["id"] != int(self.id.data):
+                    raise ValidationError('Please use a different email address.')     
         
         else:  
             raise ValidationError('Please use a valid email address.')            
@@ -142,5 +155,6 @@ form_dicts = {"Note": Note,
               "Register": Register,
               "Tag": Tag,
               "ImportNotes": ImportNotes,
-              "Note_tmpl": Note_tmpl
+              "Note_tmpl": Note_tmpl,
+              "Note_tag": Note_tag
               } 

@@ -7,6 +7,74 @@ import hashlib
 
 from datab import DB
 
+
+class GroupsAccessM:
+    @staticmethod
+    def create_access(name):
+        db = DB()
+        
+        sql_command = f"""INSERT INTO group_access (name)
+            VALUES (%s);"""
+    
+        return db.q_exe_new(sql_command, (name,))
+
+    # GroupsAccessM
+    @staticmethod
+    def get_one(g_id):
+        db = DB()
+        sql_command = f"""SELECT id, name
+        FROM group_access WHERE id = %s;"""
+        
+        return db.q_r_one(sql_command, (g_id, ))    
+
+    # GroupsAccessM
+    @staticmethod
+    def get_all():
+        db = DB()
+        sql_command = f"SELECT id, name FROM group_access;"
+
+        return db.q_r_all(sql_command, ())
+    
+    # GroupsAccessM
+    @staticmethod
+    def get_access_all_of_group(g_id):
+        db = DB()
+        sql_command = f"""SELECT group_a_id, user_id 
+        FROM users_group_conn
+        WHERE group_a_id = %s"""
+
+        return db.q_r_all(sql_command, (g_id,))     
+
+    # GroupsAccessM
+    @staticmethod
+    def get_access_all_of_user(user_id):
+        db = DB()
+        sql_command = f"""SELECT group_a_id, user_id, gc.name 
+        FROM users_group_conn
+        LEFT JOIN group_access gc ON gc.id = users_group_conn.group_a_id 
+        WHERE user_id = %s"""
+
+        return db.q_r_all(sql_command, (user_id,)) 
+
+    # GroupsAccessM
+    @staticmethod
+    def create_access_conn(user_id, group_a_id):
+        db = DB()
+        
+        sql_command = f"""INSERT INTO users_group_conn (user_id, group_a_id)
+            VALUES (%s, %s);"""
+    
+        return db.q_exe_new(sql_command, (user_id, group_a_id,))
+
+    # GroupsAccessM
+    @staticmethod
+    def delete_access_conn(user_id, group_a_id):
+        db = DB()
+        sql_command = f"DELETE FROM users_group_conn WHERE user_id = %s AND group_a_id = %s;"
+        
+        db.q_exe(sql_command, (user_id, group_a_id,))
+
+
 class UserM:
     @staticmethod
     def create(name, username, email, password, status, api_key):
@@ -55,7 +123,7 @@ class UserM:
     @staticmethod
     def login_check(username_or_email, password):
         db = DB()
-        sql_command = f"SELECT id, username, email, password FROM users WHERE (%s = username) OR (%s = email);"
+        sql_command = f"SELECT id, name, username, email, password FROM users WHERE (%s = username) OR (%s = email);"
         
         results = db.q_r_one(sql_command, (username_or_email, username_or_email))  
         
@@ -480,3 +548,27 @@ class Tag:
             db.q_exe_segment(sql_command, (tag_id, ))
         
         db.finish_()
+        
+    # Tag
+    @staticmethod    
+    def change_one(tag_id, name, color):
+        db = DB()
+        
+        sql_command = f"""UPDATE tags 
+        SET name = %s, color = %s
+        WHERE id = %s;"""
+        
+        db.q_exe(sql_command, (name, color, tag_id))           
+        
+    # Tag
+    def delete(tag_id):
+        db = DB()
+        sql_command = f"DELETE FROM note_tags WHERE tag_id = %s;"
+        results = db.q_r_all(sql_command, (tag_id,))
+        
+        db = DB()
+
+        sql_command = f"DELETE FROM tags WHERE id = %s;"
+        db.q_exe_segment(sql_command, (tag_id, ))
+        
+        db.finish_()        

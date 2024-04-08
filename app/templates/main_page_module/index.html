@@ -20,7 +20,7 @@
           {% for note in pinned_notes %}
           
             {% set note_obj = N_obj(note["id"]) %}
-            <a href="{{ url_for('main_page_module.note_view', note_id=note['id'] ) }}" style="text-decoration: none; color: inherit;">
+            <a href="{{ url_for('notes_module.note_view', note_id=note['id'] ) }}" style="text-decoration: none; color: inherit;">
               <div class="media" style="font-size: 12px;border-radius: 5px;margin-bottom: 5px;">
                 {% if note_obj.note_type != 0 %}
                   <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr [0] }}</span>
@@ -50,7 +50,7 @@
 
         
             <div class="container">
-              <a href="{{ url_for('main_page_module.note_view', note_id=note['id'] ) }}" style="text-decoration: none; color: inherit;">
+              <a href="{{ url_for('notes_module.note_view', note_id=note['id'] ) }}" style="text-decoration: none; color: inherit;">
                 <div class="media" style="font-size: 12px;background-image: linear-gradient(to bottom right, hsl(64, 100%, 86%), rgb(255, 243, 181));border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;">
                   {% if note_obj.note_type != 0 %}
                     <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr[0] }}</span>

@@ -13,8 +13,8 @@
 
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('main_page_module.users_all') }}">Users</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('main_page_module.user_edit', user_id=user_sql['id']) }}">{{ user_sql['username'] }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('admin_module.users_all') }}">Users</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('admin_module.user_edit', user_id=user_sql['id']) }}">{{ user_sql['username'] }}</a></li>
       <li class="breadcrumb-item active" aria-current="page">Fido2 Auth. Register</li>
     </ol>
   </nav>
@@ -22,7 +22,7 @@
   <div class="row">
     <div class="col-md">
       <hr>
-      <a class="btn btn-warning btn-block" href="{{ url_for('main_page_module.user_edit', user_id=user_sql['id']) }}" role="button">Back</a>
+      <a class="btn btn-warning btn-block" href="{{ url_for('admin_module.user_edit', user_id=user_sql['id']) }}" role="button">Back</a>
     </div>
     <div class="col-md-6">
 

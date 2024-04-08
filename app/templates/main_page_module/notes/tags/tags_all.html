@@ -25,11 +25,12 @@
         <hr>
 
         <div class="media">
-          <a href="{{ url_for('main_page_module.tag_view', tag_id=i["id"]) }}">
+          <a href="{{ url_for('notes_module.tag_edit', tag_id=i['id']) }}">
             <img class="mr-3" id="icon_image" src="{{ url_for('static', filename='icons/tag.svg') }}" class="rounded float-left" alt="..." style="width: 50px; height: 50px;">
           </a>
           <div class="media-body">
             <h4 class="mt-0">{{ i["name"] }} </h4>
+            <span class="badge badge-pill badge-{{ NotesS.list_tag_colors(i['color']) }}">Color</span>
           </div>
         </div>
 

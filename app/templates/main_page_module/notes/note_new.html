@@ -52,7 +52,7 @@
           <legend>New Note</legend>
           <a href="https://daringfireball.net/projects/markdown/syntax#list" target="_blank">> Syntax Help</a>
 
-          <form method="POST" action="{{ url_for('main_page_module.note_new') }}" accept-charset="UTF-8" role="form">
+          <form method="POST" action="{{ url_for('notes_module.note_new') }}" accept-charset="UTF-8" role="form">
             {{ form.csrf_token }}
             <input type="hidden" id="id" name="id" value="999">
             <input type="hidden" id="pinned" name="pinned" value="999">
@@ -75,7 +75,7 @@
             
             
             <div class="form-group">
-              {{ form.submit(class="form-control btn btn-primary mb-2") }}
+              {{ form.submit(class="form-control btn btn-dark mb-2") }}
               </div>
           </form>
         </div>
