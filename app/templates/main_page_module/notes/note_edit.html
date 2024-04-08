@@ -13,6 +13,10 @@
 
 {% block content%}
 
+
+{% set tags = Tag.get_all_of_note(note_id) %}
+{% set all_tags = Tag.get_all() %}
+
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-1">

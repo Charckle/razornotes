@@ -79,13 +79,17 @@ def note_delete():
     
     flash(f'Note {note["title"]} successfully deleted.', 'success')  
     
-    return redirect(url_for("main_page_module.index"))   
+    return redirect(url_for("notes_module.notes_all_trashed"))   
     
 @notes_module.route('/notes_delete_all_trashed/', methods=['GET'])
 @access_required()
 def notes_delete_all_trashed():
     
-    Notes.delete_all_trashed()     
+    trashed_notes = Notes.get_all_trashed()     
+    for ixc in trashed_notes:
+        note_o = N_obj(ixc["id"])
+        note_o.delete()        
+        
     
     flash(f'All trashed notes deleted.', 'success')  
     
@@ -123,7 +127,7 @@ def note_reactivate(note_id):
     
     flash(f'Note -{note["title"]}- successfully reActivated!', 'success')  
     
-    return redirect(url_for("notes_module.notes_all"))  
+    return redirect(url_for("notes_module.notes_all_trashed"))  
 
 
 @notes_module.route('/notes_all_trashed/')
@@ -184,46 +188,33 @@ def note_view(note_id):
 
     return render_template("main_page_module/notes/note_view.html", note=note)
 
-@notes_module.route('/note_edit/<note_id>', methods=['GET', 'POST'])
-@access_required()
-def note_edit(note_id):
-    note = Notes.get_one(note_id)
-    
-    if note is None:
-        flash('No entrie found or you do not have permissions to edit the note.', 'error')
-        
-        return redirect(url_for("notes_module.notes_all"))
-    
-    form = form_dicts["Note"]()
-    form.process(id = note["id"],
-                 title = note["title"],
-                 note_type = note["note_type"],
-                 note_text = note["text"],
-                 relevant = note["relevant"],
-                 pinned = note["pinned"])
-    
-    tags = Tag.get_all_of_note(note_id)
-    all_tags = Tag.get_all()
-    
-    return render_template("main_page_module/notes/note_edit.html", note=note, form=form, tags=tags, 
-                           all_tags=all_tags)
 
-@notes_module.route('/note_change/', methods=['POST'])
+@notes_module.route('/note_edit/<note_id>', methods=['GET', 'POST'])
+@notes_module.route('/note_edit/', methods=['POST', 'GET'])
 @access_required()
-def note_change():
+def note_edit(note_id=None):
     form = form_dicts["Note"]()
-    note_id = form.id.data
-    
+    if note_id == None:
+        note_id = form.id.data
+    else:
+        form.id.data = note_id
+        
     note = Notes.get_one(note_id)
-    
     if note is None:
         flash('No entrie found or you do not have permissions to edit the note.', 'error')
-        
         return redirect(url_for("notes_module.notes_all"))    
+
+    # GET
+    if request.method == 'GET':
+        form.process(id = note["id"],
+                     title = note["title"],
+                     note_type = note["note_type"],
+                     note_text = note["text"],
+                     relevant = note["relevant"],
+                     pinned = note["pinned"])      
     
-    note_o = N_obj(note_id)
-    
-    if form.validate_on_submit():
+    # POST
+    if form.validate_on_submit():        
         Notes.update_one(note_id, form.title.data, form.note_type.data, form.note_text.data, 
                                   form.relevant.data, form.pinned.data)
         
@@ -244,10 +235,9 @@ def note_change():
     for field, errors in form.errors.items():
         print(f'Field: {field}')
         for error in errors:
-            flash(f'Invalid Data for {field}: {error}', 'error')
-    
-    return render_template("main_page_module/notes/note_edit.html", note=note, form=form, tags=tags, 
-                           all_tags=all_tags)
+            flash(f'Invalid Data for {field}: {error}', 'error')    
+            
+    return render_template("main_page_module/notes/note_edit.html", note=note, form=form)    
 
 
 @notes_module.route('/note_delete_file/', methods=['POST'])
