@@ -25,7 +25,7 @@
                 {% if note_obj.note_type != 0 %}
                   <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr [0] }}</span>
                 {% endif %}
-                <img src="/static/icons/pinned.svg" height="32" width="32">
+                <img class= "align-self-center mr-3" src="/static/icons/pinned.svg" height="32" width="32">
                 <div class="media-body text-white bg-dark"><h6 class="mt-0">{{ note['title'] }}
                   {% for i in Tag.get_all_of_note(note['id'] )%}
                     {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
@@ -55,7 +55,7 @@
                   {% if note_obj.note_type != 0 %}
                     <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr[0] }}</span>
                   {% endif %}
-                  <img src="/static/icons/note.svg" height="32" width="32">
+                  <img class= "align-self-center mr-3" src="/static/icons/note.svg" height="32" width="32">
                   <div class="media-body"><h6 class="mt-0">{{ note['title'] }}
                     {% for i in Tag.get_all_of_note(note['id'])%}
                       {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}

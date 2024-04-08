@@ -457,9 +457,12 @@ def tag_create():
     
     if note is not None:
         try:        
+            if str(tagName) == "":
+                tagName = "Forgot to add the name"            
             tag_id = Tag.add(tagName, tagColor)
             
             Tag.connect_tag(note_id, tag_id)
+            
             result_concatinate = str(tagName) + "++++__++++++" + str(tagColor) + "++++__++++++" + str(tag_id)
            
             json_response = {"a": result_concatinate}        

@@ -14,6 +14,7 @@
 {% set all_tags = Tag.get_all() %}
 
 {% set text = markdown2.markdown(note["text"])  %}
+{% set tags_ = NotesS.list_tag_colors() %}
 
 
 
@@ -188,14 +189,9 @@
               <div class="form-group">
                 <label for="notationName">Tag Color</label>
                 <select class="form-control" id="tagColor">
-                  <option value="0" selected>Primary</option>
-                  <option value="1">Secondary</option>
-                  <option value="2">Success</option>
-                  <option value="3">Danger</option>
-                  <option value="4">Warning</option>
-                  <option value="5">Info</option>
-                  <option value="6">Light</option>
-                  <option value="7">Dark</option>
+                  {% for index, xx in tags_.items() %}
+                  <option value="{{ index }}" {% if loop.index == 1 %}selected{% endif %}>{{xx}}</option>
+                  {% endfor %}
                 </select>
               </div>
               <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" onclick="create_tag()">Create and Add Tag</button>
@@ -229,6 +225,13 @@
     }, "json");
 
   };
+
+
+  var tags_c = {
+    {% for index, xx in tags_.items() %}
+      {{index}}: "{{xx}}",
+    {% endfor %}
+  };
     
   function create_tag(){
       var note_id = document.getElementById("id").value;
@@ -242,37 +245,8 @@
         if (data["a"] != "no"){
           var returned_data = data["a"].split("++++__++++++");
 
-          var color = ""
-          switch(returned_data[1]) {
-            case "0":
-             color = "primary"
-              break;
-            case "1":
-              color = "secondary"
-              break;
-            case "2":
-              color = "success"
-              break;
-            case "3":
-              color = "danger"
-              break;
-            case "4":
-              color = "warning"
-              break;
-            case "5":
-              color = "info"
-              break;
-            case "6":
-              color = "light"
-              break;
-            case "7":
-              color = "dark"
-              break;
-            default:
-              color = "dark"
-          } 
-
-          
+          var color = tags_c[returned_data[1]];
+                    
           //console.log(returned_data);
           snackbar.innerHTML = "Tag added - " + returned_data[0];
 
@@ -308,36 +282,8 @@
         if (data["a"] != "no"){
           var returned_data = data["a"].split("++++__++++++");
 
-          var color = ""
-          switch(returned_data[1]) {
-            case "0":
-             color = "primary"
-              break;
-            case "1":
-              color = "secondary"
-              break;
-            case "2":
-              color = "success"
-              break;
-            case "3":
-              color = "danger"
-              break;
-            case "4":
-              color = "warning"
-              break;
-            case "5":
-              color = "info"
-              break;
-            case "6":
-              color = "light"
-              break;
-            case "7":
-              color = "dark"
-              break;
-            default:
-              color = "dark"
-          } 
-
+          var color = tags_c[returned_data[1]];
+          
           
           //console.log(returned_data);
           snackbar.innerHTML = "Tag added - " + returned_data[0];
