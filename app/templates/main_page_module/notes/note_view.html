@@ -49,7 +49,7 @@
 
       <hr>
       <div style="background-image: linear-gradient(to bottom, rgb(253, 251, 238), rgb(255, 251, 233));background-repeat: no-repeat;border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;padding: 5px;">
-          {{ text |safe }}
+          {{ Pylavor.clean_rich_text(text) | safe }}
       </div>
       
       <hr>

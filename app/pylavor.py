@@ -8,7 +8,7 @@ import random
 import pickle
 from datetime import datetime
 from typing import Union, Optional
-
+import bleach
 
 
 from unidecode import unidecode
@@ -39,6 +39,7 @@ class Pylavor:
 
         return re.sub(r'(?u)[^-\w.]', '', s)
 
+    # Pylavor
     def pickle_write(location, filename, data_, sanitation=True):    
         location = location.strip()
         
@@ -51,6 +52,7 @@ class Pylavor:
         with open(f'{location_filename}', 'wb') as file:
             pickle.dump(data_, file)
     
+    # Pylavor
     def pickle_read(location, filename):
         
         location_filename = location + "/" + filename
@@ -59,6 +61,7 @@ class Pylavor:
         with open(f'{location_filename}', 'rb') as file:
             return pickle.load(file)
 
+    # Pylavor
     @staticmethod
     def json_write(location, filename, dictio, sanitation=True):
         
@@ -73,6 +76,7 @@ class Pylavor:
         with open(f'{location_filename}', 'w') as outfile:
             json.dump(dictio, outfile)
 
+    # Pylavor
     @staticmethod
     def json_read(location, filename):
         
@@ -83,6 +87,8 @@ class Pylavor:
             data = json.load(json_file)
             
             return data
+    
+    # Pylavor
     @staticmethod
     def isAdmin():
         try:
@@ -91,6 +97,7 @@ class Pylavor:
             is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
         return is_admin
 
+    # Pylavor
     @staticmethod
     def check_file_exists(filenameLocation):
         if exists(filenameLocation):
@@ -104,12 +111,14 @@ class Pylavor:
         except IOError:
             return False
         """
-        
+    
+    # Pylavor
     @staticmethod
     def gen_passwd(len_):
         choices_list = string.ascii_letters + string.digits + "?!"
         return "".join(random.choices(choices_list, k=len_))
     
+    # Pylavor
     @staticmethod
     def perc_no_zeros_totext(value_x):
         if value_x >= 1:
@@ -128,7 +137,7 @@ class Pylavor:
         
         return new_value    
 
-    # Randoms
+    # Pylavor
     @staticmethod
     def english_to_slo_num(number):
         try:
@@ -138,6 +147,7 @@ class Pylavor:
         except:
             return "ERROR"
     
+    # Pylavor
     @staticmethod
     def english_to_slo_num_nodec(number):    
         with_dots = "{:,.2f}".format(float(number))
@@ -146,6 +156,7 @@ class Pylavor:
         
         return with_dots[0]  
 
+    # Pylavor
     @staticmethod
     def english_to_slo_num_4(number):    
         with_dots = "{:,.4f}".format(float(number))
@@ -165,6 +176,7 @@ class Pylavor:
         
         return date_
     
+    # Pylavor
     @staticmethod
     def datetime_to_string(date_n_time) -> str:
         if not isinstance(date_n_time, str):
@@ -174,6 +186,7 @@ class Pylavor:
         
         return date_n_time
     
+    # Pylavor
     @staticmethod
     def list_months():    
         months = {1: "January",
@@ -190,3 +203,17 @@ class Pylavor:
                     12: "December"}
         
         return months    
+    
+    # Pylavor
+    @staticmethod        
+    def clean_rich_text(input_text):
+        # Define allowed tags and attributes
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr']
+        allowed_attributes = {'a': ['href', 'title']}
+    
+        # Use bleach to clean the input text
+        cleaned_text = bleach.clean(input_text, tags=allowed_tags, attributes=allowed_attributes)
+        
+        return cleaned_text        

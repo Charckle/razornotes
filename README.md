@@ -42,7 +42,6 @@
 
 #### To DO
 - create a gitlab cicd, that uses semantic-release for versioning, and trivy tests for iamges and code
-- add bleach from pylavor to escape scripts
 - business mode: for personal use, the notes could be used for private and business settings. Add a mode to only show one or the other
      - as in, if you are at work and you use this app, you do not want people near you seeing you your personal notes poping up
 - recently viewed notes with option to remove specific ones

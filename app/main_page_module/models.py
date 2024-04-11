@@ -319,14 +319,7 @@ class Notes:
         FROM notes WHERE active = 0;"""
 
         return db.q_r_all(sql_command, ())
-    
-    # Notes
-    @staticmethod    
-    def delete_all_trashed():
-        db = DB()
-        sql_command = f"""DELETE FROM notes WHERE active = 0;"""
 
-        return db.q_r_all(sql_command, ())      
         
     
     # Notes
