@@ -576,3 +576,49 @@ class Tag:
         db.q_exe_segment(sql_command, (tag_id, ))
         
         db.finish_()        
+        
+
+class AuditLM:
+    def add(user_id, change_):
+        audit_datetime = datetime.now()
+        
+        db = DB()
+        sql_command = f"""INSERT INTO audit_log (audit_datetime, user_id, change_)
+                      VALUES (%s, %s, %s);"""                
+            
+        return db.q_exe_new(sql_command, (audit_datetime, user_id, change_))
+    
+    # AuditLM
+    def get_all():
+        db = DB()
+        sql_command = f"""SELECT audit_datetime, user_id, change_ FROM audit_log;"""  
+
+        return db.q_r_all(sql_command, ())
+    
+    # AuditLM
+    def get_all_limit_200():
+        db = DB()
+        sql_command = f"""
+        SELECT audit_datetime, user_id, name, username, change_ FROM audit_log
+        LEFT JOIN users ON users.id = audit_log.user_id 
+        LIMIT 200;"""  
+
+        return db.q_r_all(sql_command, ())           
+    
+    # AuditLM
+    def delete_all_but_200():
+        db = DB()
+        sql_command = f"""
+        DELETE FROM audit_log
+        WHERE audit_datetime NOT IN (
+            SELECT audit_datetime
+            FROM (
+                SELECT audit_datetime
+                FROM audit_log
+                ORDER BY audit_datetime DESC
+                LIMIT 200
+            ) AS last_200
+            );"""  
+        
+        db.q_exe(sql_command, ())    
+    

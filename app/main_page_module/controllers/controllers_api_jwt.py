@@ -92,10 +92,11 @@ class LoginM(flask_restful.Resource):
 
         return jsonify(token=access_token)
     
+# comment out because I must fix the access prvileges and the api
 
-api.add_resource(LoginM, '/login')
-api.add_resource(SearchNote, '/search')
-api.add_resource(NoteAllItem, '/notes/<int:type_n>')
-api.add_resource(NoteItem, '/note/<int:n_id>')
+#api.add_resource(LoginM, '/login')
+#api.add_resource(SearchNote, '/search')
+#api.add_resource(NoteAllItem, '/notes/<int:type_n>')
+#api.add_resource(NoteItem, '/note/<int:n_id>')
 
 

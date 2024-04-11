@@ -92,8 +92,15 @@
                     <li class="nav-item {% block nav_new_tmpl %}{% endblock nav_new_tmpl %}">
                       <a class="nav-link" href="{{ url_for('notes_module.tmpl_all') }}">All Templates </a>
                   </li>
-                    <li class="nav-item {% block nav_all_users %}{% endblock nav_all_users %}">
-                        <a class="nav-link" href="{{ url_for('admin_module.users_all') }}">Users </a>
+                    <li class="nav-item dropdown {% block nav_admin %}{% endblock nav_admin %}">
+                      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Admin
+                      </a>
+                      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="{{ url_for('admin_module.users_all') }}">Users</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ url_for('admin_module.audit_log') }}">Audit Log</a>
+                      </div>
                     </li>
                     <li class="nav-item dropdown {% block notes_import %}{% endblock notes_import %}">
                       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -136,10 +143,10 @@
                     {% if session['user_id'] %}
                         <li class="nav-item dropdown ">
                           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Profile
+                            My Profile
                           </a>
                           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="{{ url_for('main_page_module.user_profile_edit') }}">User Profile</a>
+                            <a class="dropdown-item" href="{{ url_for('main_page_module.user_profile_edit') }}">My Profile</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{{ url_for('main_page_module.logout') }}">Logout</a>
                           </div>

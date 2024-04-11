@@ -89,7 +89,7 @@ class SearchNote(Resource):
         
         return results  
     
-
-api.add_resource(SearchNote, '/search')
-api.add_resource(NoteItem, '/note/<int:n_id>')
+# comment out because I must fix the access prvileges and the api
+#api.add_resource(SearchNote, '/search')
+#api.add_resource(NoteItem, '/note/<int:n_id>')
 

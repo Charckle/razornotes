@@ -10,6 +10,7 @@ from app.main_page_module.forms import form_dicts
 from app.main_page_module.r_proc import Import_Ex, HL_proc
 from app.main_page_module.p_objects.note_o import N_obj
 from app.main_page_module.p_objects import webauthn_stp, ip_restrict
+from app.main_page_module.p_objects.audit_log import AuditLog
 
 # Import module models (i.e. User)
 from app.main_page_module.models import UserM, Notes, Tag, Tmpl, GroupsAccessM
@@ -108,6 +109,9 @@ def note_trash():
     
     Notes.trash_one(note_id)     
     
+    AuditLog.create(f"Note Trashed, id: {note_id}: {note['title'][:10]}")        
+    
+    
     flash(f'Note -{note["title"]}- successfully trashed.', 'success')  
     
     return redirect(url_for("notes_module.notes_all"))  
@@ -124,6 +128,9 @@ def note_reactivate(note_id):
     
     
     Notes.reactivate_one(note_id)     
+    
+    AuditLog.create(f"Note Reactivated, id: {note_id}: {note['title'][:10]}")        
+    
     
     flash(f'Note -{note["title"]}- successfully reActivated!', 'success')  
     
@@ -220,12 +227,16 @@ def note_edit(note_id=None):
         
         if form.file_u.data != None:
             file_u = form.file_u.data
+            note_o = N_obj(note_id)            
             note_o.save_file_to_note(file_u)
         
         #create argus index
         notes = Notes.get_all_active()
         new_index = WSearch()
         new_index.index_create(notes)
+        
+        AuditLog.create(f"Note Edited, id: {note_id}: {note['title'][:10]}")        
+        
         
         flash('Entry successfully Eddited!', 'success')
         #flash('Argus index successfully updated', 'success')
@@ -257,6 +268,9 @@ def note_delete_file():
     Notes.delete_one_file(file_id_name)
     path_u = app.config['UPLOAD_FOLDER']
     note_o.file_delete(file_u)
+    
+    AuditLog.create(f"Note file deleted, note id: {note_id}: {file_u['file_name'][:15]}")        
+    
 
     flash(f'{file_u["file_name"]} - File deleted successfully .', 'success')  
     
@@ -526,6 +540,9 @@ def tag_delete():
         return redirect(url_for("notes_module.tags_all"))    
     
     Tag.delete(tag_id)
+    
+    AuditLog.create(f"Tag deleted, id: {tag_id}: {tag['name'][:15]}")        
+    
 
     flash(f'{tag["name"]} - Tag successfully .', 'success')  
     

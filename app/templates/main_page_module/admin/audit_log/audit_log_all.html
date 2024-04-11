@@ -1,0 +1,36 @@
+{% extends "main_page_module/base.html" %}
+
+{% block extraheader %}
+{% endblock extraheader  %}
+
+{% block nav_admin %}active{% endblock nav_admin %}
+
+
+{% block content%}
+
+{% set audit_logs = AuditLM.get_all_limit_200() %}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md text-center">
+      
+    </div>
+    <div class="col-md-8">
+
+      <legend>Audit Logs</legend>
+      <ul class="list-group">
+        {% for i in audit_logs %}
+          <li class="list-group-item">User ID: {{ i["user_id"] }} - {{ i["name"] }} - {{ i["username"] }}: {{ i["change_"] }}</li>
+        {% endfor %}
+      </ul>
+
+      <hr>
+
+    </div>
+    <div class="col-md">
+      <!-- insert column here -->
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

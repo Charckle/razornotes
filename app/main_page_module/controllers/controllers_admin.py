@@ -12,7 +12,7 @@ from app.main_page_module.p_objects.note_o import N_obj
 from app.main_page_module.p_objects import webauthn_stp, ip_restrict
 
 # Import module models (i.e. User)
-from app.main_page_module.models import UserM, Notes, Tag, Tmpl, GroupsAccessM
+from app.main_page_module.models import UserM, Notes, Tag, Tmpl, GroupsAccessM, AuditLM
 
 from app import app, clipboard
 from wrappers import access_required
@@ -31,7 +31,7 @@ import datetime
 
 
 # Define the blueprint: 'auth', set its url prefix: app.url/auth
-admin_module = Blueprint('admin_module', __name__, url_prefix='/')
+admin_module = Blueprint('admin_module', __name__, url_prefix='/admin')
 
 
 @app.context_processor
@@ -102,12 +102,13 @@ def notes_export():
     return notes_j
 
 
-@admin_module.route('/admin/users_all/')
+@admin_module.route('/users_all/')
 @access_required(UserRole.ADMIN)
 def users_all():
     users = UserM.get_all()
    
-    return render_template("main_page_module/admin/users_all.html", users=users)
+    return render_template("main_page_module/admin/users/users_all.html", users=users)
+
 
 @admin_module.route('/user_new', methods=['GET', 'POST'])
 @access_required(UserRole.ADMIN)
@@ -130,10 +131,11 @@ def user_new():
         for error in errors:
             flash(f'Invalid Data for {field}: {error}', 'error')
     
-    return render_template("main_page_module/admin/user_new.html", form=form, Pylavor=Pylavor)
+    return render_template("main_page_module/admin/users/user_new.html", form=form, Pylavor=Pylavor)
 
-@admin_module.route('/admin/user_edit/<user_id>', methods=['GET', 'POST'])
-@admin_module.route('/admin/user_edit/', methods=['POST'])
+
+@admin_module.route('/user_edit/<user_id>', methods=['GET', 'POST'])
+@admin_module.route('/user_edit/', methods=['POST'])
 @access_required(UserRole.ADMIN)
 def user_edit(user_id=None):
     form = form_dicts["User"]()
@@ -181,10 +183,10 @@ def user_edit(user_id=None):
             flash(f'Invalid Data for {field}: {error}', 'error')    
     
     
-    return render_template("main_page_module/admin/user_edit.html", form=form, user=user)
+    return render_template("main_page_module/admin/users/user_edit.html", form=form, user=user)
     
 
-@admin_module.route('/admin/delete/', methods=['POST'])
+@admin_module.route('/delete/', methods=['POST'])
 @access_required(UserRole.ADMIN)
 def user_delete():
     user = UserM.get_one(request.form["id"])
@@ -276,7 +278,7 @@ def user_remove_group():
     return redirect(url_for("admin_module.user_edit", user_id=user_id))
 
 
-@admin_module.route('/admin/user_register_fido', methods=['GET'])
+@admin_module.route('/user_register_fido', methods=['GET'])
 @access_required(UserRole.ADMIN)
 def user_register_fido():
     user_id = session['user_id']
@@ -289,7 +291,7 @@ def user_register_fido():
                            user_sql=user_sql, challenge=challenge)
 
 
-@admin_module.route('/admin/user_save_registration_fido', methods=['POST'])
+@admin_module.route('/user_save_registration_fido', methods=['POST'])
 @access_required(UserRole.ADMIN)
 def user_save_registration_fido():    
         # Check if the request contains JSON data
@@ -313,7 +315,7 @@ def user_save_registration_fido():
         return jsonify({"message": "Invalid JSON data"}), 400
     
 
-@admin_module.route('/admin//user_delete_fibo2', methods=['POST'])
+@admin_module.route('//user_delete_fibo2', methods=['POST'])
 @access_required(UserRole.ADMIN)
 def user_delete_fibo2():
     cred_id_bs64 = request.form["cred_id_bs64"]
@@ -331,3 +333,11 @@ def user_delete_fibo2():
     flash(f'Credential successfully deleted.', 'success')  
     
     return redirect(url_for("admin_module.user_edit", user_id=user_id))       
+
+
+@admin_module.route('/audit_log/')
+@access_required(UserRole.ADMIN)
+def audit_log():   
+    AuditLM.delete_all_but_200()
+    
+    return render_template("main_page_module/admin/audit_log/audit_log_all.html", AuditLM=AuditLM)

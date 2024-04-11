@@ -1,6 +1,8 @@
 from app import app
 import os
 
+from app.main_page_module.p_objects.audit_log import AuditLog
+
 from app.main_page_module.models import Notes, Tag
 from app.main_page_module.other import Randoms
 from app.main_page_module.argus import WSearch
@@ -33,7 +35,10 @@ class N_obj:
             
         for tag in self.tags:
             Tag.remove_note_tag(self.n_id, tag["t_id"])
+        
             
+        AuditLog.create(f"Note Deleted, id: {self.n_id}: {self.qrry['title'][:10]}")        
+        
         Notes.delete_one(self.n_id)
         
     

@@ -272,40 +272,7 @@ class DBcreate:
             ) 
             ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
             db.q_exe(sql_command, ())
-    
-    
-    @staticmethod
-    def create_base_memory_tables():
-        #check if table exists
-        
-        if not check_table_exists("m_groups"):
-            db = DB()
-            sql_command = f"""
-            CREATE TABLE `m_groups` (
-            `id` INT NOT NULL AUTO_INCREMENT,
-            `name` varchar(150) NOT NULL,
-            `comment_` varchar(250) NOT NULL,
-            `show_` INT NOT NULL DEFAULT 1,
-            PRIMARY KEY (`id`)
-            )
-            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
-            db.q_exe(sql_command, ())        
-        
-        if not check_table_exists("m_items"):
-            db = DB()
-            sql_command = f"""
-            CREATE TABLE `m_items` (
-            `id` INT NOT NULL AUTO_INCREMENT,
-            `question` varchar(150) NOT NULL,
-            `answer` TEXT NOT NULL,
-            `comment_` varchar(250) NOT NULL,
-            `m_group_id` INT NOT NULL,
-            PRIMARY KEY (`id`),
-            FOREIGN KEY (m_group_id) REFERENCES m_groups(id)
-            )
-            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
-            db.q_exe(sql_command, ())
-        
+            
         if not check_table_exists("notes_tmpl"):
             db = DB()
             sql_command = f"""
@@ -343,6 +310,51 @@ class DBcreate:
             ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
             db.q_exe(sql_command, ())            
    
+        if not check_table_exists("audit_log"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE audit_log (
+            `audit_datetime` DATETIME NOT NULL,
+            `user_id` INT NOT NULL,
+            `change_` VARCHAR(60) NOT NULL
+            )
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
+            db.q_exe(sql_command, ())           
+    
+    
+    @staticmethod
+    def create_base_memory_tables():
+        #check if table exists
+        
+        if not check_table_exists("m_groups"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE `m_groups` (
+            `id` INT NOT NULL AUTO_INCREMENT,
+            `name` varchar(150) NOT NULL,
+            `comment_` varchar(250) NOT NULL,
+            `show_` INT NOT NULL DEFAULT 1,
+            PRIMARY KEY (`id`)
+            )
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
+            db.q_exe(sql_command, ())        
+        
+        if not check_table_exists("m_items"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE `m_items` (
+            `id` INT NOT NULL AUTO_INCREMENT,
+            `question` varchar(150) NOT NULL,
+            `answer` TEXT NOT NULL,
+            `comment_` varchar(250) NOT NULL,
+            `m_group_id` INT NOT NULL,
+            PRIMARY KEY (`id`),
+            FOREIGN KEY (m_group_id) REFERENCES m_groups(id)
+            )
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
+            db.q_exe(sql_command, ())
+        
+        
 
     @staticmethod
     def create_base_user():
@@ -392,7 +404,8 @@ class DBcreate:
                            "notes_tmpl",
                            "user_fido2",
                            "group_access",
-                           "users_group_conn"]
+                           "users_group_conn",
+                           "audit_log"]
         
         for t in tables_to_exist:
             if not check_table_exists(t):
