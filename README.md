@@ -57,17 +57,13 @@
 - ip restriction from web browser instead of environment
 - create a user profile page where the user can change the fido2 thingy, becase atm, you can only change the logged users fido2 credentials, no matter if you change for other users.
 - hash check if the note has changed while the note was being edited
-- read only users
 - related notes: add existing notes to notes, for easier browsing
 - clustering
-- in view note, show if pinned
 - qr code for note
 - sql conn pool
-- make tasks have a deadline and marked as compleeted
+- make tasks have a deadline and marked as completed
 - make the version of the app bit somewhat connected with the option to import it, so you do not mess it up if the version is not compatible
-- change the font of the displayed headers, to make them not so big
 - make index also search the name of the note
-- make search not suck
 - make it not generate the whole index each time you save a note
 - cli installer: make it detect missing requirements (pip, etc)
 - cli installer: https automatic setting
