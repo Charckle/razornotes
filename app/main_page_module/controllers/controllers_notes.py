@@ -64,7 +64,7 @@ def search_results():
 
 
 @notes_module.route('/note_delete/', methods=['POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def note_delete():
     note_id = request.form["id"]
     note = Notes.get_one(note_id)
@@ -82,7 +82,7 @@ def note_delete():
     return redirect(url_for("notes_module.notes_all_trashed"))   
     
 @notes_module.route('/notes_delete_all_trashed/', methods=['GET'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def notes_delete_all_trashed():
     
     trashed_notes = Notes.get_all_trashed()     
@@ -96,7 +96,7 @@ def notes_delete_all_trashed():
     return redirect(url_for("notes_module.notes_all_trashed"))      
     
 @notes_module.route('/note_trash/', methods=['POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def note_trash():
     note_id = request.form["id"]
     note = Notes.get_one(note_id)
@@ -113,7 +113,7 @@ def note_trash():
     return redirect(url_for("notes_module.notes_all"))  
 
 @notes_module.route('/note_reactivate/<note_id>', methods=['get'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def note_reactivate(note_id):
     note = Notes.get_one(note_id)
     
@@ -131,7 +131,7 @@ def note_reactivate(note_id):
 
 
 @notes_module.route('/notes_all_trashed/')
-@access_required()
+@access_required(UserRole.READWRITE)
 def notes_all_trashed():
     notes = Notes.get_all_trashed()
    
@@ -140,7 +140,7 @@ def notes_all_trashed():
 
 @notes_module.route('/note_new/<int:tmpl_id>', methods=['GET'])
 @notes_module.route('/note_new', methods=['GET', 'POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def note_new(tmpl_id: int =None):   
     # If sign in form is submitted
     form = form_dicts["Note"]()
@@ -191,7 +191,7 @@ def note_view(note_id):
 
 @notes_module.route('/note_edit/<note_id>', methods=['GET', 'POST'])
 @notes_module.route('/note_edit/', methods=['POST', 'GET'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def note_edit(note_id=None):
     form = form_dicts["Note"]()
     if note_id == None:
@@ -241,7 +241,7 @@ def note_edit(note_id=None):
 
 
 @notes_module.route('/note_delete_file/', methods=['POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def note_delete_file():
     file_id_name = request.form["file_id_name"]
     file_u = Notes.get_one_file(file_id_name)
@@ -305,7 +305,7 @@ def tmpl_all():
 
 
 @notes_module.route('/create_template/', methods=['GET', 'POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def tmpl_new():
     form = form_dicts["Note_tmpl"]()
     
@@ -327,7 +327,7 @@ def tmpl_new():
 
 @notes_module.route('/tmpl_edit/<tmpl_id>', methods=['GET', 'POST'])
 @notes_module.route('/tmpl_edit/', methods=['POST', 'GET'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def tmpl_edit(tmpl_id=None):
     form = form_dicts["Note_tmpl"]()
     
@@ -366,7 +366,7 @@ def tmpl_edit(tmpl_id=None):
 
 
 @notes_module.route('/tmpl_delete/<tmpl_id>', methods=['GET'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def tmpl_delete(tmpl_id):
     tmpl = Tmpl.get_one(tmpl_id)
     
@@ -392,7 +392,7 @@ def tags_all():
 
 @notes_module.route('/tag_edit/<tag_id>', methods=['GET', 'POST'])
 @notes_module.route('/tag_edit/', methods=['POST', 'GET'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def tag_edit(tag_id=None):
     form = form_dicts["Note_tag"]()
     
@@ -431,7 +431,7 @@ def tag_edit(tag_id=None):
 
 
 @notes_module.route('/tag_create/', methods=['POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def tag_create():
 
     note_id = request.form["note_id"]
@@ -462,7 +462,7 @@ def tag_create():
 
 
 @notes_module.route('/tag_add/', methods=['POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def tag_add():
 
     note_id = request.form["note_id"]
@@ -490,7 +490,7 @@ def tag_add():
 
 
 @notes_module.route('/tag_remove/', methods=['POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def tag_remove():
     note_id = request.form["note_id"]
     tag_id = request.form["tag_id"]
@@ -510,7 +510,7 @@ def tag_remove():
     return jsonify(json_response)
 
 @notes_module.route('/tag_delete/', methods=['POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def tag_delete():
     try:
         tag_id = request.form["tag_id"]

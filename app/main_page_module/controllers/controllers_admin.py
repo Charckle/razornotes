@@ -42,10 +42,11 @@ def inject_to_every_page():
 
 
 @admin_module.route('/get_zipped_entries/')
-@access_required()
+@access_required(UserRole.READWRITE)
 def get_zipped_entries():
     now = datetime.datetime.now()
     
+    """
     base_path = pathlib.Path('app//main_page_module//data//')
     data = io.BytesIO()
     with zipfile.ZipFile(data, mode='w') as z:
@@ -60,16 +61,17 @@ def get_zipped_entries():
         attachment_filename=f'all_entries_{now.strftime("%Y-%m-%d_%H-%M")}.zip',
         cache_timeout=0
     )
+    """
 
 @admin_module.route('/create_hashes/')
-@access_required()
+@access_required(UserRole.READWRITE)
 def create_hashes():
     HL_proc.create_hashes_()
    
     return redirect(url_for("main_page_module.index"))
 
 @admin_module.route('/notes_import/', methods=['GET', 'POST'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def notes_import():    
     form = form_dicts["ImportNotes"]()
     
@@ -88,7 +90,7 @@ def notes_import():
 
 
 @admin_module.route('/notes_export/', methods=['GET'])
-@access_required()
+@access_required(UserRole.READWRITE)
 def notes_export():
     data_ = Import_Ex.export()
     
@@ -276,7 +278,7 @@ def user_remove_group():
 
 
 @admin_module.route('/admin/user_register_fido', methods=['GET'])
-@access_required()
+@access_required(UserRole.ADMIN)
 def user_register_fido():
     user_id = session['user_id']
     user_sql = UserM.get_one(user_id)
@@ -289,7 +291,7 @@ def user_register_fido():
 
 
 @admin_module.route('/admin/user_save_registration_fido', methods=['POST'])
-@access_required()
+@access_required(UserRole.ADMIN)
 def user_save_registration_fido():    
         # Check if the request contains JSON data
     if request.is_json:
@@ -313,7 +315,7 @@ def user_save_registration_fido():
     
 
 @admin_module.route('/admin//user_delete_fibo2', methods=['POST'])
-@access_required()
+@access_required(UserRole.ADMIN)
 def user_delete_fibo2():
     cred_id_bs64 = request.form["cred_id_bs64"]
     fido2_cred = UserM.get_fido2(cred_id_bs64)

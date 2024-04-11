@@ -390,7 +390,7 @@ class DBcreate:
                            "m_groups",
                            "notes_files",
                            "notes_tmpl",
-                           "user_fido2"
+                           "user_fido2",
                            "group_access",
                            "users_group_conn"]
         
