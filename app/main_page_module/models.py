@@ -191,6 +191,18 @@ class UserM:
         WHERE id = %s"""
         
         db.q_exe(sql_command, (name, username, email, api_key, status, user_id,))
+        
+    # UserM
+    @staticmethod
+    def change_profile(user_id, name, email, api_key):
+        db = DB()
+      
+        sql_command = f"""UPDATE users 
+        SET name = %s, 
+        email = %s, api_key = %s
+        WHERE id = %s"""
+        
+        db.q_exe(sql_command, (name, email, api_key, user_id,))        
     
     # UserM
     @staticmethod
@@ -319,7 +331,6 @@ class Notes:
         FROM notes WHERE active = 0;"""
 
         return db.q_r_all(sql_command, ())
-
         
     
     # Notes

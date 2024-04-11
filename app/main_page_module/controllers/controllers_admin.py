@@ -138,13 +138,18 @@ def user_new():
 def user_edit(user_id=None):
     form = form_dicts["User"]()
     
-    if request.method == 'GET':
-        user = UserM.get_one(user_id)
-        if not user:
-            flash('User does not exist.', 'error')
-            
-            return redirect(url_for("admin_module.users_all"))     
-        
+    if user_id == None:
+        user_id = form.id.data
+    else:
+        form.id.data = user_id    
+    
+    user = UserM.get_one(user_id)
+    
+    if not user:
+        flash('User does not exist.', 'error')
+        return redirect(url_for("admin_module.users_all"))
+    
+    if request.method == 'GET':        
         form.process(id = user["id"],
                      name = user["name"],
                      email = user["email"],
@@ -153,28 +158,22 @@ def user_edit(user_id=None):
                      api_key = user["api_key"])
     
     # POST
-    else:
-        user = UserM.get_one(form.id.data)
-        if not user:
-            flash('User does not exist.', 'error')
-        
-            return redirect(url_for("admin_module.users_all"))         
-    
-    if form.validate_on_submit():
-        if user["status"] == 1 and form.status.data == "0" and len(UserM.get_all_w_status(1)) < 2:
-            flash('You cannot take access from the last remaining user with access, sry!', 'error')
+    else:    
+        if form.validate_on_submit():
+            if user["status"] == 1 and form.status.data == "0" and len(UserM.get_all_w_status(1)) < 2:
+                flash('You cannot take access from the last remaining user with access, sry!', 'error')
+                
+                return redirect(url_for("admin_module.user_edit", user_id=form.id.data))            
             
-            return redirect(url_for("admin_module.user_edit", user_id=form.id.data))            
-        
-        UserM.change_one(form.id.data, form.username.data, form.name.data, form.email.data,
-                        form.api_key.data, form.status.data)
-        
-        if form.password.data != "":
-            UserM.change_passw(form.id.data, form.password.data)
+            UserM.change_one(form.id.data, form.username.data, form.name.data, form.email.data,
+                            form.api_key.data, form.status.data)
             
-        flash('User successfully Eddited!', 'success')
-        
-        return redirect(url_for("admin_module.user_edit", user_id=form.id.data))
+            if form.password.data != "":
+                UserM.change_passw(form.id.data, form.password.data)
+                
+            flash('User successfully Eddited!', 'success')
+            
+            return redirect(url_for("admin_module.user_edit", user_id=form.id.data))
     
     for field, errors in form.errors.items():
         print(f'Field: {field}')

@@ -101,6 +101,36 @@ class UserF(FlaskForm):
             raise ValidationError('Please use a valid email address.')            
     
 
+class UserProfileF(FlaskForm):
+
+    id = HiddenField('id', [validators.InputRequired(message='Dont fiddle around with the code!')])
+    name   = StringField('Identification name', [validators.InputRequired(message='We need a name for the user.')])
+    username   = StringField('Username')
+    
+    email    = StringField('Email', [validators.InputRequired(message='We need an email for your account.')])
+    password  = PasswordField('Password')    
+    password_2 = PasswordField('Repeat password', [EqualTo('password', message='Passwords must match')])
+    
+    api_key = StringField('Api Key', [validators.InputRequired(message='We need an api key.'),
+                                      validators.Length(max=20)])    
+    
+    submit = SubmitField('Submit changes')
+    
+    def validate_email(self, email):
+        regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+        
+        #check if it is a real email
+        if(re.search(regex,email.data)):  
+             #if it is, check if there is another user with the same email
+            user_sql = UserM.check_email(email.data) 
+            if user_sql != None:
+                if user_sql["id"] != int(self.id.data):
+                    raise ValidationError('Please use a different email address.')     
+        
+        else:  
+            raise ValidationError('Please use a valid email address.')            
+    
+
 class Register(FlaskForm):
     username   = StringField('Username', [validators.InputRequired(message='We need a username for your account.')])
     email    = StringField('Email', [validators.InputRequired(message='We need an email for your account.')])
@@ -156,5 +186,6 @@ form_dicts = {"Note": Note,
               "Tag": Tag,
               "ImportNotes": ImportNotes,
               "Note_tmpl": Note_tmpl,
-              "Note_tag": Note_tag
+              "Note_tag": Note_tag,
+              "UserProfileF": UserProfileF
               } 

@@ -134,8 +134,15 @@
                         <a class="nav-link disabled" style="font-size: 12px; padding-top: 12px;">ver {{ Randoms.get_version() }} </a>
                         </li>
                     {% if session['user_id'] %}
-                        <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main_page_module.logout') }}">Logout </a>
+                        <li class="nav-item dropdown ">
+                          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Profile
+                          </a>
+                          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="{{ url_for('main_page_module.user_profile_edit') }}">User Profile</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('main_page_module.logout') }}">Logout</a>
+                          </div>
                         </li>
                     {% else %}
                         <li class="nav-item">

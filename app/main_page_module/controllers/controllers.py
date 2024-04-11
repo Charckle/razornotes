@@ -169,3 +169,42 @@ def verify_login_2fa():
     else:
         return jsonify({"message": "Invalid JSON data"}), 400
     
+    
+@main_page_module.route('/user_profile/', methods=['GET', 'POST'])
+@access_required()
+def user_profile_edit():
+    user_id = session['user_id']
+    user = UserM.get_one(user_id)
+    if not user:
+        flash('User does not exist.', 'error')
+        return redirect(url_for("main_page_module.index"))      
+    
+    form = form_dicts["UserProfileF"]()    
+    
+    if request.method == 'GET':
+        form.process(id = user["id"],
+                     name = user["name"],
+                     username = user["username"],
+                     email = user["email"],
+                     api_key = user["api_key"])
+    
+    # POST
+    else:
+        if form.validate_on_submit():        
+            UserM.change_profile(user_id, form.name.data, form.email.data,
+                            form.api_key.data)
+            
+            if form.password.data != "":
+                UserM.change_passw(user_id, form.password.data)
+                
+            flash('Profile successfully Eddited!', 'success')
+            
+            return redirect(url_for("main_page_module.user_profile_edit"))
+    
+    for field, errors in form.errors.items():
+        print(f'Field: {field}')
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')    
+    
+    
+    return render_template("main_page_module/user_profile/profile_edit.html", form=form, user=user)    
