@@ -327,8 +327,12 @@ def preview_file(filename):
     #    return render_template("main_page_module/notes/preview_image.html", filename=filename, file_name=file_name)
     if file_extension in ["pdf", "PDF"]:
         return send_file(path_u, mimetype="application/pdf")
+    elif file_extension in ["md", "MD", "txt", "TXT", "xml", "XML", "json", "JSON"]:
+        with open("app/" + path_u, "r") as file:
+            text_content = file.read()
+        return render_template("main_page_module/notes/file_previews/preview_md.html", text_content=text_content, file_name=file_name)
     else:
-        return render_template("main_page_module/notes/preview_image.html", filename=filename, file_name=file_name)
+        return render_template("main_page_module/notes/file_previews/preview_image.html", filename=filename, file_name=file_name)
         
         
 
