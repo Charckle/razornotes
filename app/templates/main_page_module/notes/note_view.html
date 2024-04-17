@@ -87,7 +87,7 @@
     <div class="col-md-1"> 
 
     </div>
-    <div class="col-md-3">
+    <div class="col-md-1">
             Tags
           <hr>
             <button class="btn btn-outline-success btn-block" title="Tag button" data-toggle="modal" data-target="#tagModal">Add Tags</button>
@@ -104,13 +104,16 @@
           </ul>
         
       </div>
-      <div class="col-md-3">
+      <div class="col-md-5">
         Files
+        <hr>
+
         <ul class="list-group">
           {% for file_u in note_o.files%}
             <li class="list-group-item">
               {{ file_u["file_name"] }} - <a href="{{ url_for('notes_module.note_download_file', filename=file_u['file_id_name']) }}" class="badge badge-dark" title="Download">{{ note_o.file_size(file_u) }}</a>
               <button type="button" class="badge badge-danger float-right" data-toggle="modal" data-target="#deleteFile-{{file_u['file_id_name']}}">Delete</button>
+              <a href="{{ url_for('notes_module.preview_file', filename=file_u['file_id_name']) }}" class="badge badge-success float-right" target="blank">Preview File</a>
 
               <!-- Modal -->
               <div class="modal fade" id="deleteFile-{{file_u['file_id_name'] }}" tabindex="-1" role="dialog" aria-labelledby="deleteFileitle" aria-hidden="true">

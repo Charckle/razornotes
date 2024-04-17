@@ -279,7 +279,7 @@ def note_delete_file():
     return redirect(url_for("notes_module.note_view", note_id=note_id))
 
 
-@notes_module.route('/note_download/<note_id>', methods=['GET'])
+@notes_module.route('/download/<note_id>', methods=['GET'])
 @access_required()
 def note_download(note_id):
     note = Notes.get_one(note_id)
@@ -298,7 +298,7 @@ def note_download(note_id):
     return response
 
 
-@notes_module.route('/note_download_file/<filename>', methods=['GET'])
+@notes_module.route('/download_file/<filename>', methods=['GET'])
 @access_required()
 def note_download_file(filename):
     file_u = Notes.get_one_file(filename)
@@ -310,6 +310,19 @@ def note_download_file(filename):
     file_name = file_u["file_name"]
     
     return send_file(path_u, as_attachment=True, attachment_filename=file_name)
+
+@notes_module.route('/preview_file/<filename>', methods=['GET'])
+@access_required()
+def preview_file(filename):
+    file_u = Notes.get_one_file(filename)
+    
+    if file_u is None:
+        abort(404)
+    
+    path_u = app.config['UPLOAD_FOLDER'] + "/" +  filename
+    file_name = file_u["file_name"]
+    
+    return render_template("main_page_module/notes/preview_image.html", filename=filename, file_name=file_name)
 
 
 @notes_module.route('/all_templates/')
