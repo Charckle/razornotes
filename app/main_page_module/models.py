@@ -309,7 +309,7 @@ class Notes:
         db = DB()
         sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text FROM notes 
         WHERE notes.relevant = 1 AND notes.active = 1 AND notes.pinned = 0
-        ORDER BY notes.date_mod DESC LIMIT 15 ;"""
+        ORDER BY notes.date_mod DESC LIMIT 15;"""
         
         return db.q_r_all(sql_command, ())  
     
@@ -424,6 +424,66 @@ class Notes:
         sql_command = f"""DELETE FROM notes_files WHERE file_id_name = %s;"""
         
         db.q_exe(sql_command, (file_id_name, ))    
+        
+    # Notes
+    @staticmethod
+    def get_one_viewed(note_id):
+        db = DB()
+        sql_command = f"""SELECT note_id, view_datetime
+        FROM notes_recently_viewed WHERE note_id = %s;"""
+
+        return db.q_r_one(sql_command, (note_id, ))
+    
+    # Notes
+    @staticmethod
+    def create_viewed(note_id):
+        db = DB()
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        sql_command = f"""INSERT INTO notes_recently_viewed (note_id, view_datetime)
+                      VALUES (%s, %s);"""
+        
+        return db.q_exe_new(sql_command, (note_id, timestamp))
+    
+    # Notes
+    @staticmethod
+    def change_viewed(note_id):
+        db = DB()
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        sql_command = f"""UPDATE notes_recently_viewed SET  view_datetime = %s
+                      WHERE note_id = %s;"""
+        
+        return db.q_exe_new(sql_command, (timestamp, note_id))    
+
+    # Notes
+    @staticmethod
+    def get_recent_all():
+        db = DB()
+        sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text
+        FROM notes_recently_viewed
+        LEFT JOIN notes ON notes_recently_viewed.note_id = notes.id 
+        WHERE notes.relevant = 1 AND notes.active = 1 AND notes.pinned = 0
+        ORDER BY view_datetime DESC LIMIT 6"""
+
+        return db.q_r_all(sql_command, ())       
+    
+    # Notes
+    @staticmethod    
+    def delete_last_x(last_x):
+        db = DB()
+        sql_command = f"""DELETE FROM notes_recently_viewed
+        WHERE view_datetime NOT IN (
+            SELECT view_datetime
+            FROM (
+                SELECT view_datetime
+                FROM notes_recently_viewed
+                ORDER BY view_datetime DESC
+                LIMIT %s
+            ) AS latest_entries
+        );"""
+        
+        db.q_exe(sql_command, (last_x,))        
 
 
 class Tmpl:

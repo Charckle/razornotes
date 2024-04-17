@@ -42,7 +42,7 @@
         
 
     </div>
-    <div class="col-md-10">
+    <div class="col-md-8">
       <div class="row">
       {% for note in notes %}
        <div class="col-md-4">
@@ -75,6 +75,39 @@
       
       
     </div>
+    <div class="col-md-2">
+
+
+      <div class="card mb-3" style="max-width: 18rem;">
+        <div class="card-header">Recently Viewed Notes</div>
+
+          {% for note in Notes.get_recent_all() %}
+          
+            {% set note_obj = N_obj(note["id"]) %}
+            <a href="{{ url_for('notes_module.note_view', note_id=note['id'] ) }}" style="text-decoration: none; color: inherit;">
+              <div class="media" style="font-size: 12px;border-radius: 5px;margin-bottom: 5px;">
+                {% if note_obj.note_type != 0 %}
+                  <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr [0] }}</span>
+                {% endif %}
+                <img class= "align-self-center mr-3" src="/static/icons/pinned.svg" height="32" width="32">
+                <div class="media-body"><h6 class="mt-0">{{ note['title'] }}
+                  {% for i in Tag.get_all_of_note(note['id'] )%}
+                    {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
+                    <span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span>
+                  {% endfor %}
+                  </h6>
+                  <p>{{ note['text'] }} ...</p>
+                </div>
+              </div>
+            </a>
+
+          {% endfor %}
+      </div>
+        
+
+    </div>
+
+
 
   </div>
 

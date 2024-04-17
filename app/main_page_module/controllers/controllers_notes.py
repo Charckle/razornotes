@@ -192,6 +192,8 @@ def note_view(note_id):
         
         return redirect(url_for("main_page_module.index"))
     
+    # set note as viewed
+    N_obj.notes_viewed(note_id)
 
     return render_template("main_page_module/notes/note_view.html", note=note)
 

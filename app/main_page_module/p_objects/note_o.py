@@ -106,3 +106,12 @@ class N_obj:
         user_notes = [i["id"] for i in Notes.get_all_active()]        
         
         return res, user_notes
+    
+    @staticmethod
+    def notes_viewed(note_id):
+        # add the note to the list, and remove all but the last 15 inserts
+        if Notes.get_one_viewed(note_id) is None:
+            Notes.create_viewed(note_id)
+        else:
+            Notes.change_viewed(note_id)
+        Notes.delete_last_x(15)

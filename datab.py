@@ -319,7 +319,19 @@ class DBcreate:
             `change_` VARCHAR(60) NOT NULL
             )
             ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
-            db.q_exe(sql_command, ())           
+            db.q_exe(sql_command, ())
+        
+        if not check_table_exists("notes_recently_viewed"):
+            db = DB()
+            sql_command = f"""
+            CREATE TABLE notes_recently_viewed (
+            `note_id` INT NOT NULL,
+            `view_datetime` DATETIME NOT NULL,
+            PRIMARY KEY (`note_id`),
+            FOREIGN KEY (note_id) REFERENCES notes(id)
+            )
+            ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""            
+            db.q_exe(sql_command, ())        
     
     
     @staticmethod
@@ -405,7 +417,8 @@ class DBcreate:
                            "user_fido2",
                            "group_access",
                            "users_group_conn",
-                           "audit_log"]
+                           "audit_log",
+                           "notes_recently_viewed"]
         
         for t in tables_to_exist:
             if not check_table_exists(t):
