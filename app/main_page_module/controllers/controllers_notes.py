@@ -321,7 +321,7 @@ def preview_file(filename):
     
     path_u = app.config['UPLOAD_FOLDER'] + "/" +  filename
     file_name = file_u["file_name"]
-    file_extension = os.path.splitext(file_name)[1].strip(".")
+    file_extension = N_obj.file_type(file_name)
     
     #if file_extension in ["PNG", "png", "JPG", "jpg", "JPEG", "jpeg", "svg", "SVG"]:
     #    return render_template("main_page_module/notes/preview_image.html", filename=filename, file_name=file_name)

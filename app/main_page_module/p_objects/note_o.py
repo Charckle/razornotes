@@ -27,7 +27,16 @@ class N_obj:
         self.type_ = self.qrry["note_type"]
         self.type_clr = self.get_type_clr()
     
+    @staticmethod
+    def file_type(file_name):
+        return os.path.splitext(file_name)[1].strip(".")
+    
+    @staticmethod
+    def file_is_pdf(file_name):
+        return N_obj.file_type(file_name) in ["pdf", "PDF"]
+        
 
+    
     def delete(self):
         for file_u in self.files:
             self.file_delete(file_u)
