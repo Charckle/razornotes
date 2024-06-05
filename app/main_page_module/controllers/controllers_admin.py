@@ -58,7 +58,7 @@ def get_zipped_entries():
         data,
         mimetype='application/zip',
         as_attachment=True,
-        attachment_filename=f'all_entries_{now.strftime("%Y-%m-%d_%H-%M")}.zip',
+        download_name=f'all_entries_{now.strftime("%Y-%m-%d_%H-%M")}.zip',
         cache_timeout=0
     )
     """

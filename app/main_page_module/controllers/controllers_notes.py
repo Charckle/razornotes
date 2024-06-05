@@ -309,7 +309,7 @@ def note_download_file(filename):
     path_u = app.config['UPLOAD_FOLDER'] + "/" +  filename
     file_name = file_u["file_name"]
     
-    return send_file(path_u, as_attachment=True, attachment_filename=file_name)
+    return send_file(path_u, as_attachment=True, download_name=file_name)
 
 @notes_module.route('/preview_file/<filename>', methods=['GET'])
 @access_required()
