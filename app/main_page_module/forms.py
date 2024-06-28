@@ -1,6 +1,6 @@
 # Import Form and RecaptchaField (optional)
 from flask_wtf import FlaskForm # , RecaptchaField
-from flask_wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf.file import FileField, MultipleFileField, FileAllowed, FileRequired
 
 # Import Form elements such as TextField and BooleanField (optional)
 from wtforms import BooleanField, StringField, TextAreaField, SelectField, PasswordField, HiddenField, SubmitField, validators # BooleanField
@@ -30,7 +30,7 @@ class Note(FlaskForm):
     
     note_type = SelectField(u'Type of note', choices=[(str(0), "Note"), (str(1), "Task")])
     
-    file_u = FileField("File to upload")   
+    file_u = MultipleFileField("File(s) to upload")   
     
     submit = SubmitField('Submit changes')
     

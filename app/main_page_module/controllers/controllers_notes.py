@@ -226,11 +226,13 @@ def note_edit(note_id=None):
     if form.validate_on_submit():        
         Notes.update_one(note_id, form.title.data, form.note_type.data, form.note_text.data, 
                                   form.relevant.data, form.pinned.data)
-        
+        print(form.file_u.data)
+
         if form.file_u.data != None:
-            file_u = form.file_u.data
-            note_o = N_obj(note_id)            
-            note_o.save_file_to_note(file_u)
+            for file in form.file_u.data:
+                file_u = file
+                note_o = N_obj(note_id)            
+                note_o.save_file_to_note(file_u)
         
         #create argus index
         notes = Notes.get_all_active()
