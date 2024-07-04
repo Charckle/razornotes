@@ -226,7 +226,7 @@ def note_edit(note_id=None):
     if form.validate_on_submit():        
         Notes.update_one(note_id, form.title.data, form.note_type.data, form.note_text.data, 
                                   form.relevant.data, form.pinned.data)
-        print(form.file_u.data)
+
 
         if form.file_u.data != None:
             for file in form.file_u.data:
