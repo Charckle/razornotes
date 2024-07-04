@@ -3,7 +3,7 @@ from whoosh.index import create_in
 from whoosh.fields import Schema, TEXT, NUMERIC
 from whoosh.index import open_dir
 from whoosh.query import *
-from whoosh.qparser import QueryParser
+from whoosh.qparser import MultifieldParser #QueryParser
 
 class WSearch():
     #def __init__(self, storage_location = "app//main_page_module//data//"):
@@ -32,7 +32,9 @@ class WSearch():
         #print(querystring)
         ix = open_dir(".index")
         
-        parser = QueryParser("content", ix.schema)
+        #parser = QueryParser("content", ix.schema)
+        parser = MultifieldParser(["note_name", "content"], ix.schema)
+        
         myquery = parser.parse(querystring)
         
         file_names = []
