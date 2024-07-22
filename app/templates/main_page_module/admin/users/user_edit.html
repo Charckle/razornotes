@@ -167,7 +167,7 @@
       <h5>Fido2 Credentials</h5>
 
       <hr>
-      <a href="{{ url_for('admin_module.user_register_fido') }}" class="btn btn-danger btn-block" role="button">Register Fido2 Login</a>
+      Only users can manage their fido2 credentials
       <hr>
 
       {% set user_fido2s = UserM.get_all_fido2_of_u(form.id.data) %}
@@ -176,33 +176,6 @@
         {% for i in user_fido2s %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
           {{ i["cred_id_bs64"][:10] }}...
-          <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal_cred' ~ i['cred_id_bs64'][:10] }}">Delete</button>
-
-          <!-- Modal -->
-          <div class="modal fade" id="{{ 'for_modal_cred' ~ i['cred_id_bs64'][:10] }}" tabindex="-1" role="dialog" aria-labelledby="{{ i['cred_id_bs64'][:10] ~ 'for_modal_credtext' }}" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="{{ i['cred_id_bs64'][:10] ~'for_modal_credtext' }}">Delete the Credential</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  Do you really want to delete the fido2 credential {{ i['cred_id_bs64'] }}
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                  
-                  <form method="POST" action="{{ url_for('admin_module.user_delete_fibo2') }}" accept-charset="UTF-8" role="form">
-                    <input type="hidden" id="cred_id_bs64" name="cred_id_bs64" value="{{ i['cred_id_bs64']}}">
-                    <button type="submit" class="btn btn-danger">Delete Credential</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </li>
         {% endfor %}
       </ul>

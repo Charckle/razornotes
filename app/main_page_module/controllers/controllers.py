@@ -208,3 +208,60 @@ def user_profile_edit():
     
     
     return render_template("main_page_module/user_profile/profile_edit.html", form=form, user=user)    
+
+
+@main_page_module.route('/fido2_register', methods=['GET'])
+@access_required(UserRole.ADMIN)
+def user_register_fido():
+    user_id = session['user_id']
+    user_sql = UserM.get_one(user_id)
+    
+    json_opt, challenge = webauthn_stp.generate_registration(app, user_sql)
+    session['fido2_challenge'] = challenge
+    
+    return render_template("main_page_module/user_profile/fido2_reg.html", json_opt=json_opt,
+                           user_sql=user_sql, challenge=challenge)
+
+
+@main_page_module.route('/fido2_save_registration', methods=['POST'])
+@access_required(UserRole.ADMIN)
+def user_save_registration_fido():    
+        # Check if the request contains JSON data
+    if request.is_json:
+        try:
+            json_data = request.get_json()
+            
+            challenge = session['fido2_challenge'] 
+            credential_id_bs64, credential_public_key_bs4 = webauthn_stp.verify_registration(app, json_data, challenge)
+            
+            # save the public key
+            user_id = session['user_id']
+            UserM.save_fido2_creds(user_id, credential_id_bs64, credential_public_key_bs4)
+            
+            #print(json_data["id"])
+            return jsonify({"message": "Fido2 hardware key registered successfully!"}), 200
+        except Exception as e:
+            app.logger.info(e)
+            return jsonify({"message": "Error on the server side"}), 500
+    else:
+        return jsonify({"message": "Invalid JSON data"}), 400
+    
+
+@main_page_module.route('/fibo2_delete', methods=['POST'])
+@access_required(UserRole.ADMIN)
+def user_delete_fibo2():
+    cred_id_bs64 = request.form["cred_id_bs64"]
+    fido2_cred = UserM.get_fido2(cred_id_bs64)
+    
+    user_id = fido2_cred["user_id"]
+    
+    if fido2_cred is None:
+        flash('No credentials with this ID found to delete.', 'error')
+        
+        return redirect(url_for("main_page_module.index"))  
+    
+    UserM.delete_one_fido2(cred_id_bs64)
+    
+    flash(f'Credential successfully deleted.', 'success')  
+    
+    return redirect(url_for("main_page_module.user_profile_edit"))      

@@ -110,7 +110,7 @@
       <h3>Fido2 Credentials</h3>
 
       <hr>
-      <a href="{{ url_for('admin_module.user_register_fido') }}" class="btn btn-danger btn-block" role="button">Register Fido2 Login</a>
+      <a href="{{ url_for('main_page_module.user_register_fido') }}" class="btn btn-danger btn-block" role="button">Register Fido2 Login</a>
       <hr>
 
       {% set user_fido2s = UserM.get_all_fido2_of_u(form.id.data) %}
@@ -137,7 +137,7 @@
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                   
-                  <form method="POST" action="{{ url_for('admin_module.user_delete_fibo2') }}" accept-charset="UTF-8" role="form">
+                  <form method="POST" action="{{ url_for('main_page_module.user_delete_fibo2') }}" accept-charset="UTF-8" role="form">
                     <input type="hidden" id="cred_id_bs64" name="cred_id_bs64" value="{{ i['cred_id_bs64']}}">
                     <button type="submit" class="btn btn-danger">Delete Credential</button>
                   </form>

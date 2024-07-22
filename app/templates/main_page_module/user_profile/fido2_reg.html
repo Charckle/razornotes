@@ -13,16 +13,16 @@
 
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('admin_module.users_all') }}">Users</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('admin_module.user_edit', user_id=user_sql['id']) }}">{{ user_sql['username'] }}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Fido2 Auth. Register</li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main_page_module.index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main_page_module.user_profile_edit') }}">My profile</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Create fido2 credentials</li>
     </ol>
   </nav>
 
   <div class="row">
     <div class="col-md">
       <hr>
-      <a class="btn btn-warning btn-block" href="{{ url_for('admin_module.user_edit', user_id=user_sql['id']) }}" role="button">Back</a>
+      <a class="btn btn-warning btn-block" href="{{ url_for('main_page_module.user_profile_edit') }}" role="button">My profile</a>
     </div>
     <div class="col-md-6">
 
@@ -81,7 +81,7 @@
         function sendJsonnUTH(jsonData) {
           //console.log(jsonData);
 
-          fetch('user_save_registration_fido', {
+          fetch('fido2_save_registration', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json'

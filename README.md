@@ -41,20 +41,18 @@
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
 
 #### To DO
+- fix multi ip in ip restriction
 - create a gitlab cicd, that uses semantic-release for versioning, and trivy tests for iamges and code
 - business mode: for personal use, the notes could be used for private and business settings. Add a mode to only show one or the other
      - as in, if you are at work and you use this app, you do not want people near you seeing you your personal notes poping up
-- add file reader, for attachments
 - make it so that if the database is not accessible, healthcheck works
 - add IAA (I am alive) ping to central razor server once a day
-- fix multi ip in ip restriction
 - mysql replication
 - pagination for all notes
 - create sql pooling for connections
 - add OTP verification
 - fuzzy search
 - ip restriction from web browser instead of environment
-- create a user profile page where the user can change the fido2 thingy, becase atm, you can only change the logged users fido2 credentials, no matter if you change for other users.
 - hash check if the note has changed while the note was being edited
 - related notes: add existing notes to notes, for easier browsing
 - clustering
