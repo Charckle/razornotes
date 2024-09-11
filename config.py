@@ -14,6 +14,9 @@ class Config(object):
     
     SESSION_COOKIE_SECURE = True
     
+    WTF_CSRF_ENABLED = environ.get('WTF_CSRF_ENABLED', 'True').lower() in ['true', '1', 't', 'y', 'yes']
+
+    
 
     # Application threads. A common general assumption is
     # using 2 per available processor cores - to handle
@@ -27,8 +30,10 @@ class Config(object):
     # App name
     APP_NAME = environ.get('APP_NAME', "Razor Notes")
     # Enable modules
-    MODULE_MEMORY = environ.get('MODULE_MEMORY', None)
-    MODULE_SECRETS= environ.get('MODULE_SECRETS', None)
+    #MODULE_MEMORY = environ.get('MODULE_MEMORY', None)
+    MODULE_MEMORY = environ.get('MODULE_MEMORY', 'False').lower() in ['true', '1', 't', 'y', 'yes']
+    #MODULE_SECRETS= environ.get('MODULE_SECRETS', None)
+    MODULE_SECRETS = environ.get('MODULE_SECRETS', 'False').lower() in ['true', '1', 't', 'y', 'yes']
     
     # Icon color to differentiate between different instances in use
     ICON_COLOR = environ.get('ICON_COLOR', "RED")

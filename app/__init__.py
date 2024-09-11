@@ -21,7 +21,6 @@ app = Flask(__name__)
 CORS(app) #allow any source
 #CORS(app, origins='http://127.0.0.1:4200')  # Replace with your Angular app's URL
 
-
 clipboard = {"clipboard": ""}
 secrets = {}
 
@@ -93,5 +92,15 @@ file_handler.setLevel(logging.DEBUG)
 app.logger.addHandler(file_handler)
 app.logger.setLevel(logging.DEBUG)
 app.logger.info('Application startup')
+
 if app.config['IP_RESTRICTION'] == "1":
     app.logger.info('Login will be restricted based on IP and network')
+
+if app.config['WTF_CSRF_ENABLED'] == False:
+    app.logger.info('WTF CSRF is Disabled')    
+
+if app.config['MODULE_MEMORY'] == True:
+    app.logger.info('Memory module is Enabled')    
+    
+if app.config['MODULE_SECRETS'] == True:
+    app.logger.info('Secrets module is Enabled')    
