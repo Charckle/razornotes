@@ -201,11 +201,17 @@ def user_delete():
         
         return redirect(url_for("admin_module.users_all"))     
     
+    if user["id"] == session['user_id']:
+        flash('Cannot delete yourself, sry :/', 'error')
+        return redirect(url_for("admin_module.user_edit", user_id=user["id"]))
+    
+    if len(GroupsAccessM.get_access_all_of_user(user["id"])) > 0:
+        flash('Cannot remove the user, if it has groups. Remove the groups first.', 'error')
+        return redirect(url_for("admin_module.user_edit", user_id=user["id"]))      
+    
     else:
         UserM.delete_one(user["id"])
-        
         flash(f'User {user["name"]} - {user["username"]} successfully deleted.', 'success')
-        
         return redirect(url_for("admin_module.users_all")) 
 
 
