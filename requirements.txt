@@ -27,7 +27,7 @@ pycparser==2.21
 pydantic==2.5.3
 pydantic_core==2.14.6
 PyJWT==2.6.0
-pyOpenSSL==24.1.0
+pyOpenSSL==24.2.1
 python-dotenv==1.0.0
 pytz==2023.3
 requests==2.32.0
