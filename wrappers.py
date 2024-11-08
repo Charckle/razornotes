@@ -1,4 +1,6 @@
 from functools import wraps
+import base64
+
 from flask import session, redirect, url_for, request, flash
 from app.main_page_module.models import UserM, Notes, Tag, GroupsAccessM
 
@@ -41,11 +43,13 @@ def access_required(groups_=None):
             session.clear()
             requestUrl = request.url
             requested_url = "/".join(requestUrl.split("/")[3:])
-            session['requested_url'] = "/" + requested_url
-
+            
+            encoded_bytes = base64.urlsafe_b64encode(requested_url.encode("utf-8"))
+            encoded_url = encoded_bytes.decode("utf-8")
+            
             flash("Please login to access the site.", "error")
 
-            return redirect(url_for("main_page_module.login"))
+            return redirect(url_for("main_page_module.login", w_url=encoded_url))
 
         return wrapper
     return decorator

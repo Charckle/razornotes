@@ -1,5 +1,6 @@
 import markdown2
 import json
+import base64
 
 # Import flask dependencies
 from flask import Blueprint, request, render_template, \
@@ -69,8 +70,9 @@ def set_clipboard():
 
 
 # Set the route and accepted methods
+@main_page_module.route('/login/<w_url>', methods=['GET', 'POST'])
 @main_page_module.route('/login/', methods=['GET', 'POST'])
-def login():
+def login(w_url=None):
     if ('user_id' in session):
         return redirect(url_for("main_page_module.index"))
     
@@ -107,22 +109,22 @@ def login():
     
             flash('Welcome %s' % user["username"], 'success')
             
-            if ('requested_url' in session):
-                requested_url = session['requested_url']
-                session['requested_url'] = ""
-                
-                return redirect(requested_url)            
+            if (w_url != None):
+                decoded_bytes = base64.urlsafe_b64decode(w_url.encode("utf-8"))
+                decoded_url=  "/" + decoded_bytes.decode("utf-8")
+
+                return redirect(decoded_url)            
             
             return redirect(url_for('main_page_module.index'))
     
         flash('Wrong email or password', 'error')
-
+    
     for field, errors in form.errors.items():
         print(f'Field: {field}')
         for error in errors:
             flash(f'Invalid Data for {field}: {error}', 'error')
         
-    return render_template("main_page_module/auth/login.html", form=form)
+    return render_template("main_page_module/auth/login.html", form=form, w_url=w_url)
         
 
 @main_page_module.route('/logout/')

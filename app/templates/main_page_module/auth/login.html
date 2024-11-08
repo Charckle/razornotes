@@ -153,7 +153,7 @@
       <legend>{{ config['APP_NAME'] }} - Sign in</legend>
       <hr>
       <div class="login-container">
-      <form method="POST" action="." accept-charset="UTF-8" role="form">
+      <form method="POST" action="{% if w_url != None %}{{ url_for('main_page_module.login', w_url=w_url) }}{% else %}.{% endif %}" accept-charset="UTF-8" role="form">
         {{ form.csrf_token }}
         {{ render_field(form.username_or_email, placeholder="Your Email Address",
                                     autofocus="") }}

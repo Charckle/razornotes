@@ -66,3 +66,8 @@
 - cli installer: make it detect missing requirements (pip, etc)
 - cli installer: https automatic setting
 - change theme for different instances
+
+#### Troubleshooting
+- is python throws and error, that six is not installed, uninstall it and reinstall it:
+    - `pip uninstall six`
+    - `pip install six`
