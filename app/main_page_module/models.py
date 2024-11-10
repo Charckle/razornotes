@@ -301,7 +301,18 @@ class Notes:
         sql_command = f"""SELECT id, title, note_type, text, active, relevant, pinned, v_hash 
         FROM notes WHERE active = 1;"""
         
-        return db.q_r_all(sql_command, ())      
+        return db.q_r_all(sql_command, ())
+    
+    # Notes
+    @staticmethod    
+    def get_all_active_offset(display, offset):
+        offset = offset * display
+
+        db = DB()
+        sql_command = f"""SELECT id, title, note_type, text, active, relevant, pinned, v_hash 
+        FROM notes WHERE active = 1 LIMIT %s OFFSET %s;;"""
+        
+        return db.q_r_all(sql_command, (display, offset))
     
     # Notes
     @staticmethod    

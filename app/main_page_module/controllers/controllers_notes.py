@@ -175,14 +175,18 @@ def note_new(tmpl_id: int =None):
     
     return render_template("main_page_module/notes/note_new.html", form=form)
 
+@notes_module.route('/notes_all/<int:page_offset>')
 @notes_module.route('/notes_all/')
 @access_required()
-def notes_all():
-    notes = Notes.get_all_active()
+def notes_all(page_offset=0):
+    page_display = 25
+    notes = Notes.get_all_active_offset(page_display, page_offset)
 
-    return render_template("main_page_module/notes/notes_all.html", notes=notes)
+    return render_template("main_page_module/notes/notes_all.html", notes=notes,
+                           page_display=page_display, page_offset=page_offset)
 
-@notes_module.route('/note_view/<note_id>', methods=['GET'])
+
+@notes_module.route('/note_view/<int:note_id>', methods=['GET'])
 @access_required()
 def note_view(note_id):
     note = Notes.get_one(note_id)
@@ -198,7 +202,7 @@ def note_view(note_id):
     return render_template("main_page_module/notes/note_view.html", note=note)
 
 
-@notes_module.route('/note_edit/<note_id>', methods=['GET', 'POST'])
+@notes_module.route('/note_edit/<int:note_id>', methods=['GET', 'POST'])
 @notes_module.route('/note_edit/', methods=['POST', 'GET'])
 @access_required(UserRole.READWRITE)
 def note_edit(note_id=None):
@@ -281,7 +285,7 @@ def note_delete_file():
     return redirect(url_for("notes_module.note_view", note_id=note_id))
 
 
-@notes_module.route('/download/<note_id>', methods=['GET'])
+@notes_module.route('/download/<int:note_id>', methods=['GET'])
 @access_required()
 def note_download(note_id):
     note = Notes.get_one(note_id)
@@ -368,7 +372,7 @@ def tmpl_new():
     return render_template("main_page_module/notes/templates/tmpl_new.html", form=form)
 
 
-@notes_module.route('/tmpl_edit/<tmpl_id>', methods=['GET', 'POST'])
+@notes_module.route('/tmpl_edit/<int:tmpl_id>', methods=['GET', 'POST'])
 @notes_module.route('/tmpl_edit/', methods=['POST', 'GET'])
 @access_required(UserRole.READWRITE)
 def tmpl_edit(tmpl_id=None):
@@ -408,7 +412,7 @@ def tmpl_edit(tmpl_id=None):
     return render_template("main_page_module/notes/templates/tmpl_edit.html", tmpl=tmpl, form=form)
 
 
-@notes_module.route('/tmpl_delete/<tmpl_id>', methods=['GET'])
+@notes_module.route('/tmpl_delete/<int:tmpl_id>', methods=['GET'])
 @access_required(UserRole.READWRITE)
 def tmpl_delete(tmpl_id):
     tmpl = Tmpl.get_one(tmpl_id)
@@ -433,7 +437,7 @@ def tags_all():
     return render_template("main_page_module/notes/tags/tags_all.html", tags=tags)
 
 
-@notes_module.route('/tag_edit/<tag_id>', methods=['GET', 'POST'])
+@notes_module.route('/tag_edit/<int:tag_id>', methods=['GET', 'POST'])
 @notes_module.route('/tag_edit/', methods=['POST', 'GET'])
 @access_required(UserRole.READWRITE)
 def tag_edit(tag_id=None):

@@ -29,6 +29,7 @@ class Config(object):
     
     # App name
     APP_NAME = environ.get('APP_NAME', "Razor Notes")
+    APP_LOGGING = environ.get('APP_LOGGING', "DEBUG")
     # Enable modules
     #MODULE_MEMORY = environ.get('MODULE_MEMORY', None)
     MODULE_MEMORY = environ.get('MODULE_MEMORY', 'False').lower() in ['true', '1', 't', 'y', 'yes']

@@ -66,6 +66,24 @@
 
       <hr>
 
+      {% set pagination = N_obj.pagination_all_active(page_display, page_offset) %}
+
+      <span class="d-flex justify-content-center">
+        <!-- pagination -->
+        <nav aria-label="Page navigation example">
+          <ul class="pagination">
+            <li class="page-item {% if pagination['previous'] < 0 %}disabled{% endif %}"><a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=pagination['previous']) }}">Previous</a></li>
+            {% for page_num in pagination["all_pages"] %}
+            <li class="page-item {% if pagination['current'] == page_num %}active{% endif %}"><a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=page_num) }}">{{ page_num + 1 }}</a></li>
+            {% endfor %}
+
+            <li class="page-item {% if pagination['next'] == (pagination['all_pages_len']) %}disabled{% endif %}"><a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=pagination['next']) }}">Next</a></li>
+          </ul>
+        </nav>
+      </span>
+
+
+
     </div>
     <div class="col-md">
       <!-- insert column here -->

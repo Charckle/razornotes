@@ -13,6 +13,7 @@ from datab import DBcreate, check_database_active
 from app.main_page_module.p_objects.db_migration import DB_upgrade
 from app.main_page_module.argus import WSearch
 from app.main_page_module.models import Notes
+from app.main_page_module.other import Randoms
 
 # Define the WSGI application object
 app = Flask(__name__)
@@ -82,16 +83,40 @@ new_index.index_create(notes)
 
 # activate logging
 
-if not path.exists('logs'):
-    mkdir('logs')
-file_handler = RotatingFileHandler('logs/error.log', maxBytes=10240,
-                                   backupCount=5)
-file_handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-file_handler.setLevel(logging.DEBUG)
-app.logger.addHandler(file_handler)
-app.logger.setLevel(logging.DEBUG)
+logging_level_str = app.config['APP_LOGGING']
+logging_level = getattr(logging, logging_level_str, logging.INFO)
+app.logger.setLevel(logging_level)
+
+#logging.basicConfig(level=logging_level, format='%(asctime)s - %(levelname)s - %(message)s')
+#app.logger.info(f"Logging Level set to: {logging.getLevelName(app.logger.getEffectiveLevel())}")
+
 app.logger.info('Application startup')
+
+logo_ascii = r"""
+---------------------------+
+  _____                       _   _       _            
+ |  __ \                     | \ | |     | |           
+ | |__) |__ _ _______  _ __  |  \| | ___ | |_ ___  ___ 
+ |  _  // _` |_  / _ \| '__| | . ` |/ _ \| __/ _ \/ __|
+ | | \ \ (_| |/ / (_) | |    | |\  | (_) | ||  __/\__ \
+ |_|  \_\__,_/___\___/|_|    |_| \_|\___/ \__\___||___/ 
+------------------+
+"""
+app.logger.info(r"---------------------------+")
+app.logger.info(r"  _____                       _   _       _            ")
+app.logger.info(r" |  __ \                     | \ | |     | |           ")
+app.logger.info(r" | |__) |__ _ _______  _ __  |  \| | ___ | |_ ___  ___ ")
+app.logger.info(r" |  _  // _` |_  / _ \| '__| | . ` |/ _ \| __/ _ \/ __|")
+app.logger.info(r" | | \ \ (_| |/ / (_) | |    | |\  | (_) | ||  __/\__ \ ")
+app.logger.info(r" |_|  \_\__,_/___\___/|_|    |_| \_|\___/ \__\___||___/")
+app.logger.info(r"------------------+")    
+
+app.logger.info("Stribog Manager: Web Manager for Stribog")    
+app.logger.info(f"Version: {Randoms.get_version()}")    
+app.logger.info("--------------------------------------------+ \n")    
+app.logger.info(f"Instance Name: {app.config['APP_NAME']}")
+app.logger.info(f"Logging Level: {logging.getLevelName(app.logger.getEffectiveLevel())}")
+app.logger.info("--------------------------------------------+ \n\n")
 
 if app.config['IP_RESTRICTION'] == "1":
     app.logger.info('Login will be restricted based on IP and network')

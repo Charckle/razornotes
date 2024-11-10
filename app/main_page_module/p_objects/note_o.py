@@ -1,5 +1,6 @@
 from app import app
 import os
+import math
 
 from app.main_page_module.p_objects.audit_log import AuditLog
 
@@ -124,3 +125,29 @@ class N_obj:
         else:
             Notes.change_viewed(note_id)
         Notes.delete_last_x(15)
+
+    # N_obj
+    @staticmethod
+    def pagination_all_active(page_display, page_offset):
+        #print(page_offset)
+        #print(page_display)
+        if page_offset < 0:
+            page_offset = 0
+
+        notes_len = len(Notes.get_all_active())
+
+        all_pages_len = math.ceil(notes_len / page_display)
+        all_pages = range(0, all_pages_len)
+        
+        previous = page_offset - 1
+        
+        next_ = page_offset + 1
+        
+        page = {"previous": previous,
+                "current": page_offset,
+                "next": next_,
+                "all_pages": all_pages,
+                "all_pages_len": all_pages_len,
+                "page_display": page_display}
+
+        return page
