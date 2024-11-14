@@ -1,0 +1,19 @@
+FROM python:3.11.5-alpine
+
+WORKDIR /app
+
+COPY ./requirements.txt /app
+
+# mysqlclient requirements
+RUN apk add --no-cache mariadb-dev gcc musl-dev
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Add Tini, that will take care of handling the main process
+RUN apk add --no-cache tini
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+COPY . .
+
+CMD ["gunicorn",  "-b", "0.0.0.0:8000", "run:app", "-c", "gunicorn_config.py"]
