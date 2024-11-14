@@ -310,7 +310,7 @@ class Notes:
 
         db = DB()
         sql_command = f"""SELECT id, title, note_type, text, active, relevant, pinned, v_hash 
-        FROM notes WHERE active = 1 LIMIT %s OFFSET %s;;"""
+        FROM notes WHERE active = 1 LIMIT %s OFFSET %s;"""
         
         return db.q_r_all(sql_command, (display, offset))
     

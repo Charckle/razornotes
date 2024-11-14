@@ -26,7 +26,7 @@
                   <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr [0] }}</span>
                 {% endif %}
                 <img class= "align-self-center mr-3" src="/static/icons/pinned.svg" height="32" width="32">
-                <div class="media-body text-white bg-dark"><h6 class="mt-0">{{ note['title'] }}
+                <div class="media-body text-white bg-dark text-break"><h6 class="mt-0">{{ note['title'] }}
                   {% for i in Tag.get_all_of_note(note['id'] )%}
                     {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
                     <span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span>
@@ -56,13 +56,13 @@
                     <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr[0] }}</span>
                   {% endif %}
                   <img class= "align-self-center mr-3" src="/static/icons/note.svg" height="32" width="32">
-                  <div class="media-body"><h6 class="mt-0">{{ note['title'] }}
+                  <div class="media-body text-break"><h6 class="mt-0">{{ note['title'] }}
                     {% for i in Tag.get_all_of_note(note['id'])%}
                       {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
                       <span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span>
                     {% endfor %}
                     </h6>
-                    <p>{{ note['text'] }} ...</p>
+                    <p class="text-break">{{ note['text'] }} ...</p>
                   </div>
                 </div>
               </a>
@@ -90,7 +90,7 @@
                   <span class="badge badge badge-{{ note_obj.type_clr [1] }}">{{ note_obj.type_clr [0] }}</span>
                 {% endif %}
                 <img class= "align-self-center mr-3" src="/static/icons/pinned.svg" height="32" width="32">
-                <div class="media-body"><h6 class="mt-0">{{ note['title'] }}
+                <div class="media-body text-break"><h6 class="mt-0">{{ note['title'] }}
                   {% for i in Tag.get_all_of_note(note['id'] )%}
                     {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
                     <span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span>
