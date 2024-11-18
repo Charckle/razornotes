@@ -12,7 +12,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Add Tini, that will take care of handling the main process
 RUN apk add --no-cache tini
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
+ENTRYPOINT ["/sbin/tini", "--"]
+
 
 COPY . .
 
