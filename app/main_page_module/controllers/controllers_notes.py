@@ -185,6 +185,21 @@ def notes_all(page_offset=0):
     return render_template("main_page_module/notes/notes_all.html", notes=notes,
                            page_display=page_display, page_offset=page_offset)
 
+@notes_module.route('/note_print/<int:note_id>', methods=['GET'])
+@access_required()
+def note_print(note_id):
+    note = Notes.get_one(note_id)
+    
+    if note is None:
+        flash('No entrie found', 'error')
+        
+        return redirect(url_for("main_page_module.index"))
+    
+    # set note as viewed
+    N_obj.notes_viewed(note_id)
+
+    return render_template("main_page_module/notes/note_print.html", note=note)
+
 
 @notes_module.route('/note_view/<int:note_id>', methods=['GET'])
 @access_required()

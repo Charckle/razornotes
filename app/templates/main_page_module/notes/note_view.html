@@ -34,9 +34,10 @@
       <legend>{{ note["title"] }}
          - <span class="badge badge-pill badge-{{ note_o.type_clr[1] }}">{{ note_o.type_clr[0] }}</span> - 
           <div class="btn-group btn-group-sm" role="group" aria-label="...">
-            <a href="{{ url_for('notes_module.note_edit', note_id=note_id) }}" class="btn btn-info" role="button">Edit Note</a>
-            <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#TrashNote">Trash</button>
-            <a href="{{ url_for('notes_module.note_download', note_id=note_id) }}" class="btn btn-success" role="button" title="Download MD file">Download MD file</a>
+            <a href="{{ url_for('notes_module.note_edit', note_id=note_id) }}" class="btn btn-info" role="button"><i class="bi bi-pencil-square"></i> Edit Note</a>
+            <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#TrashNote"><i class="bi bi-trash"></i> Trash</button>
+            <a href="{{ url_for('notes_module.note_download', note_id=note_id) }}" class="btn btn-success" role="button" title="Download MD file"><i class="bi bi-markdown-fill"></i> Download MD file</a>
+            <a href="{{ url_for('notes_module.note_print', note_id=note_id) }}" class="btn btn-light" role="button" title="Download MD file" target="blank"><i class="bi bi-printer-fill"></i> Print Format</a>
           </div>
           
 
@@ -112,8 +113,8 @@
           {% for file_u in note_o.files%}
             <li class="list-group-item">
               <div class="btn-group" role="group" aria-label="Basic example">
-                <a href="{{ url_for('notes_module.note_download_file', filename=file_u['file_id_name']) }}" class="btn btn-primary btn-sm" role="button" aria-pressed="true">Download</a>
-                <a href="{{ url_for('notes_module.preview_file', filename=file_u['file_id_name']) }}" class="btn btn-success btn-sm" role="button" aria-pressed="true">Preview</a>
+                <a href="{{ url_for('notes_module.note_download_file', filename=file_u['file_id_name']) }}" class="btn btn-primary btn-sm" role="button" aria-pressed="true"><i class="bi bi-download"></i> Download</a>
+                <a href="{{ url_for('notes_module.preview_file', filename=file_u['file_id_name']) }}" class="btn btn-success btn-sm" role="button" aria-pressed="true"><i class="bi bi-incognito"></i> Preview</a>
               </div>
 
               {{ file_u["file_name"] }} - <span class="badge badge-dark">{{ note_o.file_size(file_u) }}</span> <i class="bi bi-file-earmark-pdf"></i>
