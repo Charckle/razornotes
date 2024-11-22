@@ -10,6 +10,11 @@
 
     <!-- Bootstrap CSS -->
     <link href="{{ url_for('static', filename='main_page_module/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
+
+    <!-- Bootstrap icons -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='icons/bootstrap_icons/bootstrap-icons.min.css') }}">
+
     <style>
       
         .navbar {
@@ -74,14 +79,14 @@
                 <ul class="navbar-nav mr-auto">
                     
                     <li class="nav-item {% block nav_index %}{% endblock nav_index %}">
-                        <a class="nav-link" href="{{ url_for('main_page_module.index') }}">Home </a>
+                        <a class="nav-link" href="{{ url_for('main_page_module.index') }}"><i class="bi bi-house"></i> Home</a>
                     </li>
                     <li class="nav-item {% block nav_search %}{% endblock nav_search %}">
-                        <a class="nav-link" href="{{ url_for('notes_module.search') }}">Search </a>
+                        <a class="nav-link" href="{{ url_for('notes_module.search') }}"><i class="bi bi-record"></i> Search</a>
                     </li>
                     <li class="nav-item dropdown {% block nav_new_note %}{% endblock nav_new_note %}">
                       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        New Note
+                        <i class="bi bi-bookmark-plus"></i> New Note
                       </a>
                       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" href="{{ url_for('notes_module.note_new') }}">Blank Note</a>
@@ -102,7 +107,7 @@
                   </li>
                     <li class="nav-item dropdown {% block nav_admin %}{% endblock nav_admin %}">
                       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Admin
+                        <i class="bi bi-wrench"></i> Admin
                       </a>
                       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" href="{{ url_for('admin_module.users_all') }}">Users</a>
@@ -136,7 +141,7 @@
                         {% endif %}
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link btn btn-outline-danger" onclick="set_clip()">Set Clipboard </button>
+                        <button class="nav-link btn btn-outline-danger" onclick="set_clip()">Set Clipboard</button>
                     </li>
                     <li class="nav-item">
                         <button class="nav-link btn btn-outline-warning" onclick="get_clip()">Get Clipboard </button>

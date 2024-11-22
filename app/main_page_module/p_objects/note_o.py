@@ -28,16 +28,47 @@ class N_obj:
         self.type_ = self.qrry["note_type"]
         self.type_clr = self.get_type_clr()
     
+    # N_obj
     @staticmethod
     def file_type(file_name):
         return os.path.splitext(file_name)[1].strip(".")
     
+    # N_obj
     @staticmethod
     def file_is_pdf(file_name):
         return N_obj.file_type(file_name) in ["pdf", "PDF"]
-        
-
     
+    
+    # N_obj
+    @staticmethod
+    def argus_add_note(note_):
+        if not WSearch.index_exists():
+            N_obj.argus_create_index()
+        WSearch.add_item(note_)    
+    
+    # N_obj
+    @staticmethod
+    def argus_edit_note(note_):
+        if not WSearch.index_exists():
+            N_obj.argus_create_index()
+        WSearch.edit_item(note_)
+        
+    # N_obj
+    @staticmethod
+    def argus_delete_note(note_id):
+        if not WSearch.index_exists():
+            N_obj.argus_create_index()
+        WSearch.delete_item(note_id)        
+    
+    # N_obj
+    @staticmethod
+    def argus_create_index():
+        #create argus index
+        notes = Notes.get_all_active()
+        new_index = WSearch()
+        new_index.index_create(notes)        
+        
+    # N_obj
     def delete(self):
         for file_u in self.files:
             self.file_delete(file_u)
@@ -46,10 +77,14 @@ class N_obj:
         for tag in self.tags:
             Tag.remove_note_tag(self.n_id, tag["t_id"])
         
+        # remove recently viewed
+        Notes.delete_recently_viewed(self.n_id)
             
         AuditLog.create(f"Note Deleted, id: {self.n_id}: {self.qrry['title'][:10]}")        
         
         Notes.delete_one(self.n_id)
+        
+        N_obj.argus_delete_note(self.n_id)
         
     
     def get_type_clr(self):    

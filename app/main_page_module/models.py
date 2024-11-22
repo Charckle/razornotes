@@ -494,7 +494,16 @@ class Notes:
             ) AS latest_entries
         );"""
         
-        db.q_exe(sql_command, (last_x,))        
+        db.q_exe(sql_command, (last_x,))   
+        
+    
+    # Notes
+    @staticmethod    
+    def delete_recently_viewed(note_id):
+        db = DB()
+        sql_command = f"DELETE FROM notes_recently_viewed WHERE note_id = %s;"
+        
+        db.q_exe(sql_command, (note_id, ))    
 
 
 class Tmpl:

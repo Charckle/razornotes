@@ -157,13 +157,14 @@ def note_new(tmpl_id: int =None):
         note_title = str(form.title.data).strip()
         note_id = Notes.create(note_title, form.note_text.data, form.note_type.data)
         
-        #create argus index
-        notes = Notes.get_all_active()
-        new_index = WSearch()
-        new_index.index_create(notes)
+        note_ = {"id": note_id,
+                 "title": form.title.data, 
+                 "text": form.note_text.data}
+        
+        # save note in argus
+        N_obj.argus_add_note(note_)
         
         flash('Entry successfully created!', 'success')
-        flash('Argus index successfully updated', 'success')
         
         return redirect(url_for("notes_module.note_view", note_id=note_id))
     
@@ -253,10 +254,12 @@ def note_edit(note_id=None):
                 note_o = N_obj(note_id)            
                 note_o.save_file_to_note(file_u)
         
-        #create argus index
-        notes = Notes.get_all_active()
-        new_index = WSearch()
-        new_index.index_create(notes)
+        note_ = {"id": note_id,
+                 "title": form.title.data, 
+                 "text": form.note_text.data}
+        
+        # save note in argus
+        N_obj.argus_edit_note(note_)
         
         AuditLog.create(f"Note Edited, id: {note_id}: {note['title'][:10]}")        
         

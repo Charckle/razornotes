@@ -67,8 +67,8 @@ class Login(FlaskForm):
     
     submit = SubmitField('Login')
 
-class UserF(FlaskForm):
 
+class UserF(FlaskForm):
     id = HiddenField('id', [validators.InputRequired(message='Dont fiddle around with the code!')])
     name   = StringField('Identification name', [validators.InputRequired(message='We need a name for the user.')])
     
