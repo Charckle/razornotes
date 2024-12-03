@@ -166,6 +166,7 @@
   </style>
 
    <button  id="myBtn" title="Notation button" data-toggle="modal" data-target="#notationModal">Notation</button>
+   
    <script>
    //Get the button:
    /*
@@ -179,7 +180,19 @@
     spellChecker: false,
     tabSize: 4,
     element: document.getElementById("note_text") });
-   </script>
+   
+
+    // go to previous scroll position
+    window.addEventListener('load', function() {
+    const scrollPosition = localStorage.getItem('scrollPosition');
+    
+    if (scrollPosition) {
+        window.scrollTo(0, parseInt(scrollPosition, 10));
+        localStorage.removeItem('scrollPosition'); // Optionally clear it
+      }
+    });
+    
+  </script>
 
    
 {% endblock %}
