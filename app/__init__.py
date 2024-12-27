@@ -102,14 +102,11 @@ logo_ascii = r"""
  |_|  \_\__,_/___\___/|_|    |_| \_|\___/ \__\___||___/ 
 ------------------+
 """
-app.logger.info(r"---------------------------+")
-app.logger.info(r"  _____                       _   _       _            ")
-app.logger.info(r" |  __ \                     | \ | |     | |           ")
-app.logger.info(r" | |__) |__ _ _______  _ __  |  \| | ___ | |_ ___  ___ ")
-app.logger.info(r" |  _  // _` |_  / _ \| '__| | . ` |/ _ \| __/ _ \/ __|")
-app.logger.info(r" | | \ \ (_| |/ / (_) | |    | |\  | (_) | ||  __/\__ \ ")
-app.logger.info(r" |_|  \_\__,_/___\___/|_|    |_| \_|\___/ \__\___||___/")
-app.logger.info(r"------------------+")    
+
+
+logo = logo_ascii.split("\n")
+for line in logo:
+    app.logger.info(line)  
 
 app.logger.info("Stribog Manager: Web Manager for Stribog")    
 app.logger.info(f"Version: {Randoms.get_version()}")    
