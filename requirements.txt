@@ -8,7 +8,7 @@ certifi==2024.7.4
 cffi==1.16.0
 charset-normalizer==3.1.0
 click==8.1.7
-cryptography==43.0.1
+cryptography==44.0.1
 Flask==3.0.3
 Flask-Cors==5.0.0
 Flask-JWT-Extended==4.5.3
@@ -29,7 +29,7 @@ pycparser==2.21
 pydantic==2.5.3
 pydantic_core==2.14.6
 PyJWT==2.6.0
-pyOpenSSL==24.2.1
+pyOpenSSL==25.0.0
 python-dotenv==1.0.0
 pytz==2023.3
 requests==2.32.0
