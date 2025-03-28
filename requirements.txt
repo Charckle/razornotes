@@ -18,7 +18,7 @@ Flask-WTF==1.2.1
 gunicorn==23.0.0
 idna==3.7
 itsdangerous==2.2.0
-Jinja2==3.1.5
+Jinja2==3.1.6
 markdown2==2.4.3
 MarkupSafe==2.1.5
 mysql-connector-python==9.1.0
