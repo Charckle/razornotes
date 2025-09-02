@@ -12,9 +12,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Add Tini, that will take care of handling the main process
 RUN apk add --no-cache tini
 
+RUN adduser -D -u 1000 appuser
+
 ENTRYPOINT ["/sbin/tini", "--"]
 
 
 COPY . .
+
+USER appuser
 
 CMD ["gunicorn",  "-b", "0.0.0.0:8000", "run:app", "-c", "gunicorn_config.py"]
