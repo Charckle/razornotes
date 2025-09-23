@@ -71,3 +71,7 @@
 - is python throws and error, that six is not installed, uninstall it and reinstall it:
     - `pip uninstall six`
     - `pip install six`
+
+### jwt testing
+- `curl -s -X POST "127.0.0.1:5000/api/v1/login" -H "Content-Type: application/x-www-form-urlencoded"  --data "username=admin&password=banana"` get the token
+- `curl -s -H "Authorization: Bearer $TOKEN" "127.0.0.1:5000/api/v1/notes/0"` test it

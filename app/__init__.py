@@ -5,7 +5,7 @@ from os import path, mkdir, environ
 import logging
 from logging.handlers import RotatingFileHandler
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv, dotenv_values
 
 from flask_jwt_extended import JWTManager
 
@@ -55,8 +55,7 @@ def static_file():
 from app.main_page_module.controllers.controllers import main_page_module as main_module
 from app.main_page_module.controllers.controllers_notes import notes_module as notes_module
 from app.main_page_module.controllers.controllers_admin import admin_module as admin_module
-from app.main_page_module.controllers.controllers_api import razor_api as api_module
-from app.main_page_module.controllers.controllers_api_jwt import razor_api as api_module_v2
+from app.main_page_module.controllers.controllers_api_jwt import razor_api as api_module_v1
 from app.memory_module.controllers import memory_module
 from app.secrets_module.controllers import secrets_module
 
@@ -64,8 +63,7 @@ from app.secrets_module.controllers import secrets_module
 app.register_blueprint(main_module)
 app.register_blueprint(notes_module)
 app.register_blueprint(admin_module)
-app.register_blueprint(api_module)
-app.register_blueprint(api_module_v2)
+app.register_blueprint(api_module_v1)
 app.register_blueprint(memory_module)
 app.register_blueprint(secrets_module)
 # app.register_blueprint(xyz_module)
@@ -108,7 +106,7 @@ logo = logo_ascii.split("\n")
 for line in logo:
     app.logger.info(line)  
 
-app.logger.info("Stribog Manager: Web Manager for Stribog")    
+app.logger.info("Razor Notes: for notes and shit")    
 app.logger.info(f"Version: {Randoms.get_version()}")    
 app.logger.info("--------------------------------------------+ \n")    
 app.logger.info(f"Instance Name: {app.config['APP_NAME']}")

@@ -123,17 +123,21 @@ class UserM:
     @staticmethod
     def login_check(username_or_email, password):
         db = DB()
-        sql_command = f"SELECT id, name, username, email, password FROM users WHERE (%s = username) OR (%s = email);"
+        sql_command = f"""SELECT id, name, username, email, password, status 
+        FROM users WHERE (%s = username) OR (%s = email);"""
         
         results = db.q_r_one(sql_command, (username_or_email, username_or_email))  
         
         #is a user is found, returns its ID
+        if results is None or results["status"] == 0:
+            return False
+        
         if results is not None:
             if check_password_hash(results["password"], password):
                 
                 return results
         
-        return False
+        
     
     # UserM
     @staticmethod
@@ -283,7 +287,15 @@ class Notes:
         sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned, v_hash
         FROM notes WHERE v_hash = %s;"""
 
-        return db.q_r_one(sql_command, (v_hash, ))    
+        return db.q_r_one(sql_command, (v_hash, ))   
+    
+    # Notes
+    @staticmethod    
+    def get_one_hash(note_id):
+        db = DB()
+        sql_command = f"""SELECT id, v_hash FROM notes WHERE id = %s;"""
+        
+        return db.q_r_one(sql_command, (note_id,))       
     
     # Notes
     @staticmethod
@@ -332,7 +344,15 @@ class Notes:
         WHERE active = 1 AND notes.relevant = 1 AND notes.pinned = 1 
         ORDER BY date_mod DESC;"""
         
-        return db.q_r_all(sql_command, ())  
+        return db.q_r_all(sql_command, ())
+    
+    # Notes
+    @staticmethod    
+    def get_all_hash():
+        db = DB()
+        sql_command = f"""SELECT id, v_hash FROM notes;"""
+        
+        return db.q_r_all(sql_command, ())      
     
     # Notes
     @staticmethod    

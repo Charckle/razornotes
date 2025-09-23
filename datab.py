@@ -1,10 +1,13 @@
 import MySQLdb
 from MySQLdb.cursors import DictCursor
 from os import environ 
+from dotenv import load_dotenv
 import logging
 from app.pylavor import Pylavor
 
 from datetime import date
+
+load_dotenv()
 
 sql_host = environ.get('DB_HOST', "127.0.0.1")
 sql_user = environ.get('DB_USERNAME', "razornotes")
