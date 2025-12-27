@@ -4,7 +4,7 @@ from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 # Import Form elements such as TextField and BooleanField (optional)
 from wtforms import HiddenField, StringField, PasswordField, TextAreaField, SelectField, \
-     SubmitField, validators# BooleanField
+     SubmitField, BooleanField, DateField, validators
 
 # Import Form validators
 from wtforms.validators import DataRequired, Email, EqualTo
@@ -27,7 +27,11 @@ class Memory(FlaskForm):
     groups = []
     
     m_group_id = SelectField(u'Choose a group.', [validators.InputRequired(message='Specify the Group')], 
-                              choices=groups) 
+                              choices=groups)
+    
+    has_birthday = BooleanField('Has Birthday')
+    
+    birthday = DateField('Birthday', [validators.Optional()], format='%Y-%m-%d') 
 
     submit = SubmitField('Submit')
     

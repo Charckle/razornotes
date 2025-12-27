@@ -8,42 +8,114 @@
 {% set group = Grp_.get_one(g_id) %}
 {% set m_items = Mem_.get_all_from(g_id) %}
 
-
   <main>
   <br>
   
   <nav aria-label="breadcrumb">
-	  <ol class="breadcrumb">
-		<li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
-		<li class="breadcrumb-item"><a href="{{ url_for('memory_module.group_all') }}">Group All</a></li>
-	    <li class="breadcrumb-item active" aria-current="page">Group</li>
-	  </ol>
-	</nav>
-	
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('memory_module.group_all') }}">Groups</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ group['name'] }}</li>
+    </ol>
+  </nav>
+  
   <div class="row g-5">
-
     <div class="col-md-12">
-      <div class="py-5 text-center">
+      <div class="py-4 text-center">
         <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
-        <h2>{{ group['name'] }} - <small>{{ group['comment_'] }}</small></h2> 
+        <h2>{{ group['name'] }}</h2>
+        {% if group.get('comment_') %}
+          <p class="text-muted">{{ group['comment_'] }}</p>
+        {% endif %}
+        {% if group.get('show_') == 0 %}
+          <span class="badge bg-secondary">Hidden from games</span>
+        {% endif %}
       </div>
     </div>
-    
-
-    
-    <div class="list-group">
-    {% for i in m_items %}
-	  <a href="{{ url_for('memory_module.m_item_edit', mi_id=i['id']) }}" class="list-group-item list-group-item-action list-group-item-info">{{ i['answer'] }} - {{ i['question'] }}</a>
-	 {% endfor %}
-	 </div>
-	 <hr>
-	 
-	 <div class="list-group">
-	  <a href="{{ url_for('memory_module.m_item_new', g_id=g_id) }}" class="list-group-item list-group-item-action list-group-item-success">Add Memory</a>
-	  <a href="{{ url_for('memory_module.group_edit', g_id=g_id) }}" class="list-group-item list-group-item-action list-group-item-warning">Edit Group</a>
-	 </div>
-	
   </div>
+  
+  <!-- Items Card -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Memory Items ({{ m_items|length }})</h5>
+          <a href="{{ url_for('memory_module.m_item_new', g_id=g_id) }}" class="btn btn-success btn-sm">
+            + Add New Item
+          </a>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            {% for i in m_items %}
+              {% set birthday_info = calculate_birthday_info(i.get('birthday'), i.get('has_birthday', 0)) %}
+              <a href="{{ url_for('memory_module.m_item_edit', mi_id=i['id']) }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">{{ i['answer'] }}</h6>
+                    <p class="mb-1 text-muted">{{ i['question'] }}</p>
+                    {% if i.get('comment_') %}
+                      <p class="mb-1 small text-secondary">{{ i['comment_'] }}</p>
+                    {% endif %}
+                    {% if birthday_info %}
+                      <small class="text-muted">
+                        🎂 Birthday: {{ birthday_info.birthday_date.strftime('%B %d, %Y') }} | 
+                        Age: {{ birthday_info.age }} | 
+                        {% if birthday_info.days_until == 0 %}
+                          <strong class="text-success">Birthday is today! 🎉</strong>
+                        {% elif birthday_info.days_until == 1 %}
+                          <strong class="text-primary">Birthday is tomorrow! 🎂</strong>
+                        {% else %}
+                          {{ birthday_info.days_until }} days until next birthday
+                        {% endif %}
+                      </small>
+                    {% endif %}
+                  </div>
+                  <div class="ms-3">
+                    <span class="badge bg-primary rounded-pill">Edit →</span>
+                  </div>
+                </div>
+              </a>
+            {% else %}
+              <div class="list-group-item text-center text-muted py-5">
+                <p class="mb-2">No items in this group yet.</p>
+                <a href="{{ url_for('memory_module.m_item_new', g_id=g_id) }}" class="btn btn-success">
+                  Add Your First Item
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Actions Card -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card border-primary">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">Actions</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2 d-md-block">
+            <a href="{{ url_for('memory_module.game', group_id=g_id) }}" class="btn btn-success">
+              Start Practice Game
+            </a>
+            <a href="{{ url_for('memory_module.m_item_new', g_id=g_id) }}" class="btn btn-outline-success">
+              Add New Item
+            </a>
+            <a href="{{ url_for('memory_module.group_edit', g_id=g_id) }}" class="btn btn-outline-warning">
+              Edit Group
+            </a>
+            <a href="{{ url_for('memory_module.group_all') }}" class="btn btn-outline-secondary">
+              Back to Groups
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   </main>
 {% endblock %}
 

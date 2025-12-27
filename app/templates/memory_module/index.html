@@ -7,41 +7,96 @@
 
   <main>
   <br>
+  
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item active" aria-current="page">Home</li>
+    </ol>
+  </nav>
+  
   <div class="row g-5">
-
     <div class="col-md-12">
-      <div class="py-5 text-center">
+      <div class="py-4 text-center">
         <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
         <h2>People INC</h2>
-
-        
+        <p class="text-muted">Memory Training & Management</p>
       </div>
     </div>
-    <div class="d-grid gap-2">
-	<ul class="nav nav-pills nav-justified">
-	  <li class="nav-item">
-	    <a class="nav-link active" aria-current="page" href="#">Main</a>
-	  </li>
-	  <li class="nav-item">
-	    <a class="nav-link" href="{{ url_for('memory_module.group_all') }}">Groups</a>
-	  </li>
-	</ul>
-    </div>
-    <div class="d-grid gap-2">
-	  <a href="{{ url_for('memory_module.game', group_id=99999999) }}" class="btn btn-success" role="button" >Mixed</a>
-	</div>
+  </div>
+  
 
-    <div i="list-group">
-    {%- for i in Grp_.get_all() %}
-	  <a href="{{ url_for('memory_module.game', group_id=i['id']) }}" class="list-group-item list-group-item-action list-group-item-success">{{ i['name'] }}</a>
-	 {% endfor %}
-	 </div>
-	
+  <!-- Quick Start Card -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card border-primary">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">Quick Start - Practice</h5>
+        </div>
+        <div class="card-body">
+          <a href="{{ url_for('memory_module.game', group_id=99999999) }}" class="btn btn-success btn-lg w-100" role="button">
+            <strong>Start Mixed Game</strong>
+            <br>
+            <small>Practice with all groups</small>
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="d-grid gap-2">
-    <a href="{{ url_for('main_page_module.index') }}" class="btn btn-warning btn-block" role="button" >Notes</a>
+  
+  <!-- Groups Card -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Practice by Group</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            {%- for i in Grp_.get_all() %}
+              <a href="{{ url_for('memory_module.game', group_id=i['id']) }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                  <h6 class="mb-1">{{ i['name'] }}</h6>
+                  <span class="badge bg-primary rounded-pill">→</span>
+                </div>
+                {% if i.get('comment_') %}
+                  <p class="mb-1 text-muted small">{{ i['comment_'] }}</p>
+                {% endif %}
+              </a>
+            {% else %}
+              <div class="list-group-item text-center text-muted">
+                <p class="mb-0">No groups available. <a href="{{ url_for('memory_module.group_new') }}">Create one!</a></p>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <a href="{{ url_for('memory_module.memory_import') }}">Import</a>
+  
+  <!-- Actions Card -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Actions</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2 d-md-block">
+            <a href="{{ url_for('memory_module.group_all') }}" class="btn btn-outline-primary">
+              Manage Groups
+            </a>
+            <a href="{{ url_for('memory_module.memory_import') }}" class="btn btn-outline-secondary">
+              Import Memories
+            </a>
+            <a href="{{ url_for('main_page_module.index') }}" class="btn btn-outline-warning">
+              Go to Notes
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   </main>
 {% endblock %}
 

@@ -60,17 +60,49 @@
      {{ render_field(form.question) }}
      {{ render_field(form.comment_) }}
      <input type="hidden" id="m_group_id" name="m_group_id" value="{{g_id}}">
-
+     
+     <div class="form-group">
+         {{ form.has_birthday }} - {{ form.has_birthday.label.text }}
+     </div>
+     
+     <div class="form-group" id="birthday-field-group" style="display: none;">
+         {{ form.birthday.label }}
+         {% if form.birthday.errors %}
+             {% for error in form.birthday.errors %}
+                 <small class="text-danger">{{ error }}</small>
+             {% endfor %}
+         {% endif %}
+         {{ form.birthday(class="form-control", type="date") }}
+     </div>
 
      
      <div class="form-group">
     	{{ form.submit(class="form-control btn btn-primary mb-2") }}
     	</div>
      </form>
-     
+	
 
 	
   </div>
   </main>
+  
+  <script>
+  function toggleBirthdayField() {
+      var checkbox = document.querySelector('input[name="has_birthday"]');
+      var birthdayGroup = document.getElementById('birthday-field-group');
+      if (checkbox && checkbox.checked) {
+          birthdayGroup.style.display = 'block';
+      } else {
+          birthdayGroup.style.display = 'none';
+      }
+  }
+  // Add event listener on page load
+  document.addEventListener('DOMContentLoaded', function() {
+      var checkbox = document.querySelector('input[name="has_birthday"]');
+      if (checkbox) {
+          checkbox.addEventListener('change', toggleBirthdayField);
+      }
+  });
+  </script>
 {% endblock %}
 

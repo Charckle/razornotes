@@ -94,7 +94,25 @@
 
         };
 
-        document.getElementById("search").onkeyup = load_results;
+        // Debounce timer variable
+        var searchTimer = null;
+        
+        // Debounced search function
+        function debouncedSearch() {
+          // Clear any existing timer
+          if (searchTimer) {
+            clearTimeout(searchTimer);
+          }
+          
+          // Set a new timer for 1 second
+          searchTimer = setTimeout(function() {
+            load_results();
+            searchTimer = null;
+          }, 1000);
+        }
+        
+        // Attach debounced function to keyup event
+        document.getElementById("search").onkeyup = debouncedSearch;
 
       </script>
 

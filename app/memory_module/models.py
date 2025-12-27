@@ -9,7 +9,7 @@ from datab import DB
 class Mem_:
     def session():
         db = DB()
-        sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id 
+        sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id, has_birthday, birthday 
         FROM m_items as mi
         LEFT JOIN m_groups ON mi.m_group_id = m_groups.id 
         WHERE m_groups.show_ = 1;"""
@@ -20,7 +20,7 @@ class Mem_:
     def get_all():
         db = DB()
         sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id,
-        m_groups.name as mg_name
+        m_groups.name as mg_name, has_birthday, birthday
         FROM m_items as mi
         LEFT JOIN m_groups ON mi.m_group_id = m_groups.id  ;"""
         
@@ -30,7 +30,7 @@ class Mem_:
     def get_all_from(g_id):
         db = DB()
         sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id,
-        m_groups.name as mg_name
+        m_groups.name as mg_name, has_birthday, birthday
         FROM m_items as mi
         LEFT JOIN m_groups ON mi.m_group_id = m_groups.id 
         WHERE m_groups.id = %s;"""
@@ -40,19 +40,19 @@ class Mem_:
     # Mem_
     def get_one(clovek_id):
         db = DB()
-        sql_command = f"""SELECT id, answer, question, comment_, m_group_id 
+        sql_command = f"""SELECT id, answer, question, comment_, m_group_id, has_birthday, birthday 
         FROM m_items 
         WHERE id = %s;"""
 
         return db.q_r_one(sql_command, (clovek_id, ))       
     
     # Mem_
-    def create(answer, question, comment_, m_group_id):
+    def create(answer, question, comment_, m_group_id, has_birthday=0, birthday=None):
         db = DB()
-        sql_command = f"""INSERT INTO m_items (answer, question, comment_, m_group_id)
-            VALUES (%s, %s, %s, %s);"""
+        sql_command = f"""INSERT INTO m_items (answer, question, comment_, m_group_id, has_birthday, birthday)
+            VALUES (%s, %s, %s, %s, %s, %s);"""
         
-        return db.q_exe_new(sql_command, (answer, question, comment_, m_group_id))
+        return db.q_exe_new(sql_command, (answer, question, comment_, m_group_id, has_birthday, birthday))
     
     # Mem_
     def delete(item_id):
@@ -62,14 +62,14 @@ class Mem_:
         db.q_exe(sql_command, (item_id,))
     
     # Mem_
-    def edit_one(id_, answer, question, comment_, m_group_id):
+    def edit_one(id_, answer, question, comment_, m_group_id, has_birthday=0, birthday=None):
         db = DB()
         sql_command = f"""UPDATE m_items 
         SET answer = %s, question = %s,
-        comment_ = %s, m_group_id = %s
+        comment_ = %s, m_group_id = %s, has_birthday = %s, birthday = %s
         WHERE id = %s"""
 
-        db.q_exe(sql_command, (answer, question, comment_, m_group_id, id_)) 
+        db.q_exe(sql_command, (answer, question, comment_, m_group_id, has_birthday, birthday, id_)) 
 
 class Grp_:
     def get_all():

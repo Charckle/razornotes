@@ -5,6 +5,7 @@ from app import app
 
 import random
 import json
+from datetime import date, datetime
 
 from app.memory_module.models import Grp_, Mem_
 from app.memory_module.forms import f_d
@@ -15,10 +16,39 @@ from wrappers import access_required
 # Define the blueprint: 'auth', set its url prefix: app.url/auth
 memory_module = Blueprint('memory_module', __name__, url_prefix='/memory/')
 
+def calculate_birthday_info(birthday_date, has_birthday):
+    """Calculate age and days until next birthday"""
+    if not has_birthday or not birthday_date:
+        return None
+    
+    # Handle different date formats from database
+    if isinstance(birthday_date, str):
+        birthday_date = datetime.strptime(birthday_date, '%Y-%m-%d').date()
+    elif isinstance(birthday_date, datetime):
+        birthday_date = birthday_date.date()
+    elif not isinstance(birthday_date, date):
+        return None
+    
+    today = date.today()
+    age = today.year - birthday_date.year - ((today.month, today.day) < (birthday_date.month, birthday_date.day))
+    
+    # Calculate next birthday
+    next_birthday = date(today.year, birthday_date.month, birthday_date.day)
+    if next_birthday < today:
+        next_birthday = date(today.year + 1, birthday_date.month, birthday_date.day)
+    
+    days_until = (next_birthday - today).days
+    
+    return {
+        'age': age,
+        'days_until': days_until,
+        'birthday_date': birthday_date
+    }
+
 @app.context_processor
 def inject_to_every_page():
     
-    return dict(Grp_=Grp_, Mem_=Mem_)
+    return dict(Grp_=Grp_, Mem_=Mem_, calculate_birthday_info=calculate_birthday_info)
 
     
 # Set the route and accepted methods
@@ -63,17 +93,27 @@ def m_item_edit(mi_id=None):
         return redirect(url_for("memory_module.index"))    
     
     if request.method == 'GET':
+        # Convert has_birthday (int 0/1) to boolean for form
+        has_birthday_bool = bool(m_item.get("has_birthday", 0))
+        birthday_date = m_item.get("birthday")
 
         form.process(id = m_item["id"],
                      answer = m_item["answer"],
                      question = m_item["question"],
                      comment_ = m_item["comment_"],
-                     m_group_id = m_item["m_group_id"])
+                     m_group_id = m_item["m_group_id"],
+                     has_birthday = has_birthday_bool,
+                     birthday = birthday_date)
 
     if form.validate_on_submit():
+        # Convert boolean to int (0/1) for database
+        has_birthday_int = 1 if form.has_birthday.data else 0
+        # Only save birthday if has_birthday is True
+        birthday_date = form.birthday.data if form.has_birthday.data else None
+        
         Mem_.edit_one(form.id.data, form.answer.data,
                         form.question.data, form.comment_.data, 
-                        form.m_group_id.data)        
+                        form.m_group_id.data, has_birthday_int, birthday_date)        
        
         flash('Item Updated!', 'success')
         
@@ -95,9 +135,14 @@ def m_item_new(g_id=None):
         form.process(m_group_id = g_id)
     
     if form.validate_on_submit():
+        # Convert boolean to int (0/1) for database
+        has_birthday_int = 1 if form.has_birthday.data else 0
+        # Only save birthday if has_birthday is True
+        birthday_date = form.birthday.data if form.has_birthday.data else None
+        
         new_mi_id = Mem_.create(form.answer.data,
                                form.question.data, form.comment_.data, 
-                               g_id)
+                               g_id, has_birthday_int, birthday_date)
         
         flash('Memory added!', 'success')
         

@@ -363,6 +363,8 @@ class DBcreate:
             `answer` TEXT NOT NULL,
             `comment_` varchar(250) NOT NULL,
             `m_group_id` INT NOT NULL,
+            `has_birthday` INT NOT NULL DEFAULT 0,
+            `birthday` DATE NULL,
             PRIMARY KEY (`id`),
             FOREIGN KEY (m_group_id) REFERENCES m_groups(id)
             )
