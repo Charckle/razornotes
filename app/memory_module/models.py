@@ -9,7 +9,7 @@ from datab import DB
 class Mem_:
     def session():
         db = DB()
-        sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id, has_birthday, birthday 
+        sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id, has_birthday, birthday, failure_count 
         FROM m_items as mi
         LEFT JOIN m_groups ON mi.m_group_id = m_groups.id 
         WHERE m_groups.show_ = 1;"""
@@ -20,7 +20,7 @@ class Mem_:
     def get_all():
         db = DB()
         sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id,
-        m_groups.name as mg_name, has_birthday, birthday
+        m_groups.name as mg_name, has_birthday, birthday, failure_count
         FROM m_items as mi
         LEFT JOIN m_groups ON mi.m_group_id = m_groups.id  ;"""
         
@@ -30,7 +30,7 @@ class Mem_:
     def get_all_from(g_id):
         db = DB()
         sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id,
-        m_groups.name as mg_name, has_birthday, birthday
+        m_groups.name as mg_name, has_birthday, birthday, failure_count
         FROM m_items as mi
         LEFT JOIN m_groups ON mi.m_group_id = m_groups.id 
         WHERE m_groups.id = %s;"""
@@ -40,7 +40,7 @@ class Mem_:
     # Mem_
     def get_one(clovek_id):
         db = DB()
-        sql_command = f"""SELECT id, answer, question, comment_, m_group_id, has_birthday, birthday 
+        sql_command = f"""SELECT id, answer, question, comment_, m_group_id, has_birthday, birthday, failure_count 
         FROM m_items 
         WHERE id = %s;"""
 
@@ -70,6 +70,21 @@ class Mem_:
         WHERE id = %s"""
 
         db.q_exe(sql_command, (answer, question, comment_, m_group_id, has_birthday, birthday, id_)) 
+    
+    # Mem_
+    @staticmethod
+    def increment_failure_count(item_ids):
+        """Increment failure_count for multiple items"""
+        if not item_ids:
+            return
+        
+        db = DB()
+        placeholders = ','.join(['%s'] * len(item_ids))
+        sql_command = f"""UPDATE m_items 
+        SET failure_count = failure_count + 1
+        WHERE id IN ({placeholders})"""
+        
+        db.q_exe(sql_command, tuple(item_ids))
 
 class Grp_:
     def get_all():

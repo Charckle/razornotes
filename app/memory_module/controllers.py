@@ -67,16 +67,40 @@ def game(group_id):
         
     else:    
         m_items = list(Mem_.get_all_from(group_id))
-        
-    random.shuffle(m_items)
+    
+    # Sort by failure_count (descending) - items with more failures come first
+    m_items.sort(key=lambda x: x.get('failure_count', 0), reverse=True)
+    
+    # Take first 20 items (prioritizing those with higher failure_count)
+    # Then shuffle them to add randomness while keeping priority
+    prioritized = m_items[:20]
+    random.shuffle(prioritized)
     
     m_items = {i["id"]: {"answer": i["answer"], 
                       "question": i["question"], 
                        "comment_": i["comment_"],
                        "m_group_id": i["m_group_id"],
-                       "mg_name": i["mg_name"]} for i in m_items[:20]}
+                       "mg_name": i["mg_name"]} for i in prioritized}
 
     return render_template("memory_module/game.html", m_items=m_items)
+
+
+@memory_module.route('/game/submit_failures', methods=['POST'])
+@access_required()
+def submit_failures():
+    data = request.get_json()
+    failed_ids = data.get('failed_ids', [])
+    
+    if failed_ids:
+        # Validate that IDs are integers
+        try:
+            failed_ids = [int(id) for id in failed_ids]
+            Mem_.increment_failure_count(failed_ids)
+            return jsonify({"status": "success", "count": len(failed_ids)})
+        except (ValueError, TypeError):
+            return jsonify({"status": "error", "message": "Invalid IDs"}), 400
+    
+    return jsonify({"status": "success", "count": 0})
 
 
 @memory_module.route('/m_item_edit/<mi_id>', methods=['GET', 'POST'])

@@ -22,6 +22,8 @@
   
 	var cuid = m_files_d[0]["id"];
 	var old_cuid = cuid;
+	var failed_items = [];  // Track IDs of items that were failed
+	var items_sent = false;  // Track if items have already been sent
 	
   </script>
   <br>
@@ -74,7 +76,12 @@ function start_() {
 }
 
 function nePoznam() {
-nextPerson();
+	// Track as failed if user didn't know it on first try
+	if (cuid && failed_items.indexOf(cuid) === -1) {
+		failed_items.push(cuid);
+	}
+	
+	nextPerson();
 	var ime = "";
 	for (i = 0; i < m_files_d.length; i++) {
 		if (old_cuid == m_files_d[i]["id"]) {
@@ -174,6 +181,11 @@ function poznam() {
 }
 
 function falil() {
+	// Add current item to failed list if not already there
+	if (old_cuid && failed_items.indexOf(old_cuid) === -1) {
+		failed_items.push(old_cuid);
+	}
+	
 	nextPerson();
 	var gumb2 = document.getElementById("bumg2");
 	gumb2.remove(); 
@@ -186,6 +198,11 @@ function zadel() {
 	var gumb2 = document.getElementById("bumg2");
 	
 	if (m_files_d.length == 1) {
+		// Remove the last item
+		removePerson();
+		
+		// Game is finished - send failed items automatically
+		sendFailedItems();
 		
 		result_naslov.innerHTML = "No more items";
 		var comment_ = document.getElementById("komentar");
@@ -207,13 +224,38 @@ function zadel() {
 
 function ponovi() {
 	m_files_d = m_files;
+	failed_items = [];  // Reset failed items when restarting
+	items_sent = false;  // Reset sent flag when restarting
 	var gumb2 = document.getElementById("bumg2");
 	gumb2.remove(); 
 	nextPerson();
 	naprej();
 }
 
+// Function to send failed items to backend
+function sendFailedItems() {
+	// Only send if we have failed items and haven't sent them yet
+	if (failed_items.length > 0 && !items_sent) {
+		items_sent = true;  // Mark as sent to prevent duplicate sends
+		$.ajax({
+			url: "{{ url_for('memory_module.submit_failures') }}",
+			method: "POST",
+			contentType: "application/json",
+			data: JSON.stringify({failed_ids: failed_items}),
+			success: function(response) {
+				console.log("Failed items submitted:", response);
+			},
+			error: function(xhr, status, error) {
+				console.error("Error submitting failures:", error);
+			}
+		});
+	}
+}
+
 function koncaj() {
+	// Send failed items if not already sent
+	sendFailedItems();
+	
 	window.location.href = "{{ url_for('memory_module.index') }}";
 }
 
@@ -243,6 +285,17 @@ function removePerson() {
 }
 
 
+
+// Send failed items when page is about to unload (user closes tab/browser)
+window.addEventListener('beforeunload', function() {
+	if (failed_items.length > 0 && !items_sent) {
+		// Use synchronous request to ensure it completes before page unloads
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST', "{{ url_for('memory_module.submit_failures') }}", false);  // false = synchronous
+		xhr.setRequestHeader('Content-Type', 'application/json');
+		xhr.send(JSON.stringify({failed_ids: failed_items}));
+	}
+});
 
 window.onload = function() {
     start_();

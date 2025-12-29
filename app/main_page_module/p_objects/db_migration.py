@@ -9,6 +9,7 @@ class DB_upgrade:
         DB_upgrade.create_template_table()
         DB_upgrade.create_note_files_table()
         DB_upgrade.add_memory_birthday_fields()
+        DB_upgrade.add_memory_failure_tracking()
     
     # DB_upgrade
     @staticmethod
@@ -72,5 +73,15 @@ class DB_upgrade:
             db = DB()
             sql_command = f"""
             ALTER TABLE `m_items` ADD `birthday` DATE NULL;"""
+            db.q_exe_segment(sql_command, ())
+            db.finish_()
+    
+    # DB_upgrade
+    @staticmethod
+    def add_memory_failure_tracking():
+        if not check_column_exists("m_items", "failure_count"):
+            db = DB()
+            sql_command = f"""
+            ALTER TABLE `m_items` ADD `failure_count` INT NOT NULL DEFAULT 0;"""
             db.q_exe_segment(sql_command, ())
             db.finish_()            
