@@ -67,6 +67,79 @@ def setup_email_reminder_scheduler(scheduler: APScheduler):
         replace_existing=True
     )
     
+    def send_monthly_birthday_reminders():
+        """Send monthly birthday reminders on the 1st of each month at 7:00 AM"""
+        from app.memory_module.email_service import EmailService
+        from app.memory_module.models import Mem_
+        from app.main_page_module.models import UserM
+        from datetime import date
+        
+        with current_app.app_context():
+            today = date.today()
+            # Get all birthdays for current month
+            birthdays = Mem_.get_birthdays_for_month(today.month)
+            
+            if birthdays:
+                # Get users with memory reminders enabled (frequency 1 or 2)
+                users = UserM.get_users_for_morning_reminder()
+                for user in users:
+                    if user.get('email'):
+                        success = EmailService.send_monthly_birthday_reminder(
+                            user['email'],
+                            user['name'],
+                            birthdays
+                        )
+                        if success:
+                            current_app.logger.info(f"Monthly birthday reminder sent to {user['email']}")
+                        else:
+                            current_app.logger.error(f"Failed to send monthly birthday reminder to {user['email']}")
+    
+    def send_daily_birthday_reminders():
+        """Send daily birthday reminders at 7:00 AM for birthdays happening today"""
+        from app.memory_module.email_service import EmailService
+        from app.memory_module.models import Mem_
+        from app.main_page_module.models import UserM
+        
+        with current_app.app_context():
+            # Get birthdays for today
+            birthdays = Mem_.get_birthdays_for_today()
+            
+            if birthdays:
+                # Get users with memory reminders enabled (frequency 1 or 2)
+                users = UserM.get_users_for_morning_reminder()
+                for user in users:
+                    if user.get('email'):
+                        success = EmailService.send_daily_birthday_reminder(
+                            user['email'],
+                            user['name'],
+                            birthdays
+                        )
+                        if success:
+                            current_app.logger.info(f"Daily birthday reminder sent to {user['email']}")
+                        else:
+                            current_app.logger.error(f"Failed to send daily birthday reminder to {user['email']}")
+    
+    # Schedule monthly birthday reminders on the 1st of each month at 7:00 AM
+    scheduler.add_job(
+        id='monthly_birthday_reminders',
+        func=send_monthly_birthday_reminders,
+        trigger='cron',
+        day=1,
+        hour=7,
+        minute=0,
+        replace_existing=True
+    )
+    
+    # Schedule daily birthday reminders at 7:00 AM
+    scheduler.add_job(
+        id='daily_birthday_reminders',
+        func=send_daily_birthday_reminders,
+        trigger='cron',
+        hour=7,
+        minute=0,
+        replace_existing=True
+    )
+    
     # Start scheduler if not already running
     if not scheduler.running:
         scheduler.start()

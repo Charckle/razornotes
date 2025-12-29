@@ -85,6 +85,41 @@ class Mem_:
         WHERE id IN ({placeholders})"""
         
         db.q_exe(sql_command, tuple(item_ids))
+    
+    # Mem_
+    @staticmethod
+    def get_birthdays_for_month(month):
+        """Get all birthdays for a specific month (1-12)"""
+        db = DB()
+        sql_command = f"""SELECT mi.id, mi.answer, mi.question, mi.comment_, mi.birthday, mi.m_group_id,
+        m_groups.name as mg_name
+        FROM m_items as mi
+        LEFT JOIN m_groups ON mi.m_group_id = m_groups.id
+        WHERE mi.has_birthday = 1 
+        AND mi.birthday IS NOT NULL
+        AND MONTH(mi.birthday) = %s
+        ORDER BY DAY(mi.birthday)"""
+        
+        return db.q_r_all(sql_command, (month,))
+    
+    # Mem_
+    @staticmethod
+    def get_birthdays_for_today():
+        """Get all birthdays for today"""
+        from datetime import date
+        today = date.today()
+        db = DB()
+        sql_command = f"""SELECT mi.id, mi.answer, mi.question, mi.comment_, mi.birthday, mi.m_group_id,
+        m_groups.name as mg_name
+        FROM m_items as mi
+        LEFT JOIN m_groups ON mi.m_group_id = m_groups.id
+        WHERE mi.has_birthday = 1 
+        AND mi.birthday IS NOT NULL
+        AND MONTH(mi.birthday) = %s
+        AND DAY(mi.birthday) = %s
+        ORDER BY mi.answer"""
+        
+        return db.q_r_all(sql_command, (today.month, today.day))
 
 class Grp_:
     def get_all():

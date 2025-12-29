@@ -345,6 +345,61 @@ def email_settings():
             else:
                 flash('User session not found.', 'error')
             return redirect(url_for('memory_module.email_settings'))
+        
+        elif 'send_test_monthly_birthday' in request.form:
+            # Send test monthly birthday reminder email to current user
+            from app.memory_module.models import Mem_
+            from datetime import date
+            
+            user_id = session.get('user_id')
+           
+            user = UserM.get_one(user_id)
+            if user and user.get('email'):
+                today = date.today()
+                birthdays = Mem_.get_birthdays_for_month(today.month)
+                if birthdays:
+                    success = EmailService.send_monthly_birthday_reminder(
+                        user['email'],
+                        user['name'],
+                        birthdays
+                    )
+                    if success:
+                        flash(f'Test monthly birthday reminder sent to {user["email"]}!', 'success')
+                    else:
+                        flash('Failed to send test email. Check server logs for details.', 'error')
+                else:
+                    flash('No birthdays found for current month.', 'info')
+            else:
+                flash('Your user account does not have an email address configured.', 'error')
+            
+            return redirect(url_for('memory_module.email_settings'))
+        
+        elif 'send_test_daily_birthday' in request.form:
+            # Send test daily birthday reminder email to current user
+            from app.memory_module.models import Mem_
+            
+            user_id = session.get('user_id')
+            if user_id:
+                user = UserM.get_one(user_id)
+                if user and user.get('email'):
+                    birthdays = Mem_.get_birthdays_for_today()
+                    if birthdays:
+                        success = EmailService.send_daily_birthday_reminder(
+                            user['email'],
+                            user['name'],
+                            birthdays
+                        )
+                        if success:
+                            flash(f'Test daily birthday reminder sent to {user["email"]}!', 'success')
+                        else:
+                            flash('Failed to send test email. Check server logs for details.', 'error')
+                    else:
+                        flash('No birthdays found for today.', 'info')
+                else:
+                    flash('Your user account does not have an email address configured.', 'error')
+            else:
+                flash('User session not found.', 'error')
+            return redirect(url_for('memory_module.email_settings'))
     
     # Get current user's email for test email
     user_email = None

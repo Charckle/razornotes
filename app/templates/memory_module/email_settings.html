@@ -77,13 +77,25 @@
           </div>
           
           <form method="POST" action="{{ url_for('memory_module.email_settings') }}">
-            <button type="submit" name="test_email" class="btn btn-primary">
-              Test Email Connection
-            </button>
-            <button type="submit" name="send_test_email" class="btn btn-success">
-              Send Test Reminder Email
-            </button>
-            <a href="{{ url_for('memory_module.index') }}" class="btn btn-secondary">Back</a>
+            <div class="mb-2">
+              <button type="submit" name="test_email" class="btn btn-primary">
+                Test Email Connection
+              </button>
+              <button type="submit" name="send_test_email" class="btn btn-success">
+                Send Test Reminder Email
+              </button>
+            </div>
+            <div class="mb-2">
+              <button type="submit" name="send_test_monthly_birthday" class="btn btn-info">
+                Send Test Monthly Birthday Reminder
+              </button>
+              <button type="submit" name="send_test_daily_birthday" class="btn btn-warning">
+                Send Test Daily Birthday Reminder
+              </button>
+            </div>
+            <div>
+              <a href="{{ url_for('memory_module.index') }}" class="btn btn-secondary">Back</a>
+            </div>
           </form>
           {% if config.user_email %}
             <div class="alert alert-info mt-3 mb-0">
