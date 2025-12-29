@@ -48,6 +48,16 @@ class Config(object):
     # ip and network restriction
     IP_RESTRICTION = environ.get('IP_RESTRICTION', "1")
     IPS_NETWORKS = environ.get('IPS_NETWORKS', "127.0.0.1,127.0.0.0/8")
+    
+    # Website URL for email links
+    WEBSITE_URL = environ.get('WEBSITE_URL', '')
+    
+    # Email configuration for memory reminders
+    EMAIL_SMTP_HOST = environ.get('EMAIL_SMTP_HOST', '')
+    EMAIL_SMTP_PORT = int(environ.get('EMAIL_SMTP_PORT', '465'))
+    EMAIL_SMTP_USER = environ.get('EMAIL_SMTP_USER', '')
+    EMAIL_SMTP_PASSWORD = environ.get('EMAIL_SMTP_PASSWORD', '')
+    EMAIL_FROM_ADDRESS = environ.get('EMAIL_FROM_ADDRESS', '')
 
     
 class ProductionConfig(Config):

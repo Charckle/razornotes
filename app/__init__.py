@@ -8,6 +8,7 @@ from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv, find_dotenv, dotenv_values
 
 from flask_jwt_extended import JWTManager
+from flask_apscheduler import APScheduler
 
 from datab import DBcreate, check_database_active
 from app.main_page_module.p_objects.db_migration import DB_upgrade
@@ -35,6 +36,10 @@ else:
     app.config.from_object("config.ProductionConfig")
 
 jwt = JWTManager(app)
+
+# Initialize scheduler for email reminders (only if memory module is enabled)
+scheduler = APScheduler()
+scheduler.init_app(app)
 
 # Sample HTTP error handling
 @app.errorhandler(404)
@@ -120,7 +125,11 @@ if app.config['WTF_CSRF_ENABLED'] == False:
     app.logger.info('WTF CSRF is Disabled')    
 
 if app.config['MODULE_MEMORY'] == True:
-    app.logger.info('Memory module is Enabled')    
+    app.logger.info('Memory module is Enabled')
+    from app.memory_module.scheduler import setup_email_reminder_scheduler
+    setup_email_reminder_scheduler(scheduler)
+    app.logger.info('Email reminder scheduler initialized (7:00 AM and 8:00 PM)')    
     
 if app.config['MODULE_SECRETS'] == True:
-    app.logger.info('Secrets module is Enabled')    
+    app.logger.info('Secrets module is Enabled')
+ 

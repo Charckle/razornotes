@@ -142,8 +142,13 @@ class UserM:
     # UserM
     @staticmethod
     def get_all():
+        from app import app
         db = DB()
-        sql_command = f"SELECT id, name, username FROM users;"
+        # Include memory_reminder_frequency if memory module is enabled
+        if app.config.get('MODULE_MEMORY', False):
+            sql_command = f"SELECT id, name, username, memory_reminder_frequency FROM users;"
+        else:
+            sql_command = f"SELECT id, name, username FROM users;"
 
         return db.q_r_all(sql_command, ())  
     
@@ -161,7 +166,8 @@ class UserM:
     @staticmethod
     def get_one(user_id):
         db = DB()
-        sql_command = f"""SELECT id, name, username, email, password, status, created_date, api_key 
+        sql_command = f"""SELECT id, name, username, email, password, status, created_date, api_key,
+        memory_reminder_frequency
         FROM users WHERE id = %s;"""
         
         return db.q_r_one(sql_command, (user_id, ))
@@ -256,7 +262,43 @@ class UserM:
         db = DB()
         sql_command = f"DELETE FROM user_fido2 WHERE cred_id_bs64 = %s;"
         
-        db.q_exe(sql_command, (cred_id_bs64,))    
+        db.q_exe(sql_command, (cred_id_bs64,))
+    
+    # UserM
+    @staticmethod
+    def update_reminder_preferences(user_id, memory_reminder_frequency):
+        db = DB()
+        sql_command = f"""UPDATE users 
+        SET memory_reminder_frequency = %s
+        WHERE id = %s"""
+        
+        db.q_exe(sql_command, (memory_reminder_frequency, user_id,))
+    
+    # UserM
+    @staticmethod
+    def get_users_for_morning_reminder():
+        """Get users who need morning reminder (frequency 1 or 2)"""
+        db = DB()
+        
+        sql_command = f"""SELECT id, name, username, email, memory_reminder_frequency
+        FROM users 
+        WHERE status = 1 
+        AND memory_reminder_frequency IN (1, 2)"""
+        
+        return db.q_r_all(sql_command, ())
+    
+    # UserM
+    @staticmethod
+    def get_users_for_evening_reminder():
+        """Get users who need evening reminder (frequency 2 only)"""
+        db = DB()
+        
+        sql_command = f"""SELECT id, name, username, email, memory_reminder_frequency
+        FROM users 
+        WHERE status = 1 
+        AND memory_reminder_frequency = 2"""
+        
+        return db.q_r_all(sql_command, ())
 
 class Notes:
     @staticmethod

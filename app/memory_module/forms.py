@@ -66,8 +66,22 @@ class ImportMemories(FlaskForm):
         FileAllowed(["pfxf", "PFXF"], "Only PFXF allowed!")])         
 
     submit = SubmitField('Submit File')
+
+
+class ReminderPreferences(FlaskForm):
+    memory_reminder_frequency = SelectField(
+        'Reminder Frequency',
+        choices=[
+            ('0', 'Never'),
+            ('1', 'Once a day (7:00 AM)'),
+            ('2', 'Twice a day (7:00 AM & 8:00 PM)')
+        ],
+        default='0'
+    )
+    submit = SubmitField('Save Preferences')
  
 f_d = {"Memory": Memory,
               "Group": Group,
-              "ImportMemories": ImportMemories
+              "ImportMemories": ImportMemories,
+              "ReminderPreferences": ReminderPreferences
               } 

@@ -216,6 +216,7 @@ class DBcreate:
             `status` INT NOT NULL DEFAULT 0,
             `created_date` DATE NOT NULL,
             `api_key` varchar(20) NOT NULL,
+            `memory_reminder_frequency` INT NOT NULL DEFAULT 0,
             PRIMARY KEY (`id`)
             )
             ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""

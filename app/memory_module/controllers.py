@@ -10,6 +10,8 @@ from datetime import date, datetime
 from app.memory_module.models import Grp_, Mem_
 from app.memory_module.forms import f_d
 from app.memory_module.r_proc import Export_im
+from app.memory_module.email_service import EmailService
+from app.main_page_module.models import UserM
 
 from wrappers import access_required
 
@@ -302,4 +304,90 @@ def memory_import():
         print(error)
         flash(f'Invalid Data: {error}', 'error')    
     
-    return render_template("memory_module/memory_import.html", form=form)    
+    return render_template("memory_module/memory_import.html", form=form)
+
+
+@memory_module.route('/email_settings/', methods=['GET', 'POST'])
+@access_required()
+def email_settings():
+    """View and test email settings"""
+    if request.method == 'POST':
+        if 'test_email' in request.form:
+            # Test email connection
+            success, message = EmailService.test_email_connection()
+            if success:
+                flash('Email connection test successful!', 'success')
+            else:
+                flash(f'Email connection test failed: {message}', 'error')
+            return redirect(url_for('memory_module.email_settings'))
+        
+        elif 'send_test_email' in request.form:
+            # Send test reminder email to current user
+            user_id = session.get('user_id')
+            if user_id:
+                user = UserM.get_one(user_id)
+                if user and user.get('email'):
+                    game_url = EmailService.get_game_url()
+                    if game_url:
+                        success = EmailService.send_reminder_email(
+                            user['email'],
+                            user['name'],
+                            game_url
+                        )
+                        if success:
+                            flash(f'Test reminder email sent to {user["email"]}!', 'success')
+                        else:
+                            flash('Failed to send test email. Check server logs for details.', 'error')
+                    else:
+                        flash('No memory groups available to generate game URL.', 'error')
+                else:
+                    flash('Your user account does not have an email address configured.', 'error')
+            else:
+                flash('User session not found.', 'error')
+            return redirect(url_for('memory_module.email_settings'))
+    
+    # Get current user's email for test email
+    user_email = None
+    user_id = session.get('user_id')
+    if user_id:
+        user = UserM.get_one(user_id)
+        if user:
+            user_email = user.get('email')
+    
+    config = {
+        'smtp_host': app.config.get('EMAIL_SMTP_HOST', ''),
+        'smtp_port': app.config.get('EMAIL_SMTP_PORT', ''),
+        'smtp_user': app.config.get('EMAIL_SMTP_USER', ''),
+        'from_address': app.config.get('EMAIL_FROM_ADDRESS', ''),
+        'app_name': app.config.get('APP_NAME', 'Razor Notes'),
+        'password_set': bool(app.config.get('EMAIL_SMTP_PASSWORD', '')),
+        'user_email': user_email
+    }
+    
+    return render_template("memory_module/email_settings.html", config=config)
+
+
+@memory_module.route('/reminder_preferences/', methods=['GET', 'POST'])
+@access_required()
+def reminder_preferences():
+    """User reminder preferences"""
+    user_id = session.get('user_id')
+
+    user = UserM.get_one(user_id)
+    form = f_d["ReminderPreferences"]()
+    
+    if request.method == 'GET':
+        # Load current preferences
+        frequency = user.get('memory_reminder_frequency', 0)
+        form.memory_reminder_frequency.data = str(frequency)
+    
+    if form.validate_on_submit():
+        frequency = int(form.memory_reminder_frequency.data)
+        UserM.update_reminder_preferences(user_id, frequency)
+        flash('Reminder preferences updated!', 'success')
+        return redirect(url_for('memory_module.reminder_preferences'))
+    
+    for error in form.errors:
+        flash(f'Invalid Data: {error}', 'error')
+    
+    return render_template("memory_module/reminder_preferences.html", form=form, user=user)    

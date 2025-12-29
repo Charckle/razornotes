@@ -1,0 +1,70 @@
+{% extends "memory_module/base.html" %}
+
+{% block extraheader %}
+{% endblock %}
+
+{% block content%}
+
+  <main>
+  <br>
+  
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Reminder Preferences</li>
+    </ol>
+  </nav>
+  
+  <div class="row g-5">
+    <div class="col-md-12">
+      <div class="py-4 text-center">
+        <h2>Memory Game Reminders</h2>
+        <p class="text-muted">Configure when you want to receive email reminders to practice</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row mb-4">
+    <div class="col-md-8 offset-md-2">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Your Preferences</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('memory_module.reminder_preferences') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+              {{ form.memory_reminder_frequency.label(class="form-label") }}
+              {{ form.memory_reminder_frequency(class="form-select") }}
+              {% if form.memory_reminder_frequency.errors %}
+                {% for error in form.memory_reminder_frequency.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              {% endif %}
+            </div>
+            
+            <div class="alert alert-info">
+              <strong>Current setting:</strong> 
+              {% if user.memory_reminder_frequency == 0 %}
+                Never
+              {% elif user.memory_reminder_frequency == 1 %}
+                Once a day at 7:00 AM
+              {% elif user.memory_reminder_frequency == 2 %}
+                Twice a day at 7:00 AM and 8:00 PM
+              {% endif %}
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="{{ url_for('memory_module.index') }}" class="btn btn-secondary">Cancel</a>
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  </main>
+{% endblock %}
+

@@ -21,7 +21,22 @@
       <ul class="list-group">
         {% for i in users%}
         <li class="list-group-item d-flex justify-content-between align-items-center">
-          {{ i["username"] }}: {{ i["name"] }}
+          <div>
+            <strong>{{ i["username"] }}</strong>: {{ i["name"] }}
+            {% if app.config.MODULE_MEMORY and i.get('memory_reminder_frequency') is defined %}
+              <br>
+              <small class="text-muted">
+                Memory Reminders: 
+                {% if i['memory_reminder_frequency'] == 0 %}
+                  <span class="badge bg-secondary text-white">Never</span>
+                {% elif i['memory_reminder_frequency'] == 1 %}
+                  <span class="badge bg-info text-white">Once daily (7:00 AM)</span>
+                {% elif i['memory_reminder_frequency'] == 2 %}
+                  <span class="badge bg-primary text-white">Twice daily (7:00 AM & 8:00 PM)</span>
+                {% endif %}
+              </small>
+            {% endif %}
+          </div>
           <a class="btn btn-warning" href="{{ url_for('admin_module.user_edit', user_id=i['id']) }}" role="button">Edit User</a>
         </li>
         {% endfor %}
