@@ -40,6 +40,12 @@
 - `WTF_CSRF_ENABLED` - Default True. If false, it wont check CRSF tokens in the forms in ALL forms.
 - `ICON_COLOR` - Default "RED". Color of the title icon, so to differentiate between instances in use.
     - Possible: RED, BLUE, L_BLUE, GREEN, ORANGE, BLACK, WHITE, GRAY, D_BROWN, L_BROWN, L_ORANGE, PINK, PURPLE, YELLOW
+- `WEBSITE_URL` - Base URL of the website (e.g., https://example.com). Used for generating email links in memory game reminders.
+- `EMAIL_SMTP_HOST` - SMTP server hostname for sending email reminders (memory module)
+- `EMAIL_SMTP_PORT` - SMTP server port. Default 465 (SSL/TLS)
+- `EMAIL_SMTP_USER` - SMTP username for email authentication
+- `EMAIL_SMTP_PASSWORD` - SMTP password for email authentication
+- `EMAIL_FROM_ADDRESS` - Sender email address for memory game and birthday reminders
 
 #### To DO
 - fix multi ip in ip restriction
