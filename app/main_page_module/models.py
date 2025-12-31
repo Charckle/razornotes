@@ -144,11 +144,7 @@ class UserM:
     def get_all():
         from app import app
         db = DB()
-        # Include memory_reminder_frequency if memory module is enabled
-        if app.config.get('MODULE_MEMORY', False):
-            sql_command = f"SELECT id, name, username, memory_reminder_frequency FROM users;"
-        else:
-            sql_command = f"SELECT id, name, username FROM users;"
+        sql_command = f"SELECT id, name, username, memory_reminder_frequency FROM users;"
 
         return db.q_r_all(sql_command, ())  
     
@@ -262,7 +258,7 @@ class UserM:
         db = DB()
         sql_command = f"DELETE FROM user_fido2 WHERE cred_id_bs64 = %s;"
         
-        db.q_exe(sql_command, (cred_id_bs64,))
+        db.q_exe(sql_command, (cred_id_bs64,))    
     
     # UserM
     @staticmethod

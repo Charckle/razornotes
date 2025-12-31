@@ -125,11 +125,11 @@ if app.config['WTF_CSRF_ENABLED'] == False:
     app.logger.info('WTF CSRF is Disabled')    
 
 if app.config['MODULE_MEMORY'] == True:
-    app.logger.info('Memory module is Enabled')
+    app.logger.info('Memory module is Enabled')    
     from app.memory_module.scheduler import setup_email_reminder_scheduler
     setup_email_reminder_scheduler(scheduler, app)
     app.logger.info('Email reminder scheduler initialized (7:00 AM and 8:00 PM)')    
     
 if app.config['MODULE_SECRETS'] == True:
-    app.logger.info('Secrets module is Enabled')
+    app.logger.info('Secrets module is Enabled')    
  

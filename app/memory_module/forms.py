@@ -27,7 +27,7 @@ class Memory(FlaskForm):
     groups = []
     
     m_group_id = SelectField(u'Choose a group.', [validators.InputRequired(message='Specify the Group')], 
-                              choices=groups)
+                              choices=groups) 
     
     has_birthday = BooleanField('Has Birthday')
     

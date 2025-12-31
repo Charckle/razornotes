@@ -48,7 +48,7 @@ class Config(object):
     # ip and network restriction
     IP_RESTRICTION = environ.get('IP_RESTRICTION', "1")
     IPS_NETWORKS = environ.get('IPS_NETWORKS', "127.0.0.1,127.0.0.0/8")
-    
+
     # Website URL for email links
     WEBSITE_URL = environ.get('WEBSITE_URL', '')
     

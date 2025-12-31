@@ -12,13 +12,13 @@
   <br>
   
   <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
+	  <ol class="breadcrumb">
+		<li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
       <li class="breadcrumb-item"><a href="{{ url_for('memory_module.group_all') }}">Groups</a></li>
       <li class="breadcrumb-item active" aria-current="page">{{ group['name'] }}</li>
-    </ol>
-  </nav>
-  
+	  </ol>
+	</nav>
+	
   <div class="row g-5">
     <div class="col-md-12">
       <div class="py-4 text-center">
@@ -31,9 +31,9 @@
           <span class="badge bg-secondary">Hidden from games</span>
         {% endif %}
       </div>
+      </div>
     </div>
-  </div>
-  
+    
   <!-- Items Card -->
   <div class="row mb-4">
     <div class="col-md-12">
@@ -46,7 +46,7 @@
         </div>
         <div class="card-body p-0">
           <div class="list-group list-group-flush">
-            {% for i in m_items %}
+    {% for i in m_items %}
               {% set birthday_info = calculate_birthday_info(i.get('birthday'), i.get('has_birthday', 0)) %}
               <a href="{{ url_for('memory_module.m_item_edit', mi_id=i['id']) }}" class="list-group-item list-group-item-action">
                 <div class="d-flex w-100 justify-content-between align-items-start">
@@ -82,13 +82,13 @@
                   Add Your First Item
                 </a>
               </div>
-            {% endfor %}
-          </div>
+	 {% endfor %}
+	 </div>
         </div>
       </div>
     </div>
-  </div>
-  
+	 </div>
+	
   <!-- Actions Card -->
   <div class="row mb-4">
     <div class="col-md-12">

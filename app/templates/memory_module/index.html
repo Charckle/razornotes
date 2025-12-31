@@ -41,8 +41,8 @@
         </div>
       </div>
     </div>
-  </div>
-  
+	</div>
+
   <!-- Groups Card -->
   <div class="row mb-4">
     <div class="col-md-12">
@@ -52,7 +52,7 @@
         </div>
         <div class="card-body p-0">
           <div class="list-group list-group-flush">
-            {%- for i in Grp_.get_all() %}
+    {%- for i in Grp_.get_all() %}
               <a href="{{ url_for('memory_module.game', group_id=i['id']) }}" class="list-group-item list-group-item-action">
                 <div class="d-flex w-100 justify-content-between align-items-center">
                   <h6 class="mb-1">{{ i['name'] }}</h6>
@@ -66,8 +66,8 @@
               <div class="list-group-item text-center text-muted">
                 <p class="mb-0">No groups available. <a href="{{ url_for('memory_module.group_new') }}">Create one!</a></p>
               </div>
-            {% endfor %}
-          </div>
+	 {% endfor %}
+	 </div>
         </div>
       </div>
     </div>

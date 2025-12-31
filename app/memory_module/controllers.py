@@ -5,6 +5,7 @@ from app import app
 
 import random
 import json
+from itertools import groupby
 from datetime import date, datetime
 
 from app.memory_module.models import Grp_, Mem_
@@ -73,10 +74,16 @@ def game(group_id):
     # Sort by failure_count (descending) - items with more failures come first
     m_items.sort(key=lambda x: x.get('failure_count', 0), reverse=True)
     
+    # Group items by failure_count and shuffle within each group
+    # This preserves priority while adding randomness for items with same failure_count
+    shuffled_items = []
+    for failure_count, group_items in groupby(m_items, key=lambda x: x.get('failure_count', 0)):
+        group_list = list(group_items)
+        random.shuffle(group_list)
+        shuffled_items.extend(group_list)
+    
     # Take first 20 items (prioritizing those with higher failure_count)
-    # Then shuffle them to add randomness while keeping priority
-    prioritized = m_items[:20]
-    random.shuffle(prioritized)
+    prioritized = shuffled_items[:20]
     
     m_items = {i["id"]: {"answer": i["answer"], 
                       "question": i["question"], 
