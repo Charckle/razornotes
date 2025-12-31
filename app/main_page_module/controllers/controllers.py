@@ -84,7 +84,7 @@ def login(w_url=None):
         user = UserM.login_check(form.username_or_email.data, form.password.data)
         form.password.data = None        
         
-        if user is not False:
+        if user is not None:
             # check the IP restriction
             if app.config['IP_RESTRICTION'] == "1":
 

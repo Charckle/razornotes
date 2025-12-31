@@ -104,11 +104,11 @@
             clearTimeout(searchTimer);
           }
           
-          // Set a new timer for 1 second
+          // Set a new timer for 0.5 seconds
           searchTimer = setTimeout(function() {
             load_results();
             searchTimer = null;
-          }, 1000);
+          }, 500);
         }
         
         // Attach debounced function to keyup event
