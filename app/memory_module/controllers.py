@@ -99,17 +99,31 @@ def game(group_id):
 def submit_failures():
     data = request.get_json()
     failed_ids = data.get('failed_ids', [])
+    session_ids = data.get('session_ids', [])
     
-    if failed_ids:
+    try:
         # Validate that IDs are integers
-        try:
-            failed_ids = [int(id) for id in failed_ids]
+        failed_ids = [int(id) for id in failed_ids] if failed_ids else []
+        session_ids = [int(id) for id in session_ids] if session_ids else []
+        
+        # Increment failure_count for failed items
+        if failed_ids:
             Mem_.increment_failure_count(failed_ids)
-            return jsonify({"status": "success", "count": len(failed_ids)})
-        except (ValueError, TypeError):
-            return jsonify({"status": "error", "message": "Invalid IDs"}), 400
-    
-    return jsonify({"status": "success", "count": 0})
+        
+        # Decrement failure_count for successfully guessed items
+        # (items in session but not in failed list)
+        if session_ids:
+            successful_ids = [id for id in session_ids if id not in failed_ids]
+            if successful_ids:
+                Mem_.decrement_failure_count(successful_ids)
+        
+        return jsonify({
+            "status": "success", 
+            "failed_count": len(failed_ids),
+            "successful_count": len(successful_ids) if session_ids else 0
+        })
+    except (ValueError, TypeError) as e:
+        return jsonify({"status": "error", "message": f"Invalid IDs: {str(e)}"}), 400
 
 
 @memory_module.route('/m_item_edit/<mi_id>', methods=['GET', 'POST'])

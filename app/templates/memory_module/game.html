@@ -232,21 +232,30 @@ function ponovi() {
 	naprej();
 }
 
-// Function to send failed items to backend
+// Function to send failed items and session items to backend
 function sendFailedItems() {
-	// Only send if we have failed items and haven't sent them yet
-	if (failed_items.length > 0 && !items_sent) {
+	// Send if we haven't sent items yet (even if no failures, we need to decrement successful ones)
+	if (!items_sent) {
 		items_sent = true;  // Mark as sent to prevent duplicate sends
+		
+		// Get all session item IDs from the original m_files array
+		var session_ids = m_files.map(function(item) {
+			return item.id;
+		});
+		
 		$.ajax({
 			url: "{{ url_for('memory_module.submit_failures') }}",
 			method: "POST",
 			contentType: "application/json",
-			data: JSON.stringify({failed_ids: failed_items}),
+			data: JSON.stringify({
+				failed_ids: failed_items,
+				session_ids: session_ids
+			}),
 			success: function(response) {
-				console.log("Failed items submitted:", response);
+				console.log("Items submitted:", response);
 			},
 			error: function(xhr, status, error) {
-				console.error("Error submitting failures:", error);
+				console.error("Error submitting items:", error);
 			}
 		});
 	}

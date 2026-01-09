@@ -88,6 +88,21 @@ class Mem_:
     
     # Mem_
     @staticmethod
+    def decrement_failure_count(item_ids):
+        """Decrement failure_count for multiple items (minimum 0)"""
+        if not item_ids:
+            return
+        
+        db = DB()
+        placeholders = ','.join(['%s'] * len(item_ids))
+        sql_command = f"""UPDATE m_items 
+        SET failure_count = GREATEST(failure_count - 1, 0)
+        WHERE id IN ({placeholders})"""
+        
+        db.q_exe(sql_command, tuple(item_ids))
+    
+    # Mem_
+    @staticmethod
     def get_birthdays_for_month(month):
         """Get all birthdays for a specific month (1-12)"""
         db = DB()
