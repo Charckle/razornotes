@@ -56,27 +56,40 @@
     <form method="POST" action="{{ url_for('memory_module.m_item_edit') }}" accept-charset="UTF-8" role="form">
      {{ form.csrf_token }}
      {{ form.id }}
-     {{ render_field(form.answer, autofocus="") }}
-     {{ render_field(form.question) }}
-     {{ render_field(form.comment_) }}
-     {{ render_field(form.m_group_id) }}
-
-     <div class="form-group">
-         {{ form.has_birthday }} - {{ form.has_birthday.label.text }}
-     </div>
      
-     <div class="form-group" id="birthday-field-group" style="display: {% if form.has_birthday.data %}block{% else %}none{% endif %};">
-         {{ form.birthday.label }}
-         {% if form.birthday.errors %}
-             {% for error in form.birthday.errors %}
-                 <small class="text-danger">{{ error }}</small>
-             {% endfor %}
-         {% endif %}
-         {{ form.birthday(class="form-control", type="date") }}
+     <div class="row">
+       <!-- Left Column -->
+       <div class="col-md-6">
+         {{ render_field(form.answer, autofocus="") }}
+         {{ render_field(form.question) }}
+         {{ render_field(form.comment_) }}
+       </div>
+       
+       <!-- Right Column -->
+       <div class="col-md-6">
+         {{ render_field(form.m_group_id) }}
+         
+         <div class="form-group mb-3">
+             {{ form.has_birthday }} - {{ form.has_birthday.label.text }}
+         </div>
+         
+         <div class="form-group mb-3" id="birthday-field-group" style="display: {% if form.has_birthday.data %}block{% else %}none{% endif %};">
+             {{ form.birthday.label }}
+             {% if form.birthday.errors %}
+                 {% for error in form.birthday.errors %}
+                     <small class="text-danger">{{ error }}</small>
+                 {% endfor %}
+             {% endif %}
+             {{ form.birthday(class="form-control", type="date") }}
+         </div>
+         
+         <div class="form-group mb-3">
+             {{ form.show_ }} - {{ form.show_.label.text }}
+         </div>
+         
+         {{ form.submit(class="form-control btn btn-primary mb-2") }}
+       </div>
      </div>
-
-     
-     {{ form.submit(class="form-control btn btn-primary mb-2") }}
 
      </form>
      

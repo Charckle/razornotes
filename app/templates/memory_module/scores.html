@@ -1,0 +1,171 @@
+{% extends "memory_module/base.html" %}
+
+{% block extraheader %}
+{% endblock %}
+
+{% block content%}
+
+  <main>
+  <br>
+  
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('memory_module.index') }}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Memory Scores</li>
+    </ol>
+  </nav>
+  
+  <div class="row g-5">
+    <div class="col-md-12">
+      <div class="py-4 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='brand/bootstrap-logo.svg') }}" alt="" width="72" height="57">
+        <h2>Memory Scores</h2>
+        <p class="text-muted">View and edit failure counts for all memory items</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scores Table -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">All Memory Items ({{ m_items|length }})</h5>
+          <div>
+            <span class="badge bg-info">Sorted by failure count (highest first)</span>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th>Answer</th>
+                  <th>Question</th>
+                  <th>Group</th>
+                  <th style="width: 150px;">Failure Count</th>
+                  <th style="width: 100px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in m_items %}
+                <tr id="row-{{ item['id'] }}">
+                  <td><strong>{{ item['answer'] }}</strong></td>
+                  <td>{{ item['question'] }}</td>
+                  <td>
+                    <span class="badge bg-secondary">{{ item.get('mg_name', 'N/A') }}</span>
+                  </td>
+                  <td>
+                    <div class="input-group input-group-sm">
+                      <input type="number" 
+                             class="form-control failure-count-input" 
+                             id="count-{{ item['id'] }}"
+                             value="{{ item.get('failure_count', 0) }}" 
+                             min="0"
+                             data-item-id="{{ item['id'] }}">
+                      <button class="btn btn-outline-primary btn-sm" 
+                              type="button" 
+                              onclick="updateScore({{ item['id'] }})">
+                        Save
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('memory_module.m_item_edit', mi_id=item['id']) }}" 
+                       class="btn btn-sm btn-outline-secondary">
+                      Edit
+                    </a>
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-5">
+                    <p class="mb-2">No memory items found.</p>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  </main>
+  
+  <script>
+  function updateScore(itemId) {
+      var input = document.getElementById('count-' + itemId);
+      var failureCount = parseInt(input.value);
+      var row = document.getElementById('row-' + itemId);
+      
+      // Validate input
+      if (isNaN(failureCount) || failureCount < 0) {
+          alert('Please enter a valid number (0 or greater)');
+          return;
+      }
+      
+      // Disable input and show loading state
+      input.disabled = true;
+      row.style.opacity = '0.6';
+      
+      // Send AJAX request
+      $.ajax({
+          url: "{{ url_for('memory_module.update_score') }}",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({
+              item_id: itemId,
+              failure_count: failureCount
+          }),
+          success: function(response) {
+              // Re-enable input and restore opacity
+              input.disabled = false;
+              row.style.opacity = '1';
+              
+              // Show success feedback
+              var originalBg = row.style.backgroundColor;
+              row.style.backgroundColor = '#d4edda';
+              setTimeout(function() {
+                  row.style.backgroundColor = originalBg;
+              }, 1000);
+              
+              console.log("Score updated:", response);
+          },
+          error: function(xhr, status, error) {
+              // Re-enable input and restore opacity
+              input.disabled = false;
+              row.style.opacity = '1';
+              
+              // Show error feedback
+              var originalBg = row.style.backgroundColor;
+              row.style.backgroundColor = '#f8d7da';
+              setTimeout(function() {
+                  row.style.backgroundColor = originalBg;
+              }, 2000);
+              
+              var errorMsg = 'Error updating score';
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                  errorMsg = xhr.responseJSON.message;
+              }
+              alert(errorMsg);
+              console.error("Error updating score:", error);
+          }
+      });
+  }
+  
+  // Allow Enter key to trigger save
+  document.addEventListener('DOMContentLoaded', function() {
+      var inputs = document.querySelectorAll('.failure-count-input');
+      inputs.forEach(function(input) {
+          input.addEventListener('keypress', function(e) {
+              if (e.key === 'Enter') {
+                  var itemId = parseInt(this.getAttribute('data-item-id'));
+                  updateScore(itemId);
+              }
+          });
+      });
+  });
+  </script>
+{% endblock %}

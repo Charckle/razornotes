@@ -9,7 +9,7 @@ from datab import DB
 class Mem_:
     def session():
         db = DB()
-        sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id, has_birthday, birthday, failure_count 
+        sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id, has_birthday, birthday, failure_count, mi.show_
         FROM m_items as mi
         LEFT JOIN m_groups ON mi.m_group_id = m_groups.id 
         WHERE m_groups.show_ = 1;"""
@@ -20,9 +20,21 @@ class Mem_:
     def get_all():
         db = DB()
         sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id,
-        m_groups.name as mg_name, has_birthday, birthday, failure_count
+        m_groups.name as mg_name, has_birthday, birthday, failure_count, mi.show_
         FROM m_items as mi
-        LEFT JOIN m_groups ON mi.m_group_id = m_groups.id  ;"""
+        LEFT JOIN m_groups ON mi.m_group_id = m_groups.id  
+        WHERE m_groups.show_ = 1;"""
+        
+        return db.q_r_all(sql_command, ())
+    
+    # Mem_
+    def get_all_admin():
+        """Get all items including hidden ones (for admin views)"""
+        db = DB()
+        sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id,
+        m_groups.name as mg_name, has_birthday, birthday, failure_count, mi.show_
+        FROM m_items as mi
+        LEFT JOIN m_groups ON mi.m_group_id = m_groups.id;"""
         
         return db.q_r_all(sql_command, ()) 
     
@@ -30,7 +42,7 @@ class Mem_:
     def get_all_from(g_id):
         db = DB()
         sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id,
-        m_groups.name as mg_name, has_birthday, birthday, failure_count
+        m_groups.name as mg_name, has_birthday, birthday, failure_count, mi.show_
         FROM m_items as mi
         LEFT JOIN m_groups ON mi.m_group_id = m_groups.id 
         WHERE m_groups.id = %s;"""
@@ -40,19 +52,19 @@ class Mem_:
     # Mem_
     def get_one(clovek_id):
         db = DB()
-        sql_command = f"""SELECT id, answer, question, comment_, m_group_id, has_birthday, birthday, failure_count 
+        sql_command = f"""SELECT id, answer, question, comment_, m_group_id, has_birthday, birthday, failure_count, show_ 
         FROM m_items 
         WHERE id = %s;"""
 
         return db.q_r_one(sql_command, (clovek_id, ))       
     
     # Mem_
-    def create(answer, question, comment_, m_group_id, has_birthday=0, birthday=None):
+    def create(answer, question, comment_, m_group_id, has_birthday=0, birthday=None, show_=1):
         db = DB()
-        sql_command = f"""INSERT INTO m_items (answer, question, comment_, m_group_id, has_birthday, birthday)
-            VALUES (%s, %s, %s, %s, %s, %s);"""
+        sql_command = f"""INSERT INTO m_items (answer, question, comment_, m_group_id, has_birthday, birthday, show_)
+            VALUES (%s, %s, %s, %s, %s, %s, %s);"""
         
-        return db.q_exe_new(sql_command, (answer, question, comment_, m_group_id, has_birthday, birthday))
+        return db.q_exe_new(sql_command, (answer, question, comment_, m_group_id, has_birthday, birthday, show_))
     
     # Mem_
     def delete(item_id):
@@ -62,14 +74,14 @@ class Mem_:
         db.q_exe(sql_command, (item_id,))
     
     # Mem_
-    def edit_one(id_, answer, question, comment_, m_group_id, has_birthday=0, birthday=None):
+    def edit_one(id_, answer, question, comment_, m_group_id, has_birthday=0, birthday=None, show_=1):
         db = DB()
         sql_command = f"""UPDATE m_items 
         SET answer = %s, question = %s,
-        comment_ = %s, m_group_id = %s, has_birthday = %s, birthday = %s
+        comment_ = %s, m_group_id = %s, has_birthday = %s, birthday = %s, show_ = %s
         WHERE id = %s"""
 
-        db.q_exe(sql_command, (answer, question, comment_, m_group_id, has_birthday, birthday, id_)) 
+        db.q_exe(sql_command, (answer, question, comment_, m_group_id, has_birthday, birthday, show_, id_)) 
     
     # Mem_
     @staticmethod
@@ -100,6 +112,18 @@ class Mem_:
         WHERE id IN ({placeholders})"""
         
         db.q_exe(sql_command, tuple(item_ids))
+    
+    # Mem_
+    @staticmethod
+    def update_failure_count(item_id, failure_count):
+        """Update failure_count for a specific item (minimum 0)"""
+        db = DB()
+        failure_count = max(0, int(failure_count))  # Ensure non-negative
+        sql_command = f"""UPDATE m_items 
+        SET failure_count = %s
+        WHERE id = %s"""
+        
+        db.q_exe(sql_command, (failure_count, item_id))
     
     # Mem_
     @staticmethod

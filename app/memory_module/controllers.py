@@ -71,6 +71,9 @@ def game(group_id):
     else:    
         m_items = list(Mem_.get_all_from(group_id))
     
+    # Filter out items where show_ = 0 (not displayed in game)
+    m_items = [item for item in m_items if item.get('show_', 1) == 1]
+    
     # Sort by failure_count (descending) - items with more failures come first
     m_items.sort(key=lambda x: x.get('failure_count', 0), reverse=True)
     
@@ -143,6 +146,7 @@ def m_item_edit(mi_id=None):
         # Convert has_birthday (int 0/1) to boolean for form
         has_birthday_bool = bool(m_item.get("has_birthday", 0))
         birthday_date = m_item.get("birthday")
+        show_bool = bool(m_item.get("show_", 1))  # Default to 1 (show) if not set
 
         form.process(id = m_item["id"],
                      answer = m_item["answer"],
@@ -150,17 +154,19 @@ def m_item_edit(mi_id=None):
                      comment_ = m_item["comment_"],
                      m_group_id = m_item["m_group_id"],
                      has_birthday = has_birthday_bool,
-                     birthday = birthday_date)
+                     birthday = birthday_date,
+                     show_ = show_bool)
 
     if form.validate_on_submit():
         # Convert boolean to int (0/1) for database
         has_birthday_int = 1 if form.has_birthday.data else 0
+        show_int = 1 if form.show_.data else 0
         # Only save birthday if has_birthday is True
         birthday_date = form.birthday.data if form.has_birthday.data else None
         
         Mem_.edit_one(form.id.data, form.answer.data,
                         form.question.data, form.comment_.data, 
-                        form.m_group_id.data, has_birthday_int, birthday_date)        
+                        form.m_group_id.data, has_birthday_int, birthday_date, show_int)        
        
         flash('Item Updated!', 'success')
         
@@ -180,16 +186,19 @@ def m_item_new(g_id=None):
         g_id = form.m_group_id.data
     else:
         form.process(m_group_id = g_id)
+        # Set show_ to True by default for new items
+        form.show_.data = True
     
     if form.validate_on_submit():
         # Convert boolean to int (0/1) for database
         has_birthday_int = 1 if form.has_birthday.data else 0
+        show_int = 1 if form.show_.data else 0
         # Only save birthday if has_birthday is True
         birthday_date = form.birthday.data if form.has_birthday.data else None
         
         new_mi_id = Mem_.create(form.answer.data,
                                form.question.data, form.comment_.data, 
-                               g_id, has_birthday_int, birthday_date)
+                               g_id, has_birthday_int, birthday_date, show_int)
         
         flash('Memory added!', 'success')
         
@@ -441,6 +450,49 @@ def email_settings():
     }
     
     return render_template("memory_module/email_settings.html", config=config)
+
+
+@memory_module.route('/scores/', methods=['GET'])
+@access_required()
+def scores():
+    """View all memory items with their failure_count scores"""
+    # Get all memory items (including hidden) sorted by failure_count (descending)
+    m_items = list(Mem_.get_all_admin())
+    m_items.sort(key=lambda x: x.get('failure_count', 0), reverse=True)
+    
+    return render_template("memory_module/scores.html", m_items=m_items)
+
+
+@memory_module.route('/scores/update', methods=['POST'])
+@access_required()
+def update_score():
+    """Update failure_count for a specific memory item"""
+    data = request.get_json()
+    item_id = data.get('item_id')
+    failure_count = data.get('failure_count')
+    
+    if item_id is None or failure_count is None:
+        return jsonify({"status": "error", "message": "Missing item_id or failure_count"}), 400
+    
+    try:
+        item_id = int(item_id)
+        failure_count = int(failure_count)
+        
+        # Verify item exists
+        m_item = Mem_.get_one(item_id)
+        if m_item is None:
+            return jsonify({"status": "error", "message": "Item not found"}), 404
+        
+        # Update failure_count
+        Mem_.update_failure_count(item_id, failure_count)
+        
+        return jsonify({
+            "status": "success",
+            "item_id": item_id,
+            "failure_count": failure_count
+        })
+    except (ValueError, TypeError) as e:
+        return jsonify({"status": "error", "message": f"Invalid data: {str(e)}"}), 400
 
 
 @memory_module.route('/reminder_preferences/', methods=['GET', 'POST'])

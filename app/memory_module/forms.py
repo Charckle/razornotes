@@ -31,7 +31,9 @@ class Memory(FlaskForm):
     
     has_birthday = BooleanField('Has Birthday')
     
-    birthday = DateField('Birthday', [validators.Optional()], format='%Y-%m-%d') 
+    birthday = DateField('Birthday', [validators.Optional()], format='%Y-%m-%d')
+    
+    show_ = BooleanField('Display in Game', default=True)
 
     submit = SubmitField('Submit')
     

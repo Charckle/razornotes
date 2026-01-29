@@ -11,6 +11,7 @@ class DB_upgrade:
         DB_upgrade.add_memory_birthday_fields()
         DB_upgrade.add_memory_failure_tracking()
         DB_upgrade.add_memory_reminder_fields()
+        DB_upgrade.add_memory_item_show_field()
     
     # DB_upgrade
     @staticmethod
@@ -94,5 +95,15 @@ class DB_upgrade:
             db = DB()
             sql_command = f"""
             ALTER TABLE `users` ADD `memory_reminder_frequency` INT NOT NULL DEFAULT 0;"""
+            db.q_exe_segment(sql_command, ())
+            db.finish_()
+    
+    # DB_upgrade
+    @staticmethod
+    def add_memory_item_show_field():
+        if not check_column_exists("m_items", "show_"):
+            db = DB()
+            sql_command = f"""
+            ALTER TABLE `m_items` ADD `show_` INT NOT NULL DEFAULT 1;"""
             db.q_exe_segment(sql_command, ())
             db.finish_()            
