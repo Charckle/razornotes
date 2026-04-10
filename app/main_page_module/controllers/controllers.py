@@ -58,14 +58,14 @@ def index():
 @main_page_module.route('/get_clipboard/', methods=['POST'])
 @access_required()
 def get_clipboard():
-    
-    return jsonify(clipboard)
+    user_id = session['user_id']
+    return jsonify({"clipboard": clipboard.get(user_id, "")})
 
 @main_page_module.route('/set_clipboard/', methods=['POST'])
 @access_required()
 def set_clipboard():
-    clipboard["clipboard"] = request.form["clipboard"]
-    
+    user_id = session['user_id']
+    clipboard[user_id] = request.form["clipboard"]
     return jsonify({"result":"All OK!"})
 
 
@@ -84,7 +84,7 @@ def login(w_url=None):
         user = UserM.login_check(form.username_or_email.data, form.password.data)
         form.password.data = None        
         
-        if user is not None:
+        if user:
             # check the IP restriction
             if app.config['IP_RESTRICTION'] == "1":
 

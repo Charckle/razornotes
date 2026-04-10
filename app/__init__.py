@@ -23,7 +23,7 @@ app = Flask(__name__)
 CORS(app) #allow any source
 #CORS(app, origins='http://127.0.0.1:4200')  # Replace with your Angular app's URL
 
-clipboard = {"clipboard": ""}
+clipboard = {}
 secrets = {}
 
 # load the .env environment variables

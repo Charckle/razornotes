@@ -62,7 +62,21 @@
             </div>
           </div>
 
-          {{ render_field(form.email) }}
+          <div class="form-group">
+            {{ form.email.label }}
+            {% if form.email.errors %}
+              {% for error in form.email.errors %}
+                <small class="text-danger d-block">{{ error }}</small>
+              {% endfor %}
+            {% endif %}
+            <div class="input-group">
+              {% set email_css = 'form-control' + (' is-invalid' if form.email.errors else '') %}
+              {{ form.email(class=email_css, id="email") }}
+              <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary" id="btn-random-email" title="Insert random placeholder email">Random email</button>
+              </div>
+            </div>
+          </div>
 
           <div class="row">
             <div class="col-md-6">
@@ -91,5 +105,25 @@
     </div>
   </div>
   
-</div>      
+</div>
+<script>
+(function () {
+  function randomLocalPart() {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var s = '';
+    for (var i = 0; i < 12; i++) {
+      s += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return s;
+  }
+  var btn = document.getElementById('btn-random-email');
+  var input = document.getElementById('email');
+  if (btn && input) {
+    btn.addEventListener('click', function () {
+      input.value = randomLocalPart() + '@noemail.yo';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  }
+})();
+</script>
 {% endblock content %}

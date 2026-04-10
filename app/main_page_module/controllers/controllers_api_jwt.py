@@ -11,7 +11,7 @@ from app.main_page_module.models import Notes, Tag, UserM, GroupsAccessM
 
 from app.main_page_module.p_objects.note_o import N_obj
 
-from app import app
+from app import app, clipboard
 
 razor_api = Blueprint('api_1', __name__, url_prefix='/api/v1')
 api = Api(razor_api)
@@ -46,7 +46,7 @@ class NotePinned(Resource):
 class NoteHashes(Resource):
     """All notes — id and v_hash only. Use for sync checks."""
     def get(self):
-        return Notes.get_all_hash()
+        return list(Notes.get_all_hash())
 
 
 class NoteAll(Resource):
@@ -101,6 +101,19 @@ class NoteItemHash(Resource):
         return Notes.get_one_hash(n_id)
 
 
+class Clipboard(Resource):
+    """Per-user clipboard, keyed by user ID from the JWT."""
+    def get(self):
+        user_id = get_jwt().get("_id")
+        return {"clipboard": clipboard.get(user_id, "")}
+
+    def post(self):
+        user_id = get_jwt().get("_id")
+        args = parser.parse_args()
+        clipboard[user_id] = args["key"]
+        return {"clipboard": clipboard[user_id]}
+
+
 class SearchNote(Resource):
     def post(self):
         args = parser.parse_args()
@@ -118,7 +131,7 @@ class LoginM(flask_restful.Resource):
         password = request.form["password"]
         user = UserM.login_check(username, password)
 
-        if user == False:
+        if not user:
             abort(404, message="Username or password not correct.")
 
         user_id = user["id"]
@@ -165,6 +178,7 @@ class RefreshT(flask_restful.Resource):
         return jsonify(access=new_access_token)
 
 
+api.add_resource(Clipboard, '/clipboard')
 api.add_resource(LoginM, '/login')
 api.add_resource(RefreshT, '/refresh')
 api.add_resource(SearchNote, '/search')
