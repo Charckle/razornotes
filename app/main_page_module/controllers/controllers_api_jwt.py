@@ -27,19 +27,32 @@ class Resource(flask_restful.Resource):
     method_decorators = [jwt_required()]   # applies to all inherited resources
 
 
+# Note response format (NoteIndex, NotePinned, NoteAll, NoteItem):
+#   _id       : int    — note ID
+#   title     : str
+#   text      : str    — full text (NoteAll, NoteItem) or truncated to 50 chars (NoteIndex, NotePinned)
+#   pinned    : bool   — shown in pinned section on home page
+#   relevant  : bool   — shown on home page at all
+#   date_mod  : str    — last modified datetime; used to sort the 15-note home page feed
+
+
 class NoteIndex(Resource):
-    """Active, relevant, non-pinned notes — truncated text, last 15 by date."""
+    """Active, relevant, non-pinned notes — truncated text, last 15 by date_mod."""
     def get(self):
         notes = [{'_id': note_["id"], 'title': note_["title"],
-                  'text': note_["text"]} for note_ in Notes.get_all_active_for_index()]
+                  'text': note_["text"], 'pinned': note_["pinned"],
+                  'relevant': note_["relevant"], 'date_mod': str(note_["date_mod"])}
+                 for note_ in Notes.get_all_active_for_index()]
         return notes
 
 
 class NotePinned(Resource):
-    """Active, relevant, pinned notes — truncated text."""
+    """Active, relevant, pinned notes — truncated text, ordered by date_mod."""
     def get(self):
         notes = [{'_id': note_["id"], 'title': note_["title"],
-                  'text': note_["text"]} for note_ in Notes.get_all_active_index_pinned()]
+                  'text': note_["text"], 'pinned': note_["pinned"],
+                  'relevant': note_["relevant"], 'date_mod': str(note_["date_mod"])}
+                 for note_ in Notes.get_all_active_index_pinned()]
         return notes
 
 
@@ -53,7 +66,9 @@ class NoteAll(Resource):
     """All active notes — full content."""
     def get(self):
         notes = [{'_id': note_["id"], 'title': note_["title"],
-                  'text': note_["text"]} for note_ in Notes.get_all_active()]
+                  'text': note_["text"], 'pinned': note_["pinned"],
+                  'relevant': note_["relevant"], 'date_mod': str(note_["date_mod"])}
+                 for note_ in Notes.get_all_active()]
         return notes
 
 
@@ -64,7 +79,9 @@ class NoteItem(Resource):
         if note is None:
             abort(404, message="No note found for this id.")
 
-        return {'id': note["id"], "title": note["title"], "text": note["text"]}
+        return {'id': note["id"], "title": note["title"], "text": note["text"],
+                "pinned": note["pinned"], "relevant": note["relevant"],
+                "date_mod": str(note["date_mod"])}
 
     def put(self, n_id):
         claims = get_jwt()

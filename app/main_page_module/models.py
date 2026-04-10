@@ -348,7 +348,7 @@ class Notes:
     @staticmethod    
     def get_all_active():
         db = DB()
-        sql_command = f"""SELECT id, title, note_type, text, active, relevant, pinned, v_hash 
+        sql_command = f"""SELECT id, title, note_type, text, active, relevant, pinned, v_hash, date_mod 
         FROM notes WHERE active = 1;"""
         
         return db.q_r_all(sql_command, ())
@@ -368,7 +368,7 @@ class Notes:
     @staticmethod    
     def get_all_active_for_index():
         db = DB()
-        sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text FROM notes 
+        sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text, pinned, relevant, date_mod FROM notes 
         WHERE notes.relevant = 1 AND notes.active = 1 AND notes.pinned = 0
         ORDER BY notes.date_mod DESC LIMIT 15;"""
         
@@ -378,7 +378,7 @@ class Notes:
     @staticmethod    
     def get_all_active_index_pinned():
         db = DB()
-        sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text FROM notes 
+        sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text, pinned, relevant, date_mod FROM notes 
         WHERE active = 1 AND notes.relevant = 1 AND notes.pinned = 1 
         ORDER BY date_mod DESC;"""
         
