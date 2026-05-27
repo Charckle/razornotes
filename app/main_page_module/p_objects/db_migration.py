@@ -1,5 +1,4 @@
 from datab import DB, check_column_exists, check_table_exists
-from app.main_page_module.models import Notes
 
 
 class DB_upgrade:

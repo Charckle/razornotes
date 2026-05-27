@@ -59,12 +59,7 @@ class WSearch():
 
 
     def index_search(self, querystring):
-        # how many mistakes for fuzzy
-        mistakes = 2
-        #print(querystring)
         ix = open_dir(".index")
-        
-        #parser = QueryParser("content", ix.schema)
         parser = MultifieldParser(["note_name", "content"], ix.schema)
         
         # it seems that it does not work like this
@@ -81,19 +76,3 @@ class WSearch():
             
             return file_names
         
-    def index_api_search(self, querystring):
-        #print(querystring)
-        ix = open_dir(".index")
-        
-        parser = QueryParser("content", ix.schema)
-        myquery = parser.parse(querystring)
-        
-        file_names = []
-        with ix.searcher() as searcher:
-            results = searcher.search(myquery)
-            #print(f"Found {len(results)} results.")
-            for found in results:
-                file_names.append([found["note_id"], found["note_name"], found.highlights("content")])
-                #print(found.highlights("content"))
-            
-            return file_names        

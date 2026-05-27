@@ -1,6 +1,6 @@
 # Import flask dependencies
 from flask import Blueprint, request, render_template, \
-                  flash, g, session, redirect, url_for, jsonify, send_file
+                  flash, session, redirect, url_for, jsonify
 from app import app
 
 import random

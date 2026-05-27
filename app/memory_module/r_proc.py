@@ -1,6 +1,5 @@
 from app.memory_module.models import Mem_, Grp_
 import json
-import hashlib
 
 class Export_im:
     # Export_im

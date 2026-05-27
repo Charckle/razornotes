@@ -3,21 +3,10 @@ from datetime import datetime, date
 # Import password / encryption helper tools
 #from werkzeug import check_password_hash, generate_password_hash
 from werkzeug.security import generate_password_hash, check_password_hash
-import hashlib
-
 from datab import DB
 
 
 class GroupsAccessM:
-    @staticmethod
-    def create_access(name):
-        db = DB()
-        
-        sql_command = f"""INSERT INTO group_access (name)
-            VALUES (%s);"""
-    
-        return db.q_exe_new(sql_command, (name,))
-
     # GroupsAccessM
     @staticmethod
     def get_one(g_id):
@@ -105,14 +94,6 @@ class UserM:
     
     # UserM
     @staticmethod
-    def id_from_username(username):
-        db = DB()
-        sql_command = f"SELECT id FROM users WHERE (%s = username);"
-        
-        return db.q_r_one(sql_command, (username,))  
-    
-    # UserM
-    @staticmethod
     def check_email(email):
         db = DB()
         sql_command = f"SELECT id, email FROM users WHERE (%s = email);"
@@ -167,15 +148,6 @@ class UserM:
         FROM users WHERE id = %s;"""
         
         return db.q_r_one(sql_command, (user_id, ))
-    
-    # UserM
-    @staticmethod
-    def check_api_access(api_key):
-        db = DB()
-        sql_command = f"""SELECT id, name, username, email, password, status, created_date, api_key 
-        FROM users WHERE api_key = %s AND status = 1;"""
-        
-        return db.q_r_one(sql_command, (api_key,))      
     
     # UserM
     @staticmethod
@@ -647,28 +619,11 @@ class Tag:
         return db.q_r_all(sql_command, (note_id,))  
     
     # Tag
-    def notes_get_all_of_tag(tag_id):
-        db = DB()
-        sql_command = f"""SELECT notes.id as n_id, notes.title as n_title, LEFT(notes.text, 30) as n_text
-        FROM notes 
-        LEFT JOIN note_tags ON note_tags.note_id = notes.id 
-        WHERE note_tags.tag_id = %s ;"""
-        
-        return  db.q_r_all(sql_command, (tag_id, )) 
-    
-    # Tag
     def note_tag_get_one(note_id, tag_id):
         db = DB()
         sql_command = f"SELECT note_id, tag_id FROM note_tags WHERE note_id = %s AND tag_id = %s;"
         
         return db.q_r_one(sql_command, (note_id, tag_id, ))
-    
-    # Tag
-    def note_tag_all():
-        db = DB()
-        sql_command = f"""SELECT note_id, tag_id  FROM note_tags; """
-        
-        return  db.q_r_all(sql_command, ())     
     
     # Tag
     def remove_note_tag(note_id, tag_id):
@@ -725,13 +680,6 @@ class AuditLM:
                       VALUES (%s, %s, %s);"""                
             
         return db.q_exe_new(sql_command, (audit_datetime, user_id, change_))
-    
-    # AuditLM
-    def get_all():
-        db = DB()
-        sql_command = f"""SELECT audit_datetime, user_id, change_ FROM audit_log;"""  
-
-        return db.q_r_all(sql_command, ())
     
     # AuditLM
     def get_all_limit_200():

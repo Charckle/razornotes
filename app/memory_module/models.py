@@ -7,15 +7,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datab import DB
 
 class Mem_:
-    def session():
-        db = DB()
-        sql_command = f"""SELECT mi.id, answer, question, mi.comment_, m_group_id, has_birthday, birthday, failure_count, mi.show_
-        FROM m_items as mi
-        LEFT JOIN m_groups ON mi.m_group_id = m_groups.id 
-        WHERE m_groups.show_ = 1;"""
-
-        return db.q_r_all(sql_command, ()) 
-    
     # Mem_
     def get_all():
         db = DB()

@@ -1,14 +1,12 @@
 import markdown2
-import json
 import base64
 
 # Import flask dependencies
 from flask import Blueprint, request, render_template, \
-                  flash, g, session, redirect, url_for, jsonify, send_file, Response, abort
+                  flash, session, redirect, url_for, jsonify
 
 # Import module forms
 from app.main_page_module.forms import form_dicts
-from app.main_page_module.r_proc import Import_Ex, HL_proc
 from app.main_page_module.p_objects.note_o import N_obj
 from app.main_page_module.p_objects import webauthn_stp, ip_restrict
 
@@ -17,17 +15,7 @@ from app.main_page_module.models import UserM, Notes, Tag, Tmpl, GroupsAccessM
 
 from app import app, clipboard
 from wrappers import access_required
-from app.pylavor import Pylavor
-from app.main_page_module.argus import WSearch
 from app.main_page_module.other import Randoms, NotesS, UserRole
-
-#import os
-import re
-import os
-import zipfile
-import io
-import pathlib
-import datetime
 
 
 

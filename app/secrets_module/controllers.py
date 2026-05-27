@@ -1,13 +1,9 @@
-import json
-
 # Import flask dependencies
-from flask import Blueprint, request, render_template, \
-                  flash, g, session, redirect, url_for, jsonify, send_file, Response, abort
+from flask import Blueprint, request, render_template, jsonify
 
 from wrappers import login_required
 from app import app, secrets
 from app.pylavor import Pylavor
-import datetime
 import base64
 
 secrets_module = Blueprint('secrets_module', __name__, url_prefix='/secrets')

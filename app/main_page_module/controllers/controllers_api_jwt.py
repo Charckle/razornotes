@@ -1,17 +1,15 @@
-from flask import Flask, Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify
 import flask_restful
-from flask_restful import Api, url_for, reqparse, abort
+from flask_restful import Api, reqparse, abort
 
 from flask_jwt_extended import create_access_token, create_refresh_token, \
     get_jwt_identity, jwt_required, get_jwt
 
-from functools import wraps
-from app.main_page_module.argus import WSearch
-from app.main_page_module.models import Notes, Tag, UserM, GroupsAccessM
+from app.main_page_module.models import Notes, UserM, GroupsAccessM
 
 from app.main_page_module.p_objects.note_o import N_obj
 
-from app import app, clipboard
+from app import clipboard
 
 razor_api = Blueprint('api_1', __name__, url_prefix='/api/v1')
 api = Api(razor_api)

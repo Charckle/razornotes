@@ -14,13 +14,6 @@ class UserRole(Enum):
     
 
 class Randoms():
-    @staticmethod
-    def zerodivision(n, d):
-        n = float(n)
-        d = float(d)
-        
-        return n / d if d else 0
-    
     # Randoms
     #sanitize the code for saving to a file on the OS
     @staticmethod

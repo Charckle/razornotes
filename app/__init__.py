@@ -1,11 +1,10 @@
 # Import flask and template operators
 from flask import Flask, render_template, jsonify
 from flask_cors import CORS
-from os import path, mkdir, environ 
+from os import environ
 import logging
-from logging.handlers import RotatingFileHandler
 
-from dotenv import load_dotenv, find_dotenv, dotenv_values
+from dotenv import load_dotenv
 
 from flask_jwt_extended import JWTManager
 from flask_apscheduler import APScheduler

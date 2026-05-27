@@ -13,7 +13,6 @@ from app.main_page_module.other import NotesS
 
 #email verification
 import re
-import os.path
     
     
 class Note(FlaskForm):

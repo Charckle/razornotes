@@ -1,32 +1,22 @@
 import markdown2
-import json
 
 # Import flask dependencies
 from flask import Blueprint, request, render_template, \
-                  flash, g, session, redirect, url_for, jsonify, send_file, Response, abort
+                  flash, session, redirect, url_for, jsonify
 
 # Import module forms
 from app.main_page_module.forms import form_dicts
 from app.main_page_module.r_proc import Import_Ex, HL_proc
 from app.main_page_module.p_objects.note_o import N_obj
-from app.main_page_module.p_objects import webauthn_stp, ip_restrict
 
 # Import module models (i.e. User)
 from app.main_page_module.models import UserM, Notes, Tag, Tmpl, GroupsAccessM, AuditLM
 
-from app import app, clipboard
+from app import app
 from wrappers import access_required
 from app.pylavor import Pylavor
-from app.main_page_module.argus import WSearch
 from app.main_page_module.other import Randoms, NotesS, UserRole
 
-#import os
-import re
-import os
-import zipfile
-import io
-import pathlib
-import datetime
 
 
 
@@ -44,24 +34,7 @@ def inject_to_every_page():
 @admin_module.route('/get_zipped_entries/')
 @access_required(UserRole.READWRITE)
 def get_zipped_entries():
-    now = datetime.datetime.now()
-    
-    """
-    base_path = pathlib.Path('app//main_page_module//data//')
-    data = io.BytesIO()
-    with zipfile.ZipFile(data, mode='w') as z:
-        for f_name in base_path.iterdir():
-            z.write(f_name, os.path.basename(f_name))
-    data.seek(0)
-    
-    return send_file(
-        data,
-        mimetype='application/zip',
-        as_attachment=True,
-        download_name=f'all_entries_{now.strftime("%Y-%m-%d_%H-%M")}.zip',
-        cache_timeout=0
-    )
-    """
+    pass
 
 @admin_module.route('/create_hashes/')
 @access_required(UserRole.READWRITE)

@@ -2,7 +2,7 @@ from functools import wraps
 import base64
 
 from flask import session, redirect, url_for, request, flash
-from app.main_page_module.models import UserM, Notes, Tag, GroupsAccessM
+from app.main_page_module.models import UserM, GroupsAccessM
 
 from app.main_page_module.other import UserRole
 
