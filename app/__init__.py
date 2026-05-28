@@ -18,9 +18,11 @@ from app.main_page_module.other import Randoms
 # Define the WSGI application object
 app = Flask(__name__)
 
-# Enable CORS for all routes
-CORS(app) #allow any source
-#CORS(app, origins='http://127.0.0.1:4200')  # Replace with your Angular app's URL
+# SECURITY NOTE: CORS is currently open to all origins.
+# This lets any website make browser-based requests to the API.
+# Restrict this to known origins once the frontend URL is stable, e.g.:
+#   CORS(app, origins=['https://your-app.example.com'])
+#CORS(app)
 
 clipboard = {}
 secrets = {}

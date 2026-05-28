@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import flask_restful
 from flask_restful import Api, reqparse, abort
+import time
 
 from flask_jwt_extended import create_access_token, create_refresh_token, \
     get_jwt_identity, jwt_required, get_jwt
@@ -147,6 +148,7 @@ class LoginM(flask_restful.Resource):
         user = UserM.login_check(username, password)
 
         if not user:
+            time.sleep(0.5)
             abort(404, message="Username or password not correct.")
 
         user_id = user["id"]

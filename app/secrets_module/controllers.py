@@ -141,18 +141,13 @@ def get_expiry_date(expiry_date_var: str) -> datetime:
     
     return expiry_date
 
-import random
-import string
+import secrets as secrets_lib
 
-def generate_unique_string(secrets, length=9):
+def generate_unique_string(secrets, length=32):
     while True:
-        # Generate a string of random letters and numbers
-        random_chars = string.ascii_letters + string.digits
-        unique_string = ''.join(random.choice(random_chars) for _ in range(length))
-        
-        if (unique_string not in secrets):
+        unique_string = secrets_lib.token_urlsafe(length)
+        if unique_string not in secrets:
             break
-    
     return unique_string
 
 def cleanup_secrets(secrets):

@@ -18,7 +18,7 @@ Flask-MySQLdb==0.2.0
 Flask-RESTful==0.3.9
 Flask-WTF==1.2.1
 gunicorn==23.0.0
-idna==3.7
+idna==3.15
 itsdangerous==2.2.0
 Jinja2==3.1.6
 markdown2==2.4.3

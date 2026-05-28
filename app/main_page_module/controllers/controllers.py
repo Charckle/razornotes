@@ -1,5 +1,6 @@
 import markdown2
 import base64
+import time
 
 # Import flask dependencies
 from flask import Blueprint, request, render_template, \
@@ -98,13 +99,23 @@ def login(w_url=None):
             flash('Welcome %s' % user["username"], 'success')
             
             if (w_url != None):
-                decoded_bytes = base64.urlsafe_b64decode(w_url.encode("utf-8"))
-                decoded_url=  "/" + decoded_bytes.decode("utf-8")
+                try:
+                    decoded_bytes = base64.urlsafe_b64decode(w_url.encode("utf-8"))
+                    decoded_url = "/" + decoded_bytes.decode("utf-8")
+                    # Reject anything that could redirect off-site:
+                    # double slashes, backslashes, or embedded protocol/host markers
+                    if (decoded_url.startswith("//") or
+                            "\\" in decoded_url or
+                            "://" in decoded_url or
+                            "@" in decoded_url):
+                        raise ValueError("Unsafe redirect URL")
+                    return redirect(decoded_url)
+                except Exception:
+                    pass
 
-                return redirect(decoded_url)            
-            
             return redirect(url_for('main_page_module.index'))
     
+        time.sleep(0.5)
         flash('Wrong email or password', 'error')
     
     for field, errors in form.errors.items():
