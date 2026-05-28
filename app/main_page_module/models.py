@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime, date
 
 # Import password / encryption helper tools
