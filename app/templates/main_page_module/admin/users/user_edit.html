@@ -1,36 +1,22 @@
 {% extends "main_page_module/base.html" %}
 
-{% block extraheader %}
-{% endblock extraheader  %}
-
 {% block nav_admin %}active{% endblock nav_admin %}
 
-
 {% macro render_field(field, placeholder=None) %}
-<div class="form-group">
-    {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
-
-    {{ field.label }}
-
-    {% if field.errors %}
-        {% set css_class = css_class + ' is-invalid' %}
-
-        {% for error in field.errors %}
-            
-            <small id="{{ field.label.text }}" class="text-danger">
-                {{ error }}
-          </small>
-
-        {% endfor %}
-        </ul>
-    {% endif %}
-
-    {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+<div class="mb-3">
+  {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+  {{ field.label }}
+  {% if field.errors %}
+    {% set css_class = css_class + ' is-invalid' %}
+    {% for error in field.errors %}
+      <small class="text-danger d-block">{{ error }}</small>
+    {% endfor %}
+  {% endif %}
+  {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
 </div>
 {% endmacro %}
 
-
-{% block content%}
+{% block content %}
 <br>
 <div class="container-fluid">
 
@@ -43,135 +29,98 @@
 
   <div class="row">
     <div class="col-md">
-      
 
-<h5>Access Groups</h5>
-
-      <form method="POST" action="{{ url_for('admin_module.user_add_group') }}" accept-charset="UTF-8" role="form">
+      <h5>Access Groups</h5>
+      <form method="POST" action="{{ url_for('admin_module.user_add_group') }}" accept-charset="UTF-8">
         {{ form.id }}
-
         <div class="input-group flex-nowrap">
-          <select class="form-select" name="g_id" aria-label="Default select example">
-            <option >Open this select menu</option>
-            {% for g in GroupsAccessM.get_all()%}
+          <select class="form-select" name="g_id">
+            <option>Open this select menu</option>
+            {% for g in GroupsAccessM.get_all() %}
             <option value="{{ g['id'] }}">{{ g["name"] }}</option>
             {% endfor %}
           </select>
-          <button type="submit" class="form-control btn btn-primary">Add Group</button>
+          <button type="submit" class="btn btn-primary">Add Group</button>
         </div>
       </form>
-
       <hr>
 
       <ul class="list-group">
-        {% for g in GroupsAccessM.get_access_all_of_user(form.id.data)%}
+        {% for g in GroupsAccessM.get_access_all_of_user(form.id.data) %}
         <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-danger">
-          
           {{ g["name"] }}
-          <form method="POST" action="{{ url_for('admin_module.user_remove_group') }}" accept-charset="UTF-8" role="form">
-
-          {{ form.id }}
-          <input type="hidden" id="g_id" name="g_id" value="{{ g['group_a_id'] }}">
-
-            <button type="submit" class="btn btn-danger">Remove Group</button>
+          <form method="POST" action="{{ url_for('admin_module.user_remove_group') }}" accept-charset="UTF-8" class="d-inline">
+            {{ form.id }}
+            <input type="hidden" name="g_id" value="{{ g['group_a_id'] }}">
+            <button type="submit" class="btn btn-danger btn-sm">Remove Group</button>
           </form>
-        </span>
         </li>
         {% endfor %}
       </ul>
 
-
     </div>
     <div class="col-md-6">
 
-
       <legend>User</legend>
-
-        <form method="POST" action="{{ url_for('admin_module.user_edit') }}" accept-charset="UTF-8" role="form">
-          {{ form.csrf_token }}
-          {{ form.id }}
-
-          <div class="row">
-            <div class="col-md-6">
-              {{ render_field(form.name, autofocus="") }}
-            </div>
-            <div class="col-md-6">
-              {{ render_field(form.username) }}
-            </div>
-          </div>
-
-          {{ render_field(form.email) }}
-
-          <div class="row">
-            <div class="col-md-6">
-              {{ render_field(form.password) }}
-            </div>
-            <div class="col-md-6">
-              {{ render_field(form.password_2) }}
-            </div>
-          </div>
-          
+      <form method="POST" action="{{ url_for('admin_module.user_edit') }}" accept-charset="UTF-8">
+        {{ form.csrf_token }}
+        {{ form.id }}
+        <div class="row">
+          <div class="col-md-6">{{ render_field(form.name, autofocus="") }}</div>
+          <div class="col-md-6">{{ render_field(form.username) }}</div>
+        </div>
+        {{ render_field(form.email) }}
+        <div class="row">
+          <div class="col-md-6">{{ render_field(form.password) }}</div>
+          <div class="col-md-6">{{ render_field(form.password_2) }}</div>
+        </div>
         {{ render_field(form.api_key) }}
-
-          
-          
-          {{ render_field(form.status) }}
-          
-          <div class="form-group">
-            {{ form.submit(class="form-control btn btn-primary mb-2") }}
-            </div>
-        </form>
-
+        {{ render_field(form.status) }}
+        <div class="mb-3">
+          {{ form.submit(class="form-control btn btn-primary mb-2") }}
+        </div>
+      </form>
       <hr>
 
     </div>
     <div class="col-md">
       <h5>Options</h5>
-
       <hr>
       <ul class="list-group">
         <li class="list-group-item d-flex justify-content-between align-items-center">
           Permanently Delete User
-          <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ form.id.data }}">Delete user</button>
+          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#{{ 'for_modal' ~ form.id.data }}">Delete user</button>
         </li>
       </ul>
-      
 
-      <!-- Modal -->
-      <div class="modal fade" id="{{ 'for_modal' ~ form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="{{ form.id.data ~ 'for_modaltext' }}" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal fade" id="{{ 'for_modal' ~ form.id.data }}" tabindex="-1" aria-labelledby="{{ form.id.data ~ 'for_modaltext' }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="{{ form.id.data ~'for_modaltext' }}">Delete the Entry</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
+              <h5 class="modal-title" id="{{ form.id.data ~ 'for_modaltext' }}">Delete User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              Do you really want to delete the entry "{{ form.name.data }} - {{ form.username.data }}"
+              Do you really want to delete "{{ form.name.data }} – {{ form.username.data }}"?
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              
-              <form method="POST" action="{{ url_for('admin_module.user_delete') }}" accept-charset="UTF-8" role="form">
-                <input type="hidden" id="id" name="id" value="{{ form.id.data }}">
-                <button type="submit" class="btn btn-danger">Delete entry</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <form method="POST" action="{{ url_for('admin_module.user_delete') }}" accept-charset="UTF-8">
+                <input type="hidden" name="id" value="{{ form.id.data }}">
+                <button type="submit" class="btn btn-danger">Delete User</button>
               </form>
             </div>
           </div>
         </div>
       </div>
-      
-      <hr>
-      
-      <h5>Fido2 Credentials</h5>
 
       <hr>
-      Only users can manage their fido2 credentials
+      <h5>Fido2 Credentials</h5>
+      <hr>
+      Only users can manage their own fido2 credentials.
       <hr>
 
       {% set user_fido2s = UserM.get_all_fido2_of_u(form.id.data) %}
-
       <ul class="list-group">
         {% for i in user_fido2s %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -179,9 +128,8 @@
         </li>
         {% endfor %}
       </ul>
-        
+
     </div>
   </div>
-  
-</div>      
+</div>
 {% endblock content %}

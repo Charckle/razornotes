@@ -1,0 +1,122 @@
+/* ── Page background ─────────────────────────────────────────────────────── */
+[data-bs-theme="light"] body {
+  background: linear-gradient(to bottom right, rgb(255, 248, 214), rgb(218, 206, 148));
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+[data-bs-theme="dark"] body {
+  background: #1a1a2e;
+  min-height: 100vh;
+}
+
+/* ── Navbar shadow ───────────────────────────────────────────────────────── */
+.rn-navbar-shadow {
+  box-shadow: 0 8px 6px -6px #999;
+}
+
+/* ── Note card (index + all notes list) ─────────────────────────────────── */
+[data-bs-theme="light"] .rn-note-card {
+  background: linear-gradient(to bottom right, hsl(64, 100%, 86%), rgb(255, 243, 181));
+  border: 1px solid hsl(51, 46%, 56%);
+}
+
+[data-bs-theme="dark"] .rn-note-card {
+  background: #2a2a3e;
+  border: 1px solid #4a4a6a;
+}
+
+.rn-note-card {
+  border-radius: 5px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+/* Plain note rows (pinned sidebar, recently viewed) — no yellow card background */
+.rn-note-item {
+  border-radius: 5px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+/* Index note links: black text, not default link blue */
+a.rn-note-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.rn-note-link:hover {
+  color: inherit;
+  opacity: 0.85;
+}
+
+/* ── Note view content area ──────────────────────────────────────────────── */
+[data-bs-theme="light"] .rn-note-body {
+  background: linear-gradient(to bottom, rgb(253, 251, 238), rgb(255, 251, 233));
+  border: 1px solid hsl(51, 46%, 56%);
+}
+
+[data-bs-theme="dark"] .rn-note-body {
+  background: #2a2a3e;
+  border: 1px solid #4a4a6a;
+}
+
+.rn-note-body {
+  border-radius: 5px;
+  padding: 10px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ── Heading sizes ───────────────────────────────────────────────────────── */
+h1 { font-size: 32px; font-weight: bold; }
+h2 { font-size: 25px; font-weight: bold; }
+h3 { font-size: 20px; font-weight: bold; }
+h4 { font-size: 17px; font-weight: bold; }
+h5 { font-size: 14px; font-weight: bold; }
+
+/* ── Code / pre blocks ───────────────────────────────────────────────────── */
+pre {
+  background-color: #f4f4f4;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-family: "Courier New", Courier, monospace;
+}
+
+[data-bs-theme="dark"] pre {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #ccc;
+}
+
+/* ── Floating action buttons ─────────────────────────────────────────────── */
+.rn-fab {
+  position: fixed;
+  bottom: 20px;
+  z-index: 99;
+  border: none;
+  outline: none;
+  color: white;
+  cursor: pointer;
+  padding: 15px 20px;
+  border-radius: 50px;
+  font-size: 18px;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 8px rgba(0,0,0,.2), 0 6px 20px rgba(0,0,0,.19);
+}
+
+.rn-fab-right  { right: 30px;  background-color: #007aff; }
+.rn-fab-left   { left: 30px;   background-color: #2eb604; }
+.rn-fab-notation { right: 30px; background-color: #b60457; }
+
+.rn-fab:hover { opacity: .85; }
+
+/* ── Navbar clipboard buttons ────────────────────────────────────────────── */
+.navbar-dark .btn-outline-danger,
+.navbar-dark .btn-outline-warning {
+  font-weight: 600;
+  --bs-btn-border-width: 2px;
+}

@@ -1,49 +1,34 @@
 {% extends "main_page_module/base.html" %}
 
-{% block extraheader %}
-{% endblock extraheader  %}
-
 {% block nav_all_tags %}active{% endblock nav_all_tags %}
 
-
-
-{% block content%}
+{% block content %}
 <br>
 <div class="container-fluid">
   <br>
-
   <div class="row">
     <div class="col-md text-center">
       <h5>Options</h5>
-      
     </div>
     <div class="col-md-6">
-
       <legend>All Tags</legend>
       <div id="all_locations" class="container">
-        {% for i in tags%}
+        {% for i in tags %}
         <hr>
-
-        <div class="media">
-          <a href="{{ url_for('notes_module.tag_edit', tag_id=i['id']) }}">
-            <img class="mr-3" id="icon_image" src="{{ url_for('static', filename='icons/tag.svg') }}" class="rounded float-left" alt="..." style="width: 50px; height: 50px;">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('notes_module.tag_edit', tag_id=i['id']) }}" class="me-3">
+            <img src="{{ url_for('static', filename='icons/tag.svg') }}" alt="tag" style="width:50px;height:50px;">
           </a>
-          <div class="media-body">
-            <h4 class="mt-0">{{ i["name"] }} </h4>
-            <span class="badge badge-pill badge-{{ NotesS.list_tag_colors(i['color']) }}">Color</span>
+          <div class="flex-grow-1">
+            <h4 class="mt-0">{{ i["name"] }}</h4>
+            <span class="badge rounded-pill text-bg-{{ NotesS.list_tag_colors(i['color']) }}">Color</span>
           </div>
         </div>
-
         {% endfor %}
       </div>
-
       <hr>
-
     </div>
-    <div class="col-md">
-      <!-- insert column here -->
-    </div>
+    <div class="col-md"><!-- aside --></div>
   </div>
-
 </div>
 {% endblock content %}

@@ -1,77 +1,62 @@
 {% extends "main_page_module/base.html" %}
 
-{% block extraheader %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-{% endblock extraheader  %}
-
 {% block nav_index %}active{% endblock nav_index %}
 
-
-
-{% block content%}
+{% block content %}
 
 {% set note_id = note["id"] %}
 {% set note_o = N_obj(note_id) %}
 {% set all_tags = Tag.get_all() %}
-
-{% set text = markdown2.markdown(note["text"])  %}
+{% set text = markdown2.markdown(note["text"]) %}
 {% set tags_ = NotesS.list_tag_colors() %}
-
-
 
 <br>
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-1 text-center">
-
-      
-    </div>
+    <div class="col-md-1"></div>
     <div class="col-md-10">
       {% if note["pinned"] == 1 %}
-        <span class="badge badge badge-dark">Pinned</span>
+        <span class="badge text-bg-dark">Pinned</span>
       {% endif %}
-      
-      <legend>{{ note["title"] }}
-         - <span class="badge badge-pill badge-{{ note_o.type_clr[1] }}">{{ note_o.type_clr[0] }}</span> - 
-          <div class="btn-group btn-group-sm" role="group" aria-label="...">
-            <a href="{{ url_for('notes_module.note_edit', note_id=note_id) }}" class="btn btn-info" role="button"><i class="bi bi-pencil-square"></i> Edit Note</a>
-            <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#TrashNote"><i class="bi bi-trash"></i> Trash</button>
-            <a href="{{ url_for('notes_module.note_download', note_id=note_id) }}" class="btn btn-success" role="button" title="Download MD file"><i class="bi bi-markdown-fill"></i> Download MD file</a>
-            <a href="{{ url_for('notes_module.note_print', note_id=note_id) }}" class="btn btn-light" role="button" title="Download MD file" target="blank"><i class="bi bi-printer-fill"></i> Print Format</a>
-          </div>
-          
 
+      <legend>{{ note["title"] }}
+        &nbsp;<span class="badge rounded-pill text-bg-{{ note_o.type_clr[1] }}">{{ note_o.type_clr[0] }}</span>&nbsp;
+        <div class="btn-group btn-group-sm" role="group">
+          <a href="{{ url_for('notes_module.note_edit', note_id=note_id) }}" class="btn btn-info"><i class="bi bi-pencil-square"></i> Edit Note</a>
+          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#TrashNote"><i class="bi bi-trash"></i> Trash</button>
+          <a href="{{ url_for('notes_module.note_download', note_id=note_id) }}" class="btn btn-success" title="Download MD file"><i class="bi bi-markdown-fill"></i> Download MD</a>
+          <a href="{{ url_for('notes_module.note_print', note_id=note_id) }}" class="btn btn-light" title="Print format" target="blank"><i class="bi bi-printer-fill"></i> Print</a>
+        </div>
       </legend>
+
       {% for i in note_o.tags %}
-      {% set tag_color = tags_[i["tag_color"]] %}
-        <a href="{{ url_for('notes_module.tag_edit', tag_id=i['t_id']) }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i["tag_name"] }}</span></a>
+        {% set tag_color = tags_[i["tag_color"]] %}
+        <a href="{{ url_for('notes_module.tag_edit', tag_id=i['t_id']) }}">
+          <span class="badge rounded-pill text-bg-{{ tag_color }}">{{ i["tag_name"] }}</span>
+        </a>
       {% endfor %}
-      
 
       <hr>
-      <div class="text-break" style="background-image: linear-gradient(to bottom, rgb(253, 251, 238), rgb(255, 251, 233));background-repeat: no-repeat;border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;padding: 5px;word-wrap: break-word;overflow-wrap: break-word;">
-          {{ Pylavor.clean_rich_text(text) | safe }}
+      <div class="text-break rn-note-body">
+        {{ Pylavor.clean_rich_text(text) | safe }}
       </div>
-      
       <hr>
       <br>
-      <!-- Modal -->
-      <div class="modal fade" id="TrashNote" tabindex="-1" role="dialog" aria-labelledby="TrashNoteTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+
+      <!-- Trash modal -->
+      <div class="modal fade" id="TrashNote" tabindex="-1" aria-labelledby="TrashNoteTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="TrashNoteTitle">Trash the Note</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              Do you really want to Trash the note "{{ note["title"] }}" ?
+              Do you really want to Trash the note "{{ note["title"] }}"?
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              
-              <form method="POST" action="{{ url_for('notes_module.note_trash') }}" accept-charset="UTF-8" role="form">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <form method="POST" action="{{ url_for('notes_module.note_trash') }}" accept-charset="UTF-8">
                 <input type="hidden" id="id" name="id" value="{{ note_id }}">
                 <button type="submit" class="btn btn-danger">Trash note</button>
               </form>
@@ -79,330 +64,198 @@
           </div>
         </div>
       </div>
-
     </div>
-
   </div>
 
   <div class="row">
-    <div class="col-md-1"> 
-
-    </div>
+    <div class="col-md-1"></div>
     <div class="col-md-1">
-            Tags
-          <hr>
-            <button class="btn btn-outline-success btn-block" title="Tag button" data-toggle="modal" data-target="#tagModal">Add Tags</button>
-  
-            <ul id="tags_list">
-            {% for i in note_o.tags %}
-            {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
-                <li id="t{{ i['t_id'] }}"><span class="badge badge-pill badge-{{ tag_color }}">{{ i['tag_name'] }}</span>
-                  <button type="button" id="{{ i['t_id'] }}" class="close" aria-label="Close" onclick="remove_tag(this.id)">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </li>
-            {% endfor %}
-          </ul>
-        
-      </div>
-      <div class="col-md-5">
-        Files
-        <hr>
+      Tags
+      <hr>
+      <button class="btn btn-outline-success w-100" title="Add tags" data-bs-toggle="modal" data-bs-target="#tagModal">Add Tags</button>
+      <ul id="tags_list" class="list-unstyled mt-2">
+        {% for i in note_o.tags %}
+          {% set tag_color = NotesS.list_tag_colors()[i["tag_color"]] %}
+          <li id="t{{ i['t_id'] }}">
+            <span class="badge rounded-pill text-bg-{{ tag_color }}">{{ i['tag_name'] }}</span>
+            <button type="button" id="{{ i['t_id'] }}" class="btn-close btn-sm" aria-label="Remove tag" onclick="removeTag(this.id)"></button>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
 
-        <ul class="list-group">
-          {% for file_u in note_o.files%}
-            <li class="list-group-item">
-              <div class="btn-group" role="group" aria-label="Basic example">
-                <a href="{{ url_for('notes_module.note_download_file', filename=file_u['file_id_name']) }}" class="btn btn-primary btn-sm" role="button" aria-pressed="true"><i class="bi bi-download"></i> Download</a>
-                <a href="{{ url_for('notes_module.preview_file', filename=file_u['file_id_name']) }}" class="btn btn-success btn-sm" role="button" aria-pressed="true"><i class="bi bi-incognito"></i> Preview</a>
-              </div>
+    <div class="col-md-5">
+      Files
+      <hr>
+      <ul class="list-group">
+        {% for file_u in note_o.files %}
+          <li class="list-group-item">
+            <div class="btn-group">
+              <a href="{{ url_for('notes_module.note_download_file', filename=file_u['file_id_name']) }}" class="btn btn-primary btn-sm"><i class="bi bi-download"></i> Download</a>
+              <a href="{{ url_for('notes_module.preview_file', filename=file_u['file_id_name']) }}" class="btn btn-success btn-sm"><i class="bi bi-incognito"></i> Preview</a>
+            </div>
+            {{ file_u["file_name"] }} &ndash; <span class="badge text-bg-dark">{{ note_o.file_size(file_u) }}</span>
+            <button type="button" class="badge text-bg-danger float-end border-0" data-bs-toggle="modal" data-bs-target="#deleteFile-{{ file_u['file_id_name'] }}">Delete</button>
 
-              {{ file_u["file_name"] }} - <span class="badge badge-dark">{{ note_o.file_size(file_u) }}</span> <i class="bi bi-file-earmark-pdf"></i>
-              <button type="button" class="badge badge-danger float-right" data-toggle="modal" data-target="#deleteFile-{{file_u['file_id_name']}}">Delete</button>
-
-              <!-- Modal -->
-              <div class="modal fade" id="deleteFile-{{file_u['file_id_name'] }}" tabindex="-1" role="dialog" aria-labelledby="deleteFileitle" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="deleteFileTitle">Delete the File</h5>
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                      </button>
-                    </div>
-                    <div class="modal-body">
-                      Do you really want to delete the file <b>{{ file_u["file_name"] }}</b> ?
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                      
-                      <form method="POST" action="{{ url_for('notes_module.note_delete_file') }}" accept-charset="UTF-8" role="form">
-                        <input type="hidden" id="file_id_name" name="file_id_name" value="{{ file_u['file_id_name'] }}">
-                        <button type="submit" class="btn btn-danger">Delete File</button>
-                      </form>
-                    </div>
+            <div class="modal fade" id="deleteFile-{{ file_u['file_id_name'] }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Delete the File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    Delete <b>{{ file_u["file_name"] }}</b>?
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <form method="POST" action="{{ url_for('notes_module.note_delete_file') }}" accept-charset="UTF-8">
+                      <input type="hidden" name="file_id_name" value="{{ file_u['file_id_name'] }}">
+                      <button type="submit" class="btn btn-danger">Delete File</button>
+                    </form>
                   </div>
                 </div>
               </div>
-
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-      <div class="col-md-1">
-      </div>
-      <div class="col-md-3">
-          Similar notes
-        <hr>
-        <ul class="list-group">
-          {% for note_id, value in note_o.similar_notes(note["title"]).items() %}
-          <li class="list-group-item">
-            {{ value[0] }} - <a href="{{ url_for('notes_module.note_view', note_id=note_id ) }}" class="badge badge-warning" title="Download">View</a>
+            </div>
           </li>
-          {% endfor %}
-        </ul>
-      </div>
+        {% endfor %}
+      </ul>
+    </div>
 
+    <div class="col-md-1"></div>
+
+    <div class="col-md-3">
+      Similar notes
+      <hr>
+      <ul class="list-group">
+        {% for similar_id, value in note_o.similar_notes(note["title"]).items() %}
+        <li class="list-group-item">
+          {{ value[0] }} &ndash; <a href="{{ url_for('notes_module.note_view', note_id=similar_id) }}" class="badge text-bg-warning">View</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
   <br>
 
-  <a href="{{ url_for('notes_module.note_edit', note_id=note_id) }}" id="floatBtn">Edit Note</a>
+  <a href="{{ url_for('notes_module.note_edit', note_id=note_id) }}" class="rn-fab rn-fab-right" id="floatBtn">Edit Note</a>
 
-
-  
-
-  <!-- Modal -->
-  <div class="modal fade" id="tagModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+  <!-- Tags modal -->
+  <div class="modal fade" id="tagModal" tabindex="-1" aria-labelledby="tagModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalLabel">Tags</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
+        <div class="modal-header">
+          <h5 class="modal-title" id="tagModalLabel">Tags</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group">
+            <select class="form-select" id="choosen_tag">
+              {% for tag in all_tags %}
+                <option value="{{ tag['id'] }}">{{ tag["name"] }}</option>
+              {% endfor %}
+            </select>
+            <button type="button" class="btn btn-outline-info" onclick="addTag()">Add Tag</button>
           </div>
-          <div class="modal-body">
-              <div class="input-group">
-                <div class="input-group-append">
-                  <select class="custom-select" id="choosen_tag">
-                    {% for tag in all_tags %}
-                      <option value="{{ tag['id'] }}">{{ tag["name"] }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <button type="button" class="form-control btn btn-outline-info" onclick="add_tag()">Add Tag</button>
-              </div>
-            <hr>
-              <div class="form-group">
-                <label for="notationName">Tag Name</label>
-                <input type="text" class="form-control" id="tagName" placeholder="Tag name">
-              </div>
-              <div class="form-group">
-                <label for="notationName">Tag Color</label>
-                <select class="form-control" id="tagColor">
-                  {% for index, xx in tags_.items() %}
-                  <option value="{{ index }}" {% if loop.index == 1 %}selected{% endif %}>{{xx}}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" onclick="create_tag()">Create and Add Tag</button>
+          <hr>
+          <div class="mb-3">
+            <label class="form-label">Tag Name</label>
+            <input type="text" class="form-control" id="tagName" placeholder="Tag name">
           </div>
+          <div class="mb-3">
+            <label class="form-label">Tag Color</label>
+            <select class="form-select" id="tagColor">
+              {% for index, xx in tags_.items() %}
+              <option value="{{ index }}" {% if loop.index == 1 %}selected{% endif %}>{{ xx }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" onclick="createTag()">Create and Add Tag</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
+  const tags_c = {
+    {% for index, xx in tags_.items() %}{{ index }}: "{{ xx }}",{% endfor %}
+  };
 
-  function remove_tag(tag_id){
-    var note_id = document.getElementById("id").value;
-
-    $.post('/tag_remove/', {"note_id": note_id, "tag_id": tag_id}, function(data, textStatus) {
-      //console.log(data["a"]);
-      var snackbar = document.getElementById("snackbar");
-
-      if (data["a"] != "-1"){
-        //console.log(returned_data);
-        snackbar.innerHTML = "Tag removed";
-        var tag = document.getElementById("t" + tag_id);
-        tag.remove()
-
+  function removeTag(tag_id) {
+    const note_id = document.getElementById('id').value;
+    fetch('/tag_remove/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ note_id, tag_id })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data['a'] !== '-1') {
+        document.getElementById('t' + tag_id)?.remove();
+        showToast('Tag removed');
       } else {
-        snackbar.innerHTML = "Error while removing the tag";
+        showToast('Error removing tag');
       }
-
-      show_snackbar();
-      
-
-    }, "json");
-
-  };
-
-
-  var tags_c = {
-    {% for index, xx in tags_.items() %}
-      {{index}}: "{{xx}}",
-    {% endfor %}
-  };
-    
-  function create_tag(){
-      var note_id = document.getElementById("id").value;
-      var tagName = document.getElementById("tagName").value;
-      var tagColor = document.getElementById("tagColor").value;
-
-      $.post('/tag_create/', {"note_id": note_id, "tagName": tagName, "tagColor": tagColor}, function(data, textStatus) {
-        //console.log(data["a"]);
-        var snackbar = document.getElementById("snackbar");
-
-        if (data["a"] != "no"){
-          var returned_data = data["a"].split("++++__++++++");
-
-          var color = tags_c[returned_data[1]];
-                    
-          //console.log(returned_data);
-          snackbar.innerHTML = "Tag added - " + returned_data[0];
-
-          var tags_list_div = document.getElementById("tags_list")
-
-          var nel_list_thing = document.createElement("li")
-          var tag_spant = document.createElement("span")
-          tag_spant.setAttribute('class', "badge badge-pill badge-" + color );
-          tag_spant.textContent = returned_data[0];
-
-          nel_list_thing.appendChild(tag_spant);
-          tags_list_div.appendChild(nel_list_thing);
-
-        } else {
-          snackbar.innerHTML = "Error while adding the Tag";
-        }
-
-        show_snackbar();
-        
-
-      }, "json");
-
-    };
-
-    function add_tag(){
-      var note_id = document.getElementById("id").value;
-      var tag_id = document.getElementById("choosen_tag").value;
-
-      $.post('/tag_add/', {"note_id": note_id, "tag_id": tag_id}, function(data, textStatus) {
-        //console.log(data["a"]);
-        var snackbar = document.getElementById("snackbar");
-
-        if (data["a"] != "no"){
-          var returned_data = data["a"].split("++++__++++++");
-
-          var color = tags_c[returned_data[1]];
-          
-          
-          //console.log(returned_data);
-          snackbar.innerHTML = "Tag added - " + returned_data[0];
-
-          var tags_list_div = document.getElementById("tags_list")
-
-          var nel_list_thing = document.createElement("li")
-          var tag_spant = document.createElement("span")
-          tag_spant.setAttribute('class', "badge badge-pill badge-" + color );
-          tag_spant.textContent = returned_data[0];
-
-          nel_list_thing.appendChild(tag_spant);
-          tags_list_div.appendChild(nel_list_thing);
-
-        } else {
-          snackbar.innerHTML = "Error while adding the Tag";
-        }
-
-        show_snackbar();
-        
-
-      }, "json");
-
-    };
-
-
-    // save scroll position
-    document.querySelector('#floatBtn').addEventListener('click', function() {
-      localStorage.setItem('scrollPosition', window.scrollY);
     });
-  
+  }
+
+  function createTag() {
+    const note_id = document.getElementById('id').value;
+    const tagName  = document.getElementById('tagName').value;
+    const tagColor = document.getElementById('tagColor').value;
+    fetch('/tag_create/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ note_id, tagName, tagColor })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data['a'] !== 'no') {
+        const [name, colorIdx] = data['a'].split('++++__++++++');
+        const color = tags_c[colorIdx];
+        const li = document.createElement('li');
+        const sp = document.createElement('span');
+        sp.className = 'badge rounded-pill text-bg-' + color;
+        sp.textContent = name;
+        li.appendChild(sp);
+        document.getElementById('tags_list').appendChild(li);
+        showToast('Tag added – ' + name);
+      } else {
+        showToast('Error adding tag');
+      }
+    });
+  }
+
+  function addTag() {
+    const note_id = document.getElementById('id').value;
+    const tag_id  = document.getElementById('choosen_tag').value;
+    fetch('/tag_add/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ note_id, tag_id })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data['a'] !== 'no') {
+        const [name, colorIdx] = data['a'].split('++++__++++++');
+        const color = tags_c[colorIdx];
+        const li = document.createElement('li');
+        const sp = document.createElement('span');
+        sp.className = 'badge rounded-pill text-bg-' + color;
+        sp.textContent = name;
+        li.appendChild(sp);
+        document.getElementById('tags_list').appendChild(li);
+        showToast('Tag added – ' + name);
+      } else {
+        showToast('Error adding tag');
+      }
+    });
+  }
+
+  document.querySelector('#floatBtn').addEventListener('click', function() {
+    localStorage.setItem('scrollPosition', window.scrollY);
+  });
   </script>
-
-
-  <div id="snackbar">Notation added</div>
-  <style>
-  /* The snackbar - position it at the bottom and in the middle of the screen */
-    #snackbar {
-      visibility: hidden; /* Hidden by default. Visible on click */
-      min-width: 250px; /* Set a default minimum width */
-      margin-left: -125px; /* Divide value of min-width by 2 */
-      background-color: #333; /* Black background color */
-      color: #fff; /* White text color */
-      text-align: center; /* Centered text */
-      border-radius: 2px; /* Rounded borders */
-      padding: 16px; /* Padding */
-      position: fixed; /* Sit on top of the screen */
-      z-index: 1; /* Add a z-index if needed */
-      left: 50%; /* Center the snackbar */
-      bottom: 30px; /* 30px from the bottom */
-    }
-
-    /* Show the snackbar when clicking on a button (class added with JavaScript) */
-    #snackbar.show {
-      visibility: visible; /* Show the snackbar */
-      /* Add animation: Take 0.5 seconds to fade in and out the snackbar.
-      However, delay the fade out process for 2.5 seconds */
-      -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-      animation: fadein 0.5s, fadeout 0.5s 2.5s;
-    }
-
-    /* Animations to fade the snackbar in and out */
-    @-webkit-keyframes fadein {
-      from {bottom: 0; opacity: 0;}
-      to {bottom: 30px; opacity: 1;}
-    }
-
-    @keyframes fadein {
-      from {bottom: 0; opacity: 0;}
-      to {bottom: 30px; opacity: 1;}
-    }
-
-    @-webkit-keyframes fadeout {
-      from {bottom: 30px; opacity: 1;}
-      to {bottom: 0; opacity: 0;}
-    }
-
-    @keyframes fadeout {
-      from {bottom: 30px; opacity: 1;}
-      to {bottom: 0; opacity: 0;}
-    }
-  </style>
-
-  <style>
-    #floatBtn {
-      position: fixed;
-      bottom: 20px;
-      right: 30px; /* Place 30px from the right */
-      z-index: 99;
-      border: none;
-      outline: none;
-      background-color: rgb(0, 122, 255); /* Blue background color */
-      color: white;
-      cursor: pointer;
-      padding: 15px;
-      border-radius: 50px;
-      font-size: 18px;
-      text-align: center;
-      text-decoration: none; /* Remove underline for link */
-      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-    }
-  </style>
-
-  
-  
-  
-  </div>
-
-
+</div>
 
 {% endblock content %}

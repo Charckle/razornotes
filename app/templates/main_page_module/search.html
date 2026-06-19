@@ -1,127 +1,87 @@
 {% extends "main_page_module/base.html" %}
 
-{% block extraheader %}
-{% endblock extraheader  %}
-
 {% block nav_search %}active{% endblock nav_search %}
 
-
-
-{% block content%}
+{% block content %}
 <br>
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-2">
-      <!-- insert column here -->
-    </div>
+    <div class="col-md-2"><!-- aside --></div>
     <div class="col-md-8">
 
       <h1>Hello, there!</h1>
-      <input class="form-control mr-sm-2" id ="search" type="search" placeholder="Search" size="50" aria-label="Search" autofocus="">
+      <input class="form-control" id="search" type="search" placeholder="Search" aria-label="Search" autofocus>
       <hr>
-      <div class="container">
-        <div id="results">
-          <p>Now search something!</p>
-        </div>
+      <div id="results">
+        <p>Now search something!</p>
       </div>
+
       <script>
-        
-        function load_results(){
-          var search_key = document.getElementById("search").value;
+        function loadResults() {
+          const key = document.getElementById('search').value;
+          fetch('/search/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ key })
+          })
+          .then(r => r.json())
+          .then(data => {
+            const container = document.createElement('div');
+            container.className = 'container';
 
-          var results=[];
+            if (Object.keys(data).length > 0) {
+              for (const [noteId, value] of Object.entries(data)) {
+                const card = document.createElement('div');
+                card.className = 'd-flex rn-note-card p-2';
+                card.style.cssText = 'font-size:12px;border-radius:5px;margin-bottom:5px;';
 
-          $.post('/search/', {"key": search_key}, function(data, textStatus) {
-            //data contains the JSON object
-            //textStatus contains the status: success, error, etc
+                const link = document.createElement('a');
+                link.className = 'btn align-self-center me-3';
+                link.href = '/note_view/' + noteId;
+                const img = document.createElement('img');
+                img.src  = "{{ url_for('static', filename='icons/note.svg') }}";
+                img.height = 32; img.width = 32;
+                link.appendChild(img);
 
-            var searchResults = document.createElement("div");
-            searchResults.setAttribute('class', 'container');
-            var count = Object(data);
-            console.log(count);
+                const body = document.createElement('div');
+                body.className = 'flex-grow-1';
+                const title = document.createElement('h6');
+                title.className = 'mt-0';
+                title.textContent = value[0];
+                const snippet = document.createElement('p');
+                snippet.innerHTML = value[1];
+                body.appendChild(title);
+                body.appendChild(snippet);
 
-            if (0 < Object.keys(data).length) {
-
-              for (const [key, value] of Object.entries(data)) {
-                var newMedia = document.createElement("div")
-                newMedia.setAttribute('class', 'media');
-                newMedia.setAttribute('style', 'font-size: 12px;background-color: hsl(64, 100%, 86%);border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;>');
-
-                var newBodyLink = document.createElement("a")
-                newBodyLink.setAttribute('class', 'btn align-self-center mr-3');
-                newBodyLink.setAttribute('href', '/note_view/' + key);
-
-                var newBodyImage = document.createElement("img")
-                newBodyImage.setAttribute('src', "{{ url_for('static', filename='icons/note.svg') }}");
-                newBodyImage.setAttribute('height', '32');
-                newBodyImage.setAttribute('width', '32');
-                newBodyLink.appendChild(newBodyImage);
-
-                var newBody = document.createElement("div")
-                newBody.setAttribute('class', 'media-body');
-
-                var newBodyTitle = document.createElement("h6")
-                newBodyTitle.setAttribute('class', 'mt-0');
-                newBodyTitle.textContent = value[0];
-
-                var newBodyText = document.createElement("p")
-                newBodyText.innerHTML = value[1];
-
-                newBody.appendChild(newBodyTitle);
-                newBody.appendChild(newBodyText);
-                
-                newMedia.appendChild(newBodyLink);
-                newMedia.appendChild(newBody);
-                
-                searchResults.appendChild(newMedia);
-                
+                card.appendChild(link);
+                card.appendChild(body);
+                container.appendChild(card);
               }
-
             } else {
-              var noResults = document.createElement("p")
-              noResults.textContent = "We searched high and low, and we found nothing... its clearly because you were not specific enough.";
-              searchResults.appendChild(noResults);
-              var new_note = document.createElement("a")
-              new_note.textContent = "Make One";
-              new_note.setAttribute('href', "{{ url_for('notes_module.note_new') }}");
-              searchResults.appendChild(new_note);
-
+              const msg = document.createElement('p');
+              msg.textContent = "We searched high and low, and found nothing… try being more specific.";
+              const newLink = document.createElement('a');
+              newLink.textContent = 'Make One';
+              newLink.href = "{{ url_for('notes_module.note_new') }}";
+              container.appendChild(msg);
+              container.appendChild(newLink);
             }
 
-            $("#results").empty();
-            document.getElementById("results").appendChild(searchResults);
-          }, "json");
-
-        };
-
-        // Debounce timer variable
-        var searchTimer = null;
-        
-        // Debounced search function
-        function debouncedSearch() {
-          // Clear any existing timer
-          if (searchTimer) {
-            clearTimeout(searchTimer);
-          }
-          
-          // Set a new timer for 0.5 seconds
-          searchTimer = setTimeout(function() {
-            load_results();
-            searchTimer = null;
-          }, 500);
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            results.appendChild(container);
+          });
         }
-        
-        // Attach debounced function to keyup event
-        document.getElementById("search").onkeyup = debouncedSearch;
 
+        let searchTimer = null;
+        document.getElementById('search').addEventListener('keyup', function() {
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(loadResults, 500);
+        });
       </script>
 
     </div>
-  <div class="col-md-2">
-
-      
+    <div class="col-md-2"><!-- aside --></div>
   </div>
-</div>
-
 </div>
 {% endblock content %}

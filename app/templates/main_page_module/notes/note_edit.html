@@ -1,18 +1,13 @@
 {% extends "main_page_module/base.html" %}
 
-
 {% block extraheader %}
-<link rel="stylesheet" href="{{ url_for('static', filename='main_page_module/dist/simplemde/simplemde.min.css') }}">
-<script src="{{ url_for('static', filename='main_page_module/dist/simplemde/simplemde.min.js') }}"></script>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='main_page_module/dist/easymde/easymde.min.css') }}">
+<script src="{{ url_for('static', filename='main_page_module/dist/easymde/easymde.min.js') }}"></script>
 {% endblock %}
 
 {% block nav_new_note %}active{% endblock nav_new_note %}
 
-
-
-{% block content%}
-
+{% block content %}
 
 {% set tags = Tag.get_all_of_note(note_id) %}
 {% set all_tags = Tag.get_all() %}
@@ -20,179 +15,80 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-1">
-      
-                
 
       {% macro render_field(field, placeholder=None) %}
-      <div class="form-group">
-          {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
-
-          {{ field.label }}
-
-          {% if field.errors %}
-              {% set css_class = css_class + ' is-invalid' %}
-
-              {% for error in field.errors %}
-                  
-                  <small id="{{ field.label.text }}" class="text-danger">
-                      {{ error }}
-                </small>
-
-              {% endfor %}
-              </ul>
-          {% endif %}
-
-          {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+      <div class="mb-3">
+        {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+        {{ field.label }}
+        {% if field.errors %}
+          {% set css_class = css_class + ' is-invalid' %}
+          {% for error in field.errors %}
+            <small class="text-danger d-block">{{ error }}</small>
+          {% endfor %}
+        {% endif %}
+        {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
       </div>
       {% endmacro %}
 
-
     </div>
     <div class="col-md-10">
-      <form method="POST" action="{{ url_for('notes_module.note_edit') }}" accept-charset="UTF-8" role="form" enctype="multipart/form-data">
+      <form method="POST" action="{{ url_for('notes_module.note_edit') }}" accept-charset="UTF-8" enctype="multipart/form-data">
         {{ form.csrf_token }}
-
         {{ form.id }}
-
         <br>
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group">
-              <input type="text" class="form-control " id="title" name="title" placeholder="Title" value="{{ note['title'] }}"  aria-describedby="titlenotehelp" required>
-              <small id="titlenotehelp" class="form-text text-muted">Note title</small>
+            <div class="mb-3">
+              <input type="text" class="form-control" id="title" name="title" placeholder="Title" value="{{ note['title'] }}" required>
+              <div class="form-text">Note title</div>
             </div>
           </div>
-        
-          <div class="col-md-3">
-            {{ render_field(form.file_u) }}
-          </div>
+          <div class="col-md-3">{{ render_field(form.file_u) }}</div>
+          <div class="col-md-3">{{ render_field(form.note_type) }}</div>
+        </div>
 
-          <div class="col-md-3">
-            {{ render_field(form.note_type) }}
+        <div class="row mb-2">
+          <div class="col-md-2">
+            <div class="mb-3">{{ form.relevant }} – Shown in index</div>
+          </div>
+          <div class="col-md-2">
+            <div class="mb-3">{{ form.pinned }} – Pinned?</div>
+          </div>
+          <div class="col-md-2">
+            <a href="https://daringfireball.net/projects/markdown/syntax#list" target="_blank">&rsaquo; Syntax Help</a>
           </div>
         </div>
 
-        <div class="row">
-          <div class="col-md-2">
-              <div class="form-group">
-              {{ form.relevant }} - Shown in index
-              </div>
-          </div>
-  
-          <div class="col-md-2">
-              <div class="form-group">
-              {{ form.pinned }} - Pinned?
-              </div>
-          </div>
-          <div class="col-md-2">
-            <a href="https://daringfireball.net/projects/markdown/syntax#list" target="_blank">> Syntax Help</a>
-          </div>
-          <div class="col-md-2">
-           
-          </div>
+        <div class="mb-3">
+          <textarea class="form-control" id="note_text" name="note_text" placeholder="Write what stuff" required rows="30">{{ note["text"] }}</textarea>
         </div>
-        
-        
-        <div class="form-group">
-            <textarea class="form-control " id="note_text" name="note_text" placeholder="Write what stuff" required rows="30">{{ note["text"] }}</textarea>
-        </div>
-        <div class="form-group">
-          <style>
-            #saveBtn {
-              display: none; /* Hidden by default */
-              position: fixed; /* Fixed/sticky position */
-              bottom: 20px; /* Place the button at the bottom of the page */
-              left: 30px; /* Place the button 30px from the right */
-              z-index: 99; /* Make sure it does not overlap */
-              border: none; /* Remove borders */
-              outline: none; /* Remove outline */
-              background-color: rgb(46, 182, 4); /* Set a background color */
-              color: white; /* Text color */
-              cursor: pointer; /* Add a mouse pointer on hover */
-              padding: 15px; /* Some padding */
-              border-radius: 50px; /* Rounded corners */
-              font-size: 18px; /* Increase font size */
-              box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-            }
-        
-            #mysaveBtnBtn:hover {
-              background-color: rgb(195, 224, 189); /* Add a dark-grey background on hover */
-            }
-          </style>
-
-          <button  id="saveBtn">Save</button>
-          {{ form.submit(class="form-control btn btn-dark mb-2", value="Submit eddits") }}
-
-
-          <script>
-          //Get the button:
-            mybutton = document.getElementById("saveBtn");
-            mybutton.style.display = "block";
-          </script>
-
+        <div class="mb-3">
+          {{ form.submit(class="form-control btn btn-dark mb-2", value="Submit edits") }}
         </div>
       </form>
-
     </div>
-    
   </div>
+</div>
 
+<button class="rn-fab rn-fab-left" id="saveBtn" form="editForm" onclick="document.querySelector('form').submit()">Save</button>
 
+<script>
+var easymde = new EasyMDE({
+  forceSync: true,
+  indentWithTabs: false,
+  promptURLs: true,
+  spellChecker: false,
+  tabSize: 4,
+  element: document.getElementById("note_text")
+});
 
-  
-  <style>
-    #myBtn {
-      display: none; /* Hidden by default */
-      position: fixed; /* Fixed/sticky position */
-      bottom: 20px; /* Place the button at the bottom of the page */
-      right: 30px; /* Place the button 30px from the right */
-      z-index: 99; /* Make sure it does not overlap */
-      border: none; /* Remove borders */
-      outline: none; /* Remove outline */
-      background-color: rgb(182, 4, 87); /* Set a background color */
-      color: white; /* Text color */
-      cursor: pointer; /* Add a mouse pointer on hover */
-      padding: 15px; /* Some padding */
-      border-radius: 50px; /* Rounded corners */
-      font-size: 18px; /* Increase font size */
-      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-    }
+window.addEventListener('load', function() {
+  const pos = localStorage.getItem('scrollPosition');
+  if (pos) {
+    window.scrollTo(0, parseInt(pos, 10));
+    localStorage.removeItem('scrollPosition');
+  }
+});
+</script>
 
-    #myBtn:hover {
-      background-color: rgb(243, 178, 56); /* Add a dark-grey background on hover */
-    }
-
-    
-  </style>
-
-   <button  id="myBtn" title="Notation button" data-toggle="modal" data-target="#notationModal">Notation</button>
-   
-   <script>
-   //Get the button:
-   /*
-    mybutton = document.getElementById("myBtn");
-    mybutton.style.display = "block";
-    */
-
-  var simplemde = new SimpleMDE({ forceSync: true,
-    indentWithTabs: false,
-    promptURLs: true,
-    spellChecker: false,
-    tabSize: 4,
-    element: document.getElementById("note_text") });
-   
-
-    // go to previous scroll position
-    window.addEventListener('load', function() {
-    const scrollPosition = localStorage.getItem('scrollPosition');
-    
-    if (scrollPosition) {
-        window.scrollTo(0, parseInt(scrollPosition, 10));
-        localStorage.removeItem('scrollPosition'); // Optionally clear it
-      }
-    });
-    
-  </script>
-
-   
 {% endblock %}

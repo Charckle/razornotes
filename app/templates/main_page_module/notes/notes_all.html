@@ -1,94 +1,78 @@
 {% extends "main_page_module/base.html" %}
 
-{% block extraheader %}
-{% endblock extraheader  %}
-
 {% block nav_all_notes %}active{% endblock nav_all_notes %}
 
-
-{% block content%}
+{% block content %}
 <br>
 <div class="container-fluid">
   <div class="row">
     <div class="col-md text-center">
       <h5>Options</h5>
-      <a href="{{ url_for('notes_module.notes_all_trashed') }}" class="btn btn-warning btn-sm" role="button">View Trash</a>
-      
-      
+      <a href="{{ url_for('notes_module.notes_all_trashed') }}" class="btn btn-warning btn-sm">View Trash</a>
     </div>
     <div class="col-md-6">
 
       <legend>All Notes</legend>
       <div id="all_entries" class="container">
-        {% for i in notes%}
+        {% for i in notes %}
           {% set note_obj = N_obj(i["id"]) %}
-          <div class="media" style="font-size: 12px;background-color: hsl(64, 100%, 86%);border: 1px solid hsl(51, 46%, 56%);border-radius: 5px;margin-bottom: 5px;">
-              <div class="btn-group btn-group-sm align-self-center mr-3" role="group" aria-label="...">
-                
-                <a href="{{ url_for('notes_module.note_view', note_id=i['id']) }}" class="btn btn-warning" role="button">View Note</a>
-                <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#{{ 'for_modal' ~ i['id'] }}">Trash</button>
-                <div class="input-group-append">
-                  <div class="input-group-text" id="btnGroupAddon">{{ note_obj.type_clr [0] }} {% if (note_obj.files | length) > 0 %} - files: {{ note_obj.files | length }}{% endif %}</div>
+          <div class="d-flex rn-note-card p-2">
+            <div class="btn-group btn-group-sm align-self-center me-3">
+              <a href="{{ url_for('notes_module.note_view', note_id=i['id']) }}" class="btn btn-warning">View Note</a>
+              <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#{{ 'for_modal' ~ i['id'] }}">Trash</button>
+              <span class="btn btn-outline-secondary disabled">
+                {{ note_obj.type_clr[0] }}{% if (note_obj.files | length) > 0 %} &bull; files: {{ note_obj.files | length }}{% endif %}
+              </span>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="mt-0 mb-0">{{ i["title"] }}</h6>
+            </div>
+          </div>
+
+          <div class="modal fade" id="{{ 'for_modal' ~ i['id'] }}" tabindex="-1" aria-labelledby="{{ i['id'] ~ 'for_modaltext' }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="{{ i['id'] ~ 'for_modaltext' }}">Trash the note</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  Do you really want to Trash the note "{{ i["title"] }}"?
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <form method="POST" action="{{ url_for('notes_module.note_trash') }}" accept-charset="UTF-8">
+                    <input type="hidden" name="id" value="{{ i['id'] }}">
+                    <button type="submit" class="btn btn-danger">Trash note</button>
+                  </form>
                 </div>
               </div>
-            <div class="media-body">
-              <h6 class="mt-0">{{ i["title"] }}</h6>
             </div>
           </div>
-
-        <!-- Modal -->
-        <div class="modal fade" id="{{ 'for_modal' ~ i['id'] }}" tabindex="-1" role="dialog" aria-labelledby="{{ i['id'] ~ 'for_modaltext' }}" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="{{ i['id'] ~ 'for_modaltext' }}">Trash the note</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">
-                Do you really want to Trash the note "{{ i["title"] }}" ?
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                
-                <form method="POST" action="{{ url_for('notes_module.note_trash') }}" accept-charset="UTF-8" role="form">
-                  <input type="hidden" id="id" name="id" value="{{ i['id'] }}">
-                  <button type="submit" class="btn btn-danger">Trash note</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {% endfor %}
       </div>
 
       <hr>
 
       {% set pagination = N_obj.pagination_all_active(page_display, page_offset) %}
-
-      <span class="d-flex justify-content-center">
-        <!-- pagination -->
-        <nav aria-label="Page navigation example">
-          <ul class="pagination">
-            <li class="page-item {% if pagination['previous'] < 0 %}disabled{% endif %}"><a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=pagination['previous']) }}">Previous</a></li>
-            {% for page_num in pagination["all_pages"] %}
-            <li class="page-item {% if pagination['current'] == page_num %}active{% endif %}"><a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=page_num) }}">{{ page_num + 1 }}</a></li>
-            {% endfor %}
-
-            <li class="page-item {% if pagination['next'] == (pagination['all_pages_len']) %}disabled{% endif %}"><a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=pagination['next']) }}">Next</a></li>
-          </ul>
-        </nav>
-      </span>
-
-
+      <nav aria-label="Notes pagination" class="d-flex justify-content-center">
+        <ul class="pagination">
+          <li class="page-item {% if pagination['previous'] < 0 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=pagination['previous']) }}">Previous</a>
+          </li>
+          {% for page_num in pagination["all_pages"] %}
+          <li class="page-item {% if pagination['current'] == page_num %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=page_num) }}">{{ page_num + 1 }}</a>
+          </li>
+          {% endfor %}
+          <li class="page-item {% if pagination['next'] == (pagination['all_pages_len']) %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('notes_module.notes_all', page_offset=pagination['next']) }}">Next</a>
+          </li>
+        </ul>
+      </nav>
 
     </div>
-    <div class="col-md">
-      <!-- insert column here -->
-    </div>
+    <div class="col-md"><!-- aside --></div>
   </div>
-
 </div>
 {% endblock content %}

@@ -1,35 +1,22 @@
 {% extends "main_page_module/base.html" %}
 
-{% block extraheader %}
-{% endblock extraheader  %}
-
 {% block nav_admin %}active{% endblock nav_admin %}
 
-
 {% macro render_field(field, placeholder=None) %}
-<div class="form-group">
-    {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
-
-    {{ field.label }}
-
-    {% if field.errors %}
-        {% set css_class = css_class + ' is-invalid' %}
-
-        {% for error in field.errors %}
-            
-            <small id="{{ field.label.text }}" class="text-danger">
-                {{ error }}
-          </small>
-
-        {% endfor %}
-    {% endif %}
-
-    {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
+<div class="mb-3">
+  {% set css_class = 'form-control ' + kwargs.pop('class', '') %}
+  {{ field.label }}
+  {% if field.errors %}
+    {% set css_class = css_class + ' is-invalid' %}
+    {% for error in field.errors %}
+      <small class="text-danger d-block">{{ error }}</small>
+    {% endfor %}
+  {% endif %}
+  {{ field(class=css_class, placeholder=placeholder, **kwargs) }}
 </div>
 {% endmacro %}
 
-
-{% block content%}
+{% block content %}
 <br>
 <div class="container-fluid">
 
@@ -41,71 +28,52 @@
   </nav>
 
   <div class="row">
-    <div class="col-md">
-      <!-- insert column here -->
-    </div>
+    <div class="col-md"><!-- aside --></div>
     <div class="col-md-6">
 
-
       <legend>New User</legend>
+      <form method="POST" action="{{ url_for('admin_module.user_new') }}" accept-charset="UTF-8">
+        {{ form.csrf_token }}
+        <input type="hidden" id="id" name="id" value="999">
 
-        <form method="POST" action="{{ url_for('admin_module.user_new') }}" accept-charset="UTF-8" role="form">
-          {{ form.csrf_token }}
-          <input type="hidden" id="id" name="id" value="999">
+        <div class="row">
+          <div class="col-md-6">{{ render_field(form.name, autofocus="") }}</div>
+          <div class="col-md-6">{{ render_field(form.username) }}</div>
+        </div>
 
-          <div class="row">
-            <div class="col-md-6">
-              {{ render_field(form.name, autofocus="") }}
-            </div>
-            <div class="col-md-6">
-              {{ render_field(form.username) }}
-            </div>
+        <div class="mb-3">
+          {{ form.email.label }}
+          {% if form.email.errors %}
+            {% for error in form.email.errors %}
+              <small class="text-danger d-block">{{ error }}</small>
+            {% endfor %}
+          {% endif %}
+          <div class="input-group">
+            {% set email_css = 'form-control' + (' is-invalid' if form.email.errors else '') %}
+            {{ form.email(class=email_css, id="email") }}
+            <button type="button" class="btn btn-outline-secondary" id="btn-random-email" title="Insert random placeholder email">Random email</button>
           </div>
+        </div>
 
-          <div class="form-group">
-            {{ form.email.label }}
-            {% if form.email.errors %}
-              {% for error in form.email.errors %}
-                <small class="text-danger d-block">{{ error }}</small>
-              {% endfor %}
-            {% endif %}
-            <div class="input-group">
-              {% set email_css = 'form-control' + (' is-invalid' if form.email.errors else '') %}
-              {{ form.email(class=email_css, id="email") }}
-              <div class="input-group-append">
-                <button type="button" class="btn btn-outline-secondary" id="btn-random-email" title="Insert random placeholder email">Random email</button>
-              </div>
-            </div>
-          </div>
+        <div class="row">
+          <div class="col-md-6">{{ render_field(form.password) }}</div>
+          <div class="col-md-6">{{ render_field(form.password_2) }}</div>
+        </div>
 
-          <div class="row">
-            <div class="col-md-6">
-              {{ render_field(form.password) }}
-            </div>
-            <div class="col-md-6">
-              {{ render_field(form.password_2) }}
-            </div>
-          </div>
-          
-        {{ render_field(form.api_key, value = Pylavor.gen_passwd(20)) }}
+        {{ render_field(form.api_key, value=Pylavor.gen_passwd(20)) }}
+        {{ render_field(form.status) }}
 
-          
-          
-          {{ render_field(form.status) }}
-          
-          <div class="form-group">
-            {{ form.submit(class="form-control btn btn-primary mb-2") }}
-            </div>
-        </form>
-
+        <div class="mb-3">
+          {{ form.submit(class="form-control btn btn-primary mb-2") }}
+        </div>
+      </form>
       <hr>
 
     </div>
-    <div class="col-md">
-    </div>
+    <div class="col-md"><!-- aside --></div>
   </div>
-  
 </div>
+
 <script>
 (function () {
   function randomLocalPart() {
@@ -116,7 +84,7 @@
     }
     return s;
   }
-  var btn = document.getElementById('btn-random-email');
+  var btn   = document.getElementById('btn-random-email');
   var input = document.getElementById('email');
   if (btn && input) {
     btn.addEventListener('click', function () {
