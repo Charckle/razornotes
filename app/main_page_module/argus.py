@@ -46,7 +46,9 @@ class WSearch():
     def delete_item(note_id):        
         ix = index.open_dir(".index")   
     
-        ix.delete_by_term("id", note_id)
+        writer = ix.writer()
+        writer.delete_by_term("note_id", u"{}".format(note_id))
+        writer.commit()
         
         
     @staticmethod
@@ -60,7 +62,8 @@ class WSearch():
 
     def index_search(self, querystring):
         ix = open_dir(".index")
-        parser = MultifieldParser(["note_name", "content"], ix.schema)
+        parser = MultifieldParser(["note_name", "content"], ix.schema,
+                                  fieldboosts={"note_name": 3.0, "content": 1.0})
         
         # it seems that it does not work like this
         #querystring = f"{querystring}~{mistakes}"
@@ -68,7 +71,7 @@ class WSearch():
         
         file_names = []
         with ix.searcher() as searcher:
-            results = searcher.search(myquery)
+            results = searcher.search(myquery, limit=30)
             # print(f"Found {len(results)} results.")
             for found in results:
                 file_names.append([found["note_id"], found["note_name"], found.highlights("content")])

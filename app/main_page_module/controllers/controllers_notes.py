@@ -97,6 +97,9 @@ def note_trash():
     
     Notes.trash_one(note_id)     
     
+    # remove the trashed note from the search index
+    N_obj.argus_delete_note(note_id)
+    
     AuditLog.create(f"Note Trashed, id: {note_id}: {note['title'][:10]}")        
     
     
@@ -116,6 +119,12 @@ def note_reactivate(note_id):
     
     
     Notes.reactivate_one(note_id)     
+    
+    # add the reactivated note back into the search index
+    note_ = {"id": note_id,
+             "title": note["title"],
+             "text": note["text"]}
+    N_obj.argus_add_note(note_)
     
     AuditLog.create(f"Note Reactivated, id: {note_id}: {note['title'][:10]}")        
     
