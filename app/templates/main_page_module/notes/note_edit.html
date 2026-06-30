@@ -32,7 +32,7 @@
 
     </div>
     <div class="col-md-10">
-      <form method="POST" action="{{ url_for('notes_module.note_edit') }}" accept-charset="UTF-8" enctype="multipart/form-data">
+      <form id="editForm" method="POST" action="{{ url_for('notes_module.note_edit') }}" accept-charset="UTF-8" enctype="multipart/form-data">
         {{ form.csrf_token }}
         {{ form.id }}
         <br>
@@ -70,7 +70,7 @@
   </div>
 </div>
 
-<button class="rn-fab rn-fab-left" id="saveBtn" form="editForm" onclick="document.querySelector('form').submit()">Save</button>
+<button type="submit" class="rn-fab rn-fab-left" id="saveBtn" form="editForm">Save</button>
 
 <script>
 var easymde = new EasyMDE({
