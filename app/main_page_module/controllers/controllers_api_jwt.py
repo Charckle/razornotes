@@ -138,6 +138,10 @@ class SearchNote(Resource):
         if not key:
             abort(404, message="Search value cannot be None")
 
+        key = key.strip()
+        if len(key) < 3:
+            abort(400, message="Search value must be at least 3 characters")
+
         return N_obj.search(key + "*")
 
 

@@ -40,16 +40,13 @@ def search():
 @notes_module.route('/search/', methods=['POST'])
 @access_required()
 def search_results():
-    key = request.form["key"]
+    key = request.form["key"].strip()
 
-    if key == "":
-        asterix = ""
-    else:
-        asterix = "*"
-        
-    key = key + asterix
+    # avoid wasteful searches on very short queries
+    if len(key) < 3:
+        return jsonify({})
 
-    return jsonify(N_obj.search(key))
+    return jsonify(N_obj.search(key + "*"))
 
 
 @notes_module.route('/note_delete/', methods=['POST'])

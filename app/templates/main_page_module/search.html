@@ -17,8 +17,20 @@
       </div>
 
       <script>
+        const MIN_SEARCH_CHARS = 3;
+
         function loadResults() {
-          const key = document.getElementById('search').value;
+          const key = document.getElementById('search').value.trim();
+
+          if (key.length < MIN_SEARCH_CHARS) {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            const hint = document.createElement('p');
+            hint.textContent = 'Type at least ' + MIN_SEARCH_CHARS + ' characters to search.';
+            results.appendChild(hint);
+            return;
+          }
+
           fetch('/search/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
