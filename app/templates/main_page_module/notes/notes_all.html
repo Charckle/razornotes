@@ -42,6 +42,7 @@
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                   <form method="POST" action="{{ url_for('notes_module.note_trash') }}" accept-charset="UTF-8">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="id" value="{{ i['id'] }}">
                     <button type="submit" class="btn btn-danger">Trash note</button>
                   </form>

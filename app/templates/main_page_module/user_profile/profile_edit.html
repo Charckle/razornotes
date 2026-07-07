@@ -89,6 +89,7 @@
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                   <form method="POST" action="{{ url_for('main_page_module.user_delete_fibo2') }}" accept-charset="UTF-8">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="cred_id_bs64" value="{{ i['cred_id_bs64'] }}">
                     <button type="submit" class="btn btn-danger">Delete Credential</button>
                   </form>

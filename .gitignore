@@ -12,3 +12,4 @@ app/files_u/*
 # exception to the rule
 !app/files_u/.gitkeep 
 .env
+docker_example/.env

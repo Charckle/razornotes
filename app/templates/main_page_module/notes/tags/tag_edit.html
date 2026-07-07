@@ -41,6 +41,7 @@
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               <form method="POST" action="{{ url_for('notes_module.tag_delete') }}" accept-charset="UTF-8">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="tag_id" value="{{ tag_id }}">
                 <button type="submit" class="btn btn-danger">Delete Tag</button>
               </form>

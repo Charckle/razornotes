@@ -57,6 +57,7 @@
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               <form method="POST" action="{{ url_for('notes_module.note_trash') }}" accept-charset="UTF-8">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" id="id" name="id" value="{{ note_id }}">
                 <button type="submit" class="btn btn-danger">Trash note</button>
               </form>
@@ -110,6 +111,7 @@
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <form method="POST" action="{{ url_for('notes_module.note_delete_file') }}" accept-charset="UTF-8">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <input type="hidden" name="file_id_name" value="{{ file_u['file_id_name'] }}">
                       <button type="submit" class="btn btn-danger">Delete File</button>
                     </form>
@@ -185,7 +187,7 @@
     const note_id = document.getElementById('id').value;
     fetch('/tag_remove/', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
       body: new URLSearchParams({ note_id, tag_id })
     })
     .then(r => r.json())
@@ -205,7 +207,7 @@
     const tagColor = document.getElementById('tagColor').value;
     fetch('/tag_create/', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
       body: new URLSearchParams({ note_id, tagName, tagColor })
     })
     .then(r => r.json())
@@ -231,7 +233,7 @@
     const tag_id  = document.getElementById('choosen_tag').value;
     fetch('/tag_add/', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
       body: new URLSearchParams({ note_id, tag_id })
     })
     .then(r => r.json())

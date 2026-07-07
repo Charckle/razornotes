@@ -33,7 +33,7 @@
 
           fetch('/search/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
             body: new URLSearchParams({ key })
           })
           .then(r => r.json())

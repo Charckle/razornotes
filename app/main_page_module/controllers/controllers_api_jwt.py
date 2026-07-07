@@ -86,7 +86,7 @@ class NoteItem(Resource):
         claims = get_jwt()
         read_access = claims.get("read_access")
 
-        if not any(x in read_access for x in [1, 2, 3]):
+        if not any(x in read_access for x in [1, 2]):
             abort(401, message="You dont have the permission to edit it.")
 
         note = Notes.get_one_hash(n_id)

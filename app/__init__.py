@@ -7,6 +7,7 @@ import logging
 from dotenv import load_dotenv
 
 from flask_jwt_extended import JWTManager
+from flask_wtf.csrf import CSRFProtect
 from flask_apscheduler import APScheduler
 
 from datab import DBcreate, check_database_active
@@ -37,6 +38,8 @@ else:
     app.config.from_object("config.ProductionConfig")
 
 jwt = JWTManager(app)
+csrf = CSRFProtect()
+csrf.init_app(app)
 
 # Initialize scheduler for email reminders (only if memory module is enabled)
 scheduler = APScheduler()
@@ -72,6 +75,7 @@ app.register_blueprint(admin_module)
 app.register_blueprint(api_module_v1)
 app.register_blueprint(memory_module)
 app.register_blueprint(secrets_module)
+csrf.exempt(api_module_v1)
 # app.register_blueprint(xyz_module)
 # ..
 
