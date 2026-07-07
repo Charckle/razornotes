@@ -129,13 +129,10 @@
     <div class="col-md-3">
       Similar notes
       <hr>
-      <ul class="list-group">
-        {% for similar_id, value in note_o.similar_notes(note["title"]).items() %}
-        <li class="list-group-item">
-          {{ value[0] }} &ndash; <a href="{{ url_for('notes_module.note_view', note_id=similar_id) }}" class="badge text-bg-warning">View</a>
-        </li>
-        {% endfor %}
-      </ul>
+      <button type="button" class="btn btn-warning w-100" id="showSimilarBtn" onclick="loadSimilarNotes()">
+        Show similar notes
+      </button>
+      <div id="similarNotesResults" class="mt-2" hidden></div>
     </div>
   </div>
   <br>
@@ -251,6 +248,48 @@
       } else {
         showToast('Error adding tag');
       }
+    });
+  }
+
+  function loadSimilarNotes() {
+    const btn = document.getElementById('showSimilarBtn');
+    const results = document.getElementById('similarNotesResults');
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+
+    fetch('{{ url_for("notes_module.note_similar", note_id=note_id) }}', {
+      method: 'POST',
+      headers: csrfHeaders()
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.remove();
+      results.hidden = false;
+
+      if (Object.keys(data).length === 0) {
+        results.textContent = 'No similar notes found.';
+        return;
+      }
+
+      const ul = document.createElement('ul');
+      ul.className = 'list-group';
+      for (const [similarId, value] of Object.entries(data)) {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.appendChild(document.createTextNode(value[0] + ' \u2013 '));
+        const link = document.createElement('a');
+        link.href = '/note_view/' + similarId;
+        link.className = 'badge text-bg-warning';
+        link.textContent = 'View';
+        li.appendChild(link);
+        ul.appendChild(li);
+      }
+      results.appendChild(ul);
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.textContent = 'Show similar notes';
+      showToast('Error loading similar notes');
     });
   }
 

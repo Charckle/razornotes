@@ -49,6 +49,17 @@ def search_results():
     return jsonify(N_obj.search(key + "*"))
 
 
+@notes_module.route('/note_similar/<int:note_id>', methods=['POST'])
+@access_required()
+def note_similar(note_id):
+    note = Notes.get_one(note_id)
+
+    if note is None:
+        return jsonify({}), 404
+
+    return jsonify(N_obj(note_id).similar_notes(note["title"]))
+
+
 @notes_module.route('/note_delete/', methods=['POST'])
 @access_required(UserRole.READWRITE)
 def note_delete():
