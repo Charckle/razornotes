@@ -8,6 +8,7 @@ from flask import Blueprint, request, render_template, \
 from app.main_page_module.forms import form_dicts
 from app.main_page_module.r_proc import Import_Ex, HL_proc
 from app.main_page_module.p_objects.note_o import N_obj
+from app.main_page_module.p_objects.audit_log import AuditLog
 
 # Import module models (i.e. User)
 from app.main_page_module.models import UserM, Notes, Tag, Tmpl, GroupsAccessM, AuditLM
@@ -50,6 +51,8 @@ def notes_import():
     
     if form.validate_on_submit():
         ditc_ = Import_Ex.import_(form.import_file.data)
+        if ditc_.get("version_warning"):
+            flash(ditc_["version_warning"], "warning")
         flash(f"Import holds {ditc_['to_process']} Notes, {ditc_['added']} added.", "success")
         
         return redirect(url_for("main_page_module.index"))
@@ -263,3 +266,70 @@ def audit_log():
     AuditLM.delete_all_but_200()
     
     return render_template("main_page_module/admin/audit_log/audit_log_all.html", AuditLM=AuditLM)
+
+
+@admin_module.route('/attachments/')
+@access_required(UserRole.ADMIN)
+def attachments_all():
+    q = (request.args.get("q") or "").strip()
+    sort = request.args.get("sort", "file_name")
+    direction = request.args.get("dir", "asc")
+
+    if sort not in ("file_name", "size", "note_title"):
+        sort = "file_name"
+    if direction not in ("asc", "desc"):
+        direction = "asc"
+
+    attachments = N_obj.get_all_attachments()
+
+    if q:
+        q_lower = q.lower()
+        attachments = [
+            a for a in attachments
+            if q_lower in a["file_name"].lower() or q_lower in a["note_title"].lower()
+        ]
+
+    reverse = direction == "desc"
+    if sort == "file_name":
+        attachments.sort(key=lambda a: a["file_name"].lower(), reverse=reverse)
+    elif sort == "note_title":
+        attachments.sort(key=lambda a: a["note_title"].lower(), reverse=reverse)
+    else:
+        present = [a for a in attachments if a["size_bytes"] is not None]
+        missing = [a for a in attachments if a["size_bytes"] is None]
+        present.sort(key=lambda a: a["size_bytes"], reverse=reverse)
+        attachments = present + missing
+
+    total_bytes = sum(a["size_bytes"] or 0 for a in attachments)
+    total_size = Randoms.format_file_size(total_bytes) if total_bytes else "0.00 KB"
+
+    return render_template(
+        "main_page_module/admin/attachments/attachments_all.html",
+        attachments=attachments,
+        q=q,
+        sort=sort,
+        direction=direction,
+        total_size=total_size,
+        count=len(attachments),
+    )
+
+
+@admin_module.route('/attachments/delete/', methods=['POST'])
+@access_required(UserRole.ADMIN)
+def attachments_delete():
+    file_id_name = request.form.get("file_id_name")
+    file_u = Notes.get_one_file(file_id_name)
+
+    if file_u is None:
+        flash('No attachment with this ID found to delete.', 'error')
+        return redirect(url_for("admin_module.attachments_all"))
+
+    note_id = file_u["note_id"]
+    note_o = N_obj(note_id)
+    Notes.delete_one_file(file_id_name)
+    note_o.file_delete(file_u)
+
+    AuditLog.create(f"Note file deleted (admin), note id: {note_id}: {file_u['file_name'][:15]}")
+
+    flash(f"{file_u['file_name']} - File deleted successfully.", 'success')
+    return redirect(url_for("admin_module.attachments_all"))

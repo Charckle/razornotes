@@ -252,6 +252,7 @@ class DBcreate:
             CREATE TABLE `notes` (
             `id` INT NOT NULL AUTO_INCREMENT,
             `title` varchar(128) NOT NULL,
+            `note_type` INT NOT NULL DEFAULT 0,
             `text` text NOT NULL,
             `v_hash` varchar(32) NOT NULL,
             `pinned` INT DEFAULT 0 ,
@@ -367,6 +368,7 @@ class DBcreate:
             `has_birthday` INT NOT NULL DEFAULT 0,
             `birthday` DATE NULL,
             `failure_count` INT NOT NULL DEFAULT 0,
+            `show_` INT NOT NULL DEFAULT 1,
             PRIMARY KEY (`id`),
             FOREIGN KEY (m_group_id) REFERENCES m_groups(id)
             )
@@ -384,7 +386,8 @@ class DBcreate:
         # admin
         # banana
         api_key = Pylavor.gen_passwd(20)
-        sql_command = f"""INSERT INTO `users` VALUES (1,'admin','admin','','pbkdf2:sha256:260000$vnE6xPAiuRLVweYe$986824300bfc489a4274bcb604cee7eaf9bc77838e4c90ed04f2d38ca6edae7f',1,%s, %s)"""
+        sql_command = f"""INSERT INTO `users` (id, name, username, email, password, status, created_date, api_key)
+            VALUES (1,'admin','admin','','pbkdf2:sha256:260000$vnE6xPAiuRLVweYe$986824300bfc489a4274bcb604cee7eaf9bc77838e4c90ed04f2d38ca6edae7f',1,%s, %s)"""
         db.q_exe(sql_command, (today, api_key))
         
         

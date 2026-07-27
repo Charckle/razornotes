@@ -1,0 +1,152 @@
+{% extends "main_page_module/base.html" %}
+
+{% block nav_admin %}active{% endblock nav_admin %}
+
+{% block content %}
+{% macro sort_url(col) -%}
+  {%- if sort == col and direction == 'asc' -%}
+    {{ url_for('admin_module.attachments_all', q=q, sort=col, dir='desc') }}
+  {%- else -%}
+    {{ url_for('admin_module.attachments_all', q=q, sort=col, dir='asc') }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro sort_icon(col) -%}
+  {%- if sort == col -%}
+    {%- if direction == 'asc' -%}<i class="bi bi-sort-up"></i>{%- else -%}<i class="bi bi-sort-down"></i>{%- endif -%}
+  {%- endif -%}
+{%- endmacro %}
+
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-10 mx-auto">
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <legend class="mb-0">All Attachments</legend>
+        <div>
+          <span class="badge text-bg-secondary">{{ count }} file{% if count != 1 %}s{% endif %}</span>
+          <span class="badge text-bg-dark">Total: {{ total_size }}</span>
+        </div>
+      </div>
+
+      <form method="GET" action="{{ url_for('admin_module.attachments_all') }}" class="mb-3">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="hidden" name="dir" value="{{ direction }}">
+        <div class="input-group">
+          <input type="text" class="form-control" name="q" value="{{ q }}"
+                 placeholder="Search by filename or note title…" aria-label="Search attachments">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+          {% if q %}
+            <a href="{{ url_for('admin_module.attachments_all', sort=sort, dir=direction) }}" class="btn btn-outline-secondary">Clear</a>
+          {% endif %}
+        </div>
+      </form>
+
+      {% if attachments %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th scope="col">
+                <a href="{{ sort_url('file_name') }}" class="text-decoration-none text-body">
+                  Filename {{ sort_icon('file_name') }}
+                </a>
+              </th>
+              <th scope="col">
+                <a href="{{ sort_url('size') }}" class="text-decoration-none text-body">
+                  Size {{ sort_icon('size') }}
+                </a>
+              </th>
+              <th scope="col">
+                <a href="{{ sort_url('note_title') }}" class="text-decoration-none text-body">
+                  Note {{ sort_icon('note_title') }}
+                </a>
+              </th>
+              <th scope="col">Status</th>
+              <th scope="col" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for file_u in attachments %}
+            <tr {% if file_u.in_trash or file_u.missing %}class="table-secondary"{% endif %}>
+              <td>{{ file_u.file_name }}</td>
+              <td>
+                {% if file_u.missing %}
+                  <span class="text-muted">—</span>
+                {% else %}
+                  <span class="badge text-bg-dark">{{ file_u.size_display }}</span>
+                {% endif %}
+              </td>
+              <td>{{ file_u.note_title }}</td>
+              <td>
+                {% if file_u.in_trash %}
+                  <span class="badge text-bg-warning">Trash</span>
+                {% endif %}
+                {% if file_u.missing %}
+                  <span class="badge text-bg-danger">Missing</span>
+                {% endif %}
+                {% if not file_u.in_trash and not file_u.missing %}
+                  <span class="badge text-bg-success">OK</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  {% if file_u.in_trash %}
+                    <a href="{{ url_for('notes_module.notes_all_trashed') }}" class="btn btn-outline-warning" title="Open trash list">
+                      <i class="bi bi-trash"></i> Note
+                    </a>
+                  {% else %}
+                    <a href="{{ url_for('notes_module.note_view', note_id=file_u.note_id) }}" class="btn btn-outline-warning" title="Open note">
+                      <i class="bi bi-journal-text"></i> Note
+                    </a>
+                  {% endif %}
+                  {% if not file_u.missing %}
+                    <a href="{{ url_for('notes_module.preview_file', filename=file_u.file_id_name) }}" class="btn btn-outline-success" title="Preview">
+                      <i class="bi bi-incognito"></i>
+                    </a>
+                    <a href="{{ url_for('notes_module.note_download_file', filename=file_u.file_id_name) }}" class="btn btn-outline-primary" title="Download">
+                      <i class="bi bi-download"></i>
+                    </a>
+                  {% endif %}
+                  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                          data-bs-target="#deleteFile-{{ file_u.file_id_name }}" title="Delete">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+
+                <div class="modal fade" id="deleteFile-{{ file_u.file_id_name }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content text-start">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Delete the File</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        Delete <b>{{ file_u.file_name }}</b> from note <b>{{ file_u.note_title }}</b>?
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <form method="POST" action="{{ url_for('admin_module.attachments_delete') }}" accept-charset="UTF-8">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <input type="hidden" name="file_id_name" value="{{ file_u.file_id_name }}">
+                          <button type="submit" class="btn btn-danger">Delete File</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p class="text-muted">No attachments found{% if q %} matching “{{ q }}”{% endif %}.</p>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock content %}

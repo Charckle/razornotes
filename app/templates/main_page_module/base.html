@@ -65,6 +65,8 @@
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('admin_module.users_all') }}">Users</a></li>
                 <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('admin_module.attachments_all') }}">Attachments</a></li>
+                <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('admin_module.audit_log') }}">Audit Log</a></li>
               </ul>
             </li>
@@ -149,7 +151,7 @@
       {% if messages %}
         <div class="mt-2 mx-3">
           {% for category, message in messages %}
-            <div class="alert alert-{% if category == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{% if category == 'error' %}danger{% elif category == 'warning' %}warning{% else %}success{% endif %} alert-dismissible fade show" role="alert">
               {{ message }}
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>

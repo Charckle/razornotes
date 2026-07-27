@@ -271,15 +271,15 @@ class UserM:
 
 class Notes:
     @staticmethod
-    def create(title, text, note_type):
+    def create(title, text, note_type, pinned=0, relevant=1):
         db = DB()
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         v_hash = hashlib.md5(text.encode()).hexdigest()
         
-        sql_command = f"""INSERT INTO notes (title, note_type, text, v_hash, date_mod)
-                      VALUES (%s, %s, %s, %s, %s);"""
+        sql_command = f"""INSERT INTO notes (title, note_type, text, v_hash, pinned, relevant, date_mod)
+                      VALUES (%s, %s, %s, %s, %s, %s, %s);"""
         
-        return db.q_exe_new(sql_command, (title, note_type,  text, v_hash, timestamp))
+        return db.q_exe_new(sql_command, (title, note_type, text, v_hash, pinned, relevant, timestamp))
 
     # Notes
     @staticmethod
@@ -449,6 +449,18 @@ class Notes:
         FROM notes_files WHERE note_id = %s;"""
 
         return db.q_r_all(sql_command, (note_id,))
+
+    # Notes
+    @staticmethod
+    def get_all_files():
+        db = DB()
+        sql_command = f"""SELECT nf.note_id, nf.file_name, nf.file_id_name,
+        n.title AS note_title, n.active AS note_active
+        FROM notes_files nf
+        LEFT JOIN notes n ON nf.note_id = n.id
+        ORDER BY nf.file_name;"""
+
+        return db.q_r_all(sql_command, ())
     
     # Notes
     @staticmethod
@@ -585,6 +597,14 @@ class Tag:
                       VALUES (%s, %s);"""                
             
         return db.q_exe_new(sql_command, (tagName, tagColor))
+    
+    # Tag
+    @staticmethod
+    def get_by_name(tag_name):
+        db = DB()
+        sql_command = f"""SELECT id, name, color FROM tags WHERE name = %s;"""
+        
+        return db.q_r_one(sql_command, (tag_name, ))
     
     # Tag
     def get_one(tag_id):

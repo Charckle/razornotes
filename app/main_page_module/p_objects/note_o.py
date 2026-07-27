@@ -124,6 +124,28 @@ class N_obj:
         else:
             print(file_path)
             return "Missing"
+
+    # N_obj
+    @staticmethod
+    def get_all_attachments():
+        attachments = []
+        for file_u in Notes.get_all_files():
+            file_path = f"{N_obj.path_u}/{file_u['file_id_name']}"
+            missing = not os.path.exists(file_path)
+            size_bytes = None if missing else os.path.getsize(file_path)
+
+            attachments.append({
+                "note_id": file_u["note_id"],
+                "file_name": file_u["file_name"],
+                "file_id_name": file_u["file_id_name"],
+                "note_title": file_u["note_title"] or "(unknown note)",
+                "in_trash": not bool(file_u["note_active"]) if file_u["note_active"] is not None else False,
+                "missing": missing,
+                "size_bytes": size_bytes,
+                "size_display": "—" if missing else Randoms.format_file_size(size_bytes),
+            })
+
+        return attachments
     
     def file_delete(self, file_u):
         file_id_name = file_u["file_id_name"]
