@@ -182,9 +182,9 @@
 
   function removeTag(tag_id) {
     const note_id = document.getElementById('id').value;
-    fetch('/tag_remove/', {
+    fetchWithCsrf('/tag_remove/', {
       method: 'POST',
-      headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ note_id, tag_id })
     })
     .then(r => r.json())
@@ -202,9 +202,9 @@
     const note_id = document.getElementById('id').value;
     const tagName  = document.getElementById('tagName').value;
     const tagColor = document.getElementById('tagColor').value;
-    fetch('/tag_create/', {
+    fetchWithCsrf('/tag_create/', {
       method: 'POST',
-      headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ note_id, tagName, tagColor })
     })
     .then(r => r.json())
@@ -228,9 +228,9 @@
   function addTag() {
     const note_id = document.getElementById('id').value;
     const tag_id  = document.getElementById('choosen_tag').value;
-    fetch('/tag_add/', {
+    fetchWithCsrf('/tag_add/', {
       method: 'POST',
-      headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ note_id, tag_id })
     })
     .then(r => r.json())
@@ -257,9 +257,8 @@
     btn.disabled = true;
     btn.textContent = 'Loading…';
 
-    fetch('{{ url_for("notes_module.note_similar", note_id=note_id) }}', {
-      method: 'POST',
-      headers: csrfHeaders()
+    fetchWithCsrf('{{ url_for("notes_module.note_similar", note_id=note_id) }}', {
+      method: 'POST'
     })
     .then(r => r.json())
     .then(data => {

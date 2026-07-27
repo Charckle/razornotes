@@ -158,19 +158,6 @@ class Register(FlaskForm):
             raise ValidationError('Please use a valid email address.')          
     
 
-class Tag(FlaskForm):
-    name = StringField('Name of Tag', [validators.InputRequired(message='You need to specify a name'),
-                                             validators.Length(max=50)])
-    
-    color = SelectField(u"Tag Color", [validators.InputRequired(message="You need to fill something")], choices=[])
-    
-    submit = SubmitField("Add Tag")
-
-    def __init__(self, *args, **kwargs):
-        super(TagForm, self).__init__(*args, **kwargs)
-        self.color.choices = [(str(key), str(value)) for key, value in NotesS.list_tag_colors().items()]
-    
-    
 class ImportNotes(FlaskForm):
     import_file = FileField("Note's .RNXF file", validators=[
         FileAllowed(["rnxf", "RNXF"], "Only RNXF allowed!"),
@@ -182,7 +169,6 @@ form_dicts = {"Note": Note,
               "Login": Login,
               "User": UserF,
               "Register": Register,
-              "Tag": Tag,
               "ImportNotes": ImportNotes,
               "Note_tmpl": Note_tmpl,
               "Note_tag": Note_tag,

@@ -45,9 +45,9 @@
         }
 
         function sendJsonnUTH(jsonData) {
-          fetch('fido2_save_registration', {
+          fetchWithCsrf('fido2_save_registration', {
             method: 'POST',
-            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(jsonData)
           })
           .then(r => r.json())

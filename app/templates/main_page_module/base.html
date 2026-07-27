@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-refresh-url" content="{{ url_for('main_page_module.csrf_token_refresh') }}">
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename=Randoms.icon_name(config)) }}">
 
@@ -160,12 +161,8 @@
     {% block content %}{% endblock %}
 
     <script src="{{ url_for('static', filename='main_page_module/dist/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='main_page_module/js/csrf.js') }}"></script>
     <script>
-    function csrfHeaders(extra = {}) {
-      const token = document.querySelector('meta[name="csrf-token"]')?.content;
-      return token ? { ...extra, 'X-CSRFToken': token } : extra;
-    }
-
     // ── Toast helper (replaces old snackbar) ─────────────────────────────────
     const _toastEl = document.getElementById('appToast');
     const _toast   = new bootstrap.Toast(_toastEl, { delay: 3000 });
@@ -176,29 +173,36 @@
     }
 
     // ── Clipboard ─────────────────────────────────────────────────────────────
-    function setClip() {
-      navigator.clipboard.readText().then(text => {
-        fetch("{{ url_for('main_page_module.set_clipboard') }}", {
+    async function setClip() {
+      try {
+        const text = await navigator.clipboard.readText();
+        const r = await fetchWithCsrf("{{ url_for('main_page_module.set_clipboard') }}", {
           method: 'POST',
-          headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({ clipboard: text })
-        })
-        .then(r => r.json())
-        .then(() => showToast('Clipboard saved!'));
-      });
+        });
+        if (!r.ok) { showToast('Clipboard save failed'); return; }
+        await r.json();
+        showToast('Clipboard saved!');
+      } catch (e) {
+        showToast('Clipboard save failed');
+      }
     }
 
-    function getClip() {
-      fetch("{{ url_for('main_page_module.get_clipboard') }}", {
-        method: 'POST',
-        headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
-        body: new URLSearchParams({})
-      })
-      .then(r => r.json())
-      .then(data => {
-        navigator.clipboard.writeText(data['clipboard']);
+    async function getClip() {
+      try {
+        const r = await fetchWithCsrf("{{ url_for('main_page_module.get_clipboard') }}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({})
+        });
+        if (!r.ok) { showToast('Clipboard load failed'); return; }
+        const data = await r.json();
+        await navigator.clipboard.writeText(data['clipboard']);
         showToast('Clipboard loaded!');
-      });
+      } catch (e) {
+        showToast('Clipboard load failed');
+      }
     }
 
     // ── Dark mode toggle ──────────────────────────────────────────────────────

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-refresh-url" content="{{ url_for('main_page_module.csrf_token_refresh') }}">
     <link href="{{ url_for('static', filename='main_page_module/dist/css/bootstrap.min.css') }}" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename=Randoms.icon_name(config)) }}">
     <style>
@@ -52,6 +53,7 @@
 {% endblock %}
 
   </body>
+  <script src="{{ url_for('static', filename='main_page_module/js/csrf.js') }}"></script>
   <script>
     const enc = new TextEncoder();
     var publicKeyCredentialRequestOptions = {{ json_opt | safe }};
@@ -79,12 +81,9 @@
     }
 
     function sendJsonnUTH(jsonData) {
-      const token = document.querySelector('meta[name="csrf-token"]')?.content;
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['X-CSRFToken'] = token;
-      fetch('verify_login_2fa', {
+      fetchWithCsrf('verify_login_2fa', {
         method: 'POST',
-        headers: headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(jsonData)
       })
       .then(r => r.json())

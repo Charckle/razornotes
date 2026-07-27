@@ -5,6 +5,7 @@ import time
 # Import flask dependencies
 from flask import Blueprint, request, render_template, \
                   flash, session, redirect, url_for, jsonify
+from flask_wtf.csrf import generate_csrf
 
 # Import module forms
 from app.main_page_module.forms import form_dicts
@@ -42,6 +43,12 @@ def index():
 
     return render_template("main_page_module/index.html", notes=notes, 
                            pinned_notes=pinned_notes)
+
+
+@main_page_module.route('/csrf-token/', methods=['GET'])
+def csrf_token_refresh():
+    """Fresh CSRF token for long-lived tabs / AJAX retry after expiry."""
+    return jsonify({"csrf_token": generate_csrf()})
 
 
 @main_page_module.route('/get_clipboard/', methods=['POST'])
