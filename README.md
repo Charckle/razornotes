@@ -15,6 +15,7 @@
 - A memory subapp
 - A secrets sharing subapp, for passwords etc
 - fido2 login
+- Installable offline notes app at `/app` (Other → App). Needs HTTPS (or localhost) to install.
 
 #### Login
 - Username: admin
@@ -27,7 +28,7 @@
 - `DB_PASSWORD` - Database password
 - `DB_NAME` - Database name
 - `DB_PORT` - Database port. Default 3306
-- `JWT_SECRET_KEY` - The secret for jwt api
+- `JWT_SECRET_KEY` - The secret for jwt api and the `/app` PWA
 - `SECRET_KEY` - Secret key for CSRF
 - `RP_ID` - WebAuthn variable, it is the base domain. When developing localy, use "localhost"
 - `RP_NAME` - WebAuthn variable, for identification of the application.

@@ -2,7 +2,7 @@ version: "3.8"
 services:
   razornotes:
     container_name: razor_notes
-    image: charckle/razornotes:1.0.10
+    image: charckle/razornotes:latest-alpine
     depends_on:
       - db_razor_notes
     ports:
@@ -16,6 +16,7 @@ services:
         DB_NAME: ${DB_NAME}
         DB_PORT: 3306
         SECRET_KEY: ${SECRET_KEY}
+        JWT_SECRET_KEY: ${JWT_SECRET_KEY}
         MODULE_MEMORY: True
         ICON_COLOR: "RED"
     volumes:
