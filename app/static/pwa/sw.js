@@ -1,4 +1,4 @@
-const CACHE = 'razor-pwa-v1';
+const CACHE = 'razor-pwa-v4';
 const PRECACHE = [
   '/app/',
   '/app/assets/css/app.css',
@@ -7,9 +7,7 @@ const PRECACHE = [
   '/app/assets/js/db.js',
   '/app/assets/js/sync.js',
   '/app/assets/js/markdown.js',
-  '/app/assets/icons/icon.svg',
-  '/app/assets/icons/icon-192.png',
-  '/app/assets/icons/icon-512.png',
+  '/app/icon.ico',
   '/app/manifest.webmanifest'
 ];
 

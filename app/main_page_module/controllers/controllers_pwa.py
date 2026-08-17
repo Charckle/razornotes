@@ -3,10 +3,13 @@ import os
 
 from flask import Blueprint, current_app, render_template, send_from_directory, jsonify
 
+from app.main_page_module.other import Randoms
+
 pwa_module = Blueprint('pwa_module', __name__, url_prefix='/app')
 
 _PWA_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'static', 'pwa')
 PWA_DIR = os.path.normpath(_PWA_DIR)
+_STATIC_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', 'static'))
 
 
 @pwa_module.route('/sw.js')
@@ -15,6 +18,12 @@ def service_worker():
     response.headers['Cache-Control'] = 'no-cache'
     response.headers['Service-Worker-Allowed'] = '/app/'
     return response
+
+
+@pwa_module.route('/icon.ico')
+def icon():
+    """Serve the same instance favicon the webapp uses (ICON_COLOR)."""
+    return send_from_directory(_STATIC_DIR, Randoms.icon_name(current_app.config))
 
 
 @pwa_module.route('/manifest.webmanifest')
@@ -32,21 +41,9 @@ def manifest():
         "theme_color": "#212529",
         "icons": [
             {
-                "src": "/app/assets/icons/icon-192.png",
-                "sizes": "192x192",
-                "type": "image/png",
-                "purpose": "any"
-            },
-            {
-                "src": "/app/assets/icons/icon-512.png",
-                "sizes": "512x512",
-                "type": "image/png",
-                "purpose": "any"
-            },
-            {
-                "src": "/app/assets/icons/icon.svg",
+                "src": "/app/icon.ico",
                 "sizes": "any",
-                "type": "image/svg+xml",
+                "type": "image/x-icon",
                 "purpose": "any"
             }
         ]

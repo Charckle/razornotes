@@ -141,6 +141,43 @@ export async function apiFetch(path, opts = {}, retry = true) {
   return data;
 }
 
+function filenameFromDisposition(header, fallback) {
+  if (!header) return fallback;
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(header);
+  if (star) {
+    try { return decodeURIComponent(star[1]); } catch { /* keep going */ }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header);
+  return plain ? plain[1] : fallback;
+}
+
+export async function apiFetchBlob(path, opts = {}, retry = true) {
+  const access = await getMeta('access');
+  const headers = Object.assign({}, opts.headers || {});
+  if (access) headers.Authorization = 'Bearer ' + access;
+  let res;
+  try {
+    res = await fetch(API + path, Object.assign({}, opts, { headers, credentials: 'same-origin' }));
+  } catch {
+    throw new NetworkError();
+  }
+  if ((res.status === 401 || res.status === 422) && retry) {
+    const ok = await refreshAccess();
+    if (ok) return apiFetchBlob(path, opts, false);
+    await deleteMeta('access');
+    const fromSession = await loginFromFlaskSession().catch(() => false);
+    if (fromSession) return apiFetchBlob(path, opts, false);
+    throw new ApiError('Session expired', res.status);
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new ApiError((data && data.message) || ('HTTP ' + res.status), res.status, data);
+  }
+  const blob = await res.blob();
+  const filename = filenameFromDisposition(res.headers.get('Content-Disposition'), '');
+  return { blob, filename };
+}
+
 export async function ping() {
   try {
     const res = await fetch('/health', { method: 'GET' });

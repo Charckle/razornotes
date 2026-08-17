@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify, session
+import os
+import time
+
+from flask import Blueprint, request, jsonify, session, send_file
 import flask_restful
 from flask_restful import Api, reqparse, abort
-import time
 
 from flask_jwt_extended import create_access_token, create_refresh_token, \
     get_jwt_identity, jwt_required, get_jwt
@@ -246,6 +248,33 @@ class NoteItemHash(Resource):
         return Notes.get_one_hash(n_id)
 
 
+class NoteFiles(Resource):
+    """Attachments on a note — metadata only."""
+    def get(self, n_id):
+        note = Notes.get_one(n_id)
+        if note is None:
+            abort(404, message="No note found for this id.")
+        files = Notes.get_all_files_of(n_id) or []
+        return [{
+            "file_name": f["file_name"],
+            "file_id_name": f["file_id_name"]
+        } for f in files]
+
+
+class NoteFile(Resource):
+    """Download a single attachment. Online only; not cached by the PWA."""
+    def get(self, file_id_name):
+        if "/" in file_id_name or "\\" in file_id_name or ".." in file_id_name:
+            abort(400, message="Invalid file id.")
+        file_u = Notes.get_one_file(file_id_name)
+        if file_u is None:
+            abort(404, message="No file found.")
+        path_u = os.path.join(N_obj.path_u, file_id_name)
+        if not os.path.isfile(path_u):
+            abort(404, message="File missing on server.")
+        return send_file(path_u, as_attachment=True, download_name=file_u["file_name"])
+
+
 class Clipboard(Resource):
     """Per-user clipboard, keyed by user ID from the JWT."""
     def get(self):
@@ -342,3 +371,5 @@ api.add_resource(NoteMeta,   '/notes/meta')
 api.add_resource(NoteAll,    '/notes')
 api.add_resource(NoteItem,     '/note/<int:n_id>')
 api.add_resource(NoteItemHash, '/note/<int:n_id>/hash')
+api.add_resource(NoteFiles,    '/note/<int:n_id>/files')
+api.add_resource(NoteFile,     '/file/<string:file_id_name>')

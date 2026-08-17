@@ -4,6 +4,8 @@ import * as sync from './sync.js';
 import { renderMarkdown } from './markdown.js';
 
 const APP_NAME = window.RN?.appName || 'Razor Notes';
+const HOME_LATEST = 20;
+const ALL_PAGE_SIZE = 25;
 const root = document.getElementById('app');
 let toastTimer = null;
 let searchQuery = '';
@@ -43,6 +45,10 @@ function parseHash() {
   const raw = (location.hash || '#/').replace(/^#/, '') || '/';
   const parts = raw.split('/').filter(Boolean);
   if (!parts.length) return { name: 'list' };
+  if (parts[0] === 'all') {
+    const page = Math.max(0, parseInt(parts[1], 10) || 0);
+    return { name: 'all', page };
+  }
   if (parts[0] === 'note' && parts[1]) return { name: 'view', id: coerceId(parts[1]) };
   if (parts[0] === 'edit') return { name: 'edit', id: parts[1] ? coerceId(parts[1]) : 'new' };
   if (parts[0] === 'settings') return { name: 'settings' };
@@ -77,7 +83,7 @@ function statusText() {
   return 'Online';
 }
 
-function shell(title, inner, { back = false, fab = false, extra = '' } = {}) {
+function shell(title, inner, { back = false, fab = false, editFab = false, extra = '', mainClass = '' } = {}) {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   return `
     <header class="topbar">
@@ -88,8 +94,9 @@ function shell(title, inner, { back = false, fab = false, extra = '' } = {}) {
     </header>
     <div class="status-bar ${statusClass()}"><span class="dot"></span><span>${esc(statusText())}</span></div>
     ${!standalone && extra === 'list' ? `<div class="install-hint">Install: browser menu → Add to Home screen. Then this app works offline.</div>` : ''}
-    <div class="main">${inner}</div>
+    <div class="main ${esc(mainClass)}">${inner}</div>
     ${fab ? `<button class="fab" data-act="new" aria-label="New note">+</button>` : ''}
+    ${editFab ? `<button class="fab fab-edit" data-act="edit-note" aria-label="Edit note">✎</button>` : ''}
   `;
 }
 
@@ -153,10 +160,18 @@ function noteCard(n) {
   </a>`;
 }
 
-async function renderList() {
+function filesOnline() {
+  return online && !db.isForceLocal();
+}
+
+function byDateDesc(a, b) {
+  return String(b.date_mod || '').localeCompare(String(a.date_mod || ''));
+}
+
+async function loadNotes() {
   let notes = await db.allNotes();
   const mode = await db.getSyncMode();
-  if (mode === 'remote_only' && online && !db.isForceLocal()) {
+  if (mode === 'remote_only' && filesOnline()) {
     try {
       const meta = await api.apiFetch('/notes/meta');
       const dirty = notes.filter((n) => n.dirty);
@@ -175,34 +190,79 @@ async function renderList() {
       notes = dirty.concat(remote.filter((n) => !dirtyIds.has(String(n.id))));
     } catch { /* keep cache */ }
   }
+  return notes;
+}
+
+function bindSearch() {
+  const search = root.querySelector('#search');
+  if (!search) return;
+  search.addEventListener('input', () => {
+    searchQuery = search.value;
+    clearTimeout(search._t);
+    search._t = setTimeout(() => route(), 220);
+  });
+  if (searchQuery) {
+    search.focus();
+    search.setSelectionRange(searchQuery.length, searchQuery.length);
+  }
+}
+
+function matchesQuery(n, q) {
+  if (!q) return true;
+  return (n.title || '').toLowerCase().includes(q) || (n.text || '').toLowerCase().includes(q)
+    || (n.preview || '').toLowerCase().includes(q);
+}
+
+async function renderList() {
+  let notes = await loadNotes();
   const q = searchQuery.trim().toLowerCase();
   if (q) {
-    notes = notes.filter((n) =>
-      (n.title || '').toLowerCase().includes(q) || (n.text || '').toLowerCase().includes(q));
+    notes = notes.filter((n) => matchesQuery(n, q)).sort(byDateDesc);
+    const body = `
+      <input class="search" id="search" placeholder="Search cached notes…" value="${esc(searchQuery)}">
+      ${notes.length === 0 ? `<div class="empty">No matches.</div>` : `<div class="section-label">Results</div>${notes.map(noteCard).join('')}`}
+    `;
+    root.innerHTML = shell(APP_NAME, body, { fab: true, extra: 'list' });
+    bindSearch();
+    return;
   }
-  notes.sort((a, b) => {
-    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-    return String(b.date_mod).localeCompare(String(a.date_mod));
-  });
-  const pinned = notes.filter((n) => n.pinned);
-  const rest = notes.filter((n) => !n.pinned);
+  const pinned = notes.filter((n) => n.pinned && n.relevant !== false).sort(byDateDesc);
+  const rest = notes.filter((n) => !n.pinned && (n.relevant !== false || n.dirty || db.isLocalId(n.id))).sort(byDateDesc);
+  const latest = rest.slice(0, HOME_LATEST);
+  const showAll = notes.length > pinned.length + latest.length || rest.length > HOME_LATEST;
   const body = `
     <input class="search" id="search" placeholder="Search cached notes…" value="${esc(searchQuery)}">
-    ${notes.length === 0 ? `<div class="empty">${q ? 'No matches.' : 'No notes on this device yet. Open notes while online, or download all in Settings.'}</div>` : ''}
-    ${pinned.length ? `<div class="section-label">Pinned</div>${pinned.map(noteCard).join('')}` : ''}
-    ${rest.length ? `<div class="section-label">${q ? 'Results' : 'Notes'}</div>${rest.map(noteCard).join('')}` : ''}
+    ${notes.length === 0 ? `<div class="empty">No notes on this device yet. Open notes while online, or download all in Settings.</div>` : ''}
+    <div class="home-cols">
+      ${pinned.length ? `<section class="home-col"><div class="section-label">Pinned</div>${pinned.map(noteCard).join('')}</section>` : ''}
+      ${latest.length ? `<section class="home-col"><div class="section-label">Latest</div>${latest.map(noteCard).join('')}</section>` : ''}
+    </div>
+    ${showAll ? `<div class="view-all-wrap"><button class="btn ghost" data-act="view-all">View all</button></div>` : ''}
   `;
-  root.innerHTML = shell(APP_NAME, body, { fab: true, extra: 'list' });
-  const search = root.querySelector('#search');
-    search.addEventListener('input', () => {
-      searchQuery = search.value;
-      clearTimeout(search._t);
-      search._t = setTimeout(() => renderList(), 220);
-    });
-    if (searchQuery) {
-      search.focus();
-      search.setSelectionRange(searchQuery.length, searchQuery.length);
-    }
+  root.innerHTML = shell(APP_NAME, body, { fab: true, extra: 'list', mainClass: 'home-screen' });
+  bindSearch();
+}
+
+async function renderAll(page) {
+  let notes = await loadNotes();
+  const q = searchQuery.trim().toLowerCase();
+  if (q) notes = notes.filter((n) => matchesQuery(n, q));
+  notes.sort(byDateDesc);
+  const pages = Math.max(1, Math.ceil(notes.length / ALL_PAGE_SIZE));
+  page = Math.min(Math.max(0, page), pages - 1);
+  const slice = notes.slice(page * ALL_PAGE_SIZE, (page + 1) * ALL_PAGE_SIZE);
+  const body = `
+    <input class="search" id="search" placeholder="Search cached notes…" value="${esc(searchQuery)}">
+    ${notes.length === 0 ? `<div class="empty">${q ? 'No matches.' : 'No notes.'}</div>` : `<div class="section-label">All notes</div>${slice.map(noteCard).join('')}`}
+    ${notes.length > ALL_PAGE_SIZE ? `<div class="pager">
+      <button class="btn ghost" data-act="page-prev" ${page <= 0 ? 'disabled' : ''}>Prev</button>
+      <span class="muted">Page ${page + 1} / ${pages}</span>
+      <button class="btn ghost" data-act="page-next" ${page >= pages - 1 ? 'disabled' : ''}>Next</button>
+    </div>` : ''}
+  `;
+  root.innerHTML = shell('All notes', body, { back: true, fab: true });
+  root.dataset.page = String(page);
+  bindSearch();
 }
 
 async function renderView(id) {
@@ -212,6 +272,23 @@ async function renderView(id) {
   } catch (e) {
     root.innerHTML = shell('Note', `<div class="empty">${esc(e.message || 'Could not load note.')}</div>`, { back: true });
     return;
+  }
+  let filesHtml = '';
+  if (!db.isLocalId(note.id)) {
+    const canDl = filesOnline();
+    let files = [];
+    if (canDl) {
+      try { files = await api.apiFetch('/note/' + note.id + '/files'); } catch { files = []; }
+    }
+    if (files.length) {
+      const items = files.map((f) => `
+        <li>
+          <span class="fname">${esc(f.file_name)}</span>
+          <button class="btn ghost" data-act="download-file" data-file-id="${esc(f.file_id_name)}" data-file-name="${esc(f.file_name)}" ${canDl ? '' : 'disabled'}>Download</button>
+        </li>`).join('');
+      filesHtml = `<div class="section-label">Attachments</div><ul class="files-list">${items}</ul>
+        ${canDl ? '' : '<p class="muted">Downloads need a connection.</p>'}`;
+    }
   }
   const body = `
     <article class="note-view">
@@ -223,9 +300,10 @@ async function renderView(id) {
       <h2 class="title">${esc(note.title || 'Untitled')}</h2>
       <div class="note-meta">${esc(note.date_mod || '')}${note.dirty ? ' · pending sync' : ''}${db.isLocalId(note.id) ? ' · not uploaded yet' : ''}</div>
       <div class="note-body">${renderMarkdown(note.text || '')}</div>
+      ${filesHtml}
     </article>
   `;
-  root.innerHTML = shell(note.title || 'Note', body, { back: true });
+  root.innerHTML = shell(note.title || 'Note', body, { back: true, editFab: true });
   root.dataset.noteId = String(note.id);
 }
 
@@ -241,15 +319,17 @@ async function renderEdit(id) {
     }
   }
   const body = `
-    <input class="edit-title" id="title" placeholder="Title" value="${esc(note.title)}">
-    <textarea class="edit-body" id="body" placeholder="Write…">${esc(note.text)}</textarea>
-    <div class="row-actions">
-      <button class="btn solid" data-act="save">Save</button>
-      <label class="muted"><input type="checkbox" id="pinned" ${note.pinned ? 'checked' : ''}> Pinned</label>
-      <label class="muted"><input type="checkbox" id="relevant" ${note.relevant !== false ? 'checked' : ''}> Show on home</label>
+    <div class="edit-form">
+      <input class="edit-title" id="title" placeholder="Title" value="${esc(note.title)}">
+      <textarea class="edit-body" id="body" placeholder="Write…">${esc(note.text)}</textarea>
+      <div class="row-actions">
+        <button class="btn solid" data-act="save">Save</button>
+        <label class="muted"><input type="checkbox" id="pinned" ${note.pinned ? 'checked' : ''}> Pinned</label>
+        <label class="muted"><input type="checkbox" id="relevant" ${note.relevant !== false ? 'checked' : ''}> Show on home</label>
+      </div>
     </div>
   `;
-  root.innerHTML = shell(id === 'new' ? 'New note' : 'Edit', body, { back: true });
+  root.innerHTML = shell(id === 'new' ? 'New note' : 'Edit', body, { back: true, mainClass: 'edit-screen' });
   const state = { note };
   root._edit = state;
   const save = async (andLeave) => {
@@ -330,7 +410,7 @@ async function renderSettings() {
   root.innerHTML = shell('Settings', body, { back: true });
 }
 
-async function onAction(act) {
+async function onAction(act, btn) {
   if (act === 'back') {
     history.length > 1 ? history.back() : go('/');
     return;
@@ -341,6 +421,40 @@ async function onAction(act) {
   }
   if (act === 'settings') { go('/settings'); return; }
   if (act === 'new') { go('/edit/new'); return; }
+  if (act === 'view-all') { go('/all/0'); return; }
+  if (act === 'page-prev' || act === 'page-next') {
+    if (btn && btn.disabled) return;
+    const page = parseInt(root.dataset.page || '0', 10) || 0;
+    go('/all/' + (act === 'page-next' ? page + 1 : Math.max(0, page - 1)));
+    return;
+  }
+  if (act === 'download-file') {
+    if (!filesOnline()) {
+      toast('Connect to download attachments');
+      return;
+    }
+    const fileId = btn && btn.dataset.fileId;
+    const fileName = (btn && btn.dataset.fileName) || 'download';
+    if (!fileId) return;
+    btn.disabled = true;
+    try {
+      toast('Downloading…');
+      const { blob, filename } = await api.apiFetchBlob('/file/' + encodeURIComponent(fileId));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast(e.message || 'Download failed');
+    } finally {
+      btn.disabled = false;
+    }
+    return;
+  }
   if (act === 'save' && root._saveEdit) { await root._saveEdit(); return; }
   if (act === 'edit-note') {
     go('/edit/' + root.dataset.noteId);
@@ -401,7 +515,7 @@ root.addEventListener('click', (ev) => {
   const btn = ev.target.closest('[data-act]');
   if (!btn) return;
   ev.preventDefault();
-  onAction(btn.dataset.act);
+  onAction(btn.dataset.act, btn);
 });
 
 root.addEventListener('change', async (ev) => {
@@ -431,6 +545,7 @@ async function route() {
   if (r.name === 'view') return renderView(r.id);
   if (r.name === 'edit') return renderEdit(r.id);
   if (r.name === 'settings') return renderSettings();
+  if (r.name === 'all') return renderAll(r.page);
   await renderList();
 }
 
@@ -446,6 +561,7 @@ window.addEventListener('offline', () => {
     bar.className = 'status-bar offline';
     bar.lastElementChild.textContent = 'Offline';
   }
+  document.querySelectorAll('[data-act="download-file"]').forEach((el) => { el.disabled = true; });
 });
 
 if ('serviceWorker' in navigator) {
