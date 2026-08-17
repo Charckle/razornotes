@@ -1,0 +1,470 @@
+import * as db from './db.js';
+import * as api from './api.js';
+import * as sync from './sync.js';
+import { renderMarkdown } from './markdown.js';
+
+const APP_NAME = window.RN?.appName || 'Razor Notes';
+const root = document.getElementById('app');
+let toastTimer = null;
+let searchQuery = '';
+let online = navigator.onLine;
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function toast(msg) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('rn-theme', theme);
+}
+
+function currentTheme() {
+  return localStorage.getItem('rn-theme')
+    || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+
+function parseHash() {
+  const raw = (location.hash || '#/').replace(/^#/, '') || '/';
+  const parts = raw.split('/').filter(Boolean);
+  if (!parts.length) return { name: 'list' };
+  if (parts[0] === 'note' && parts[1]) return { name: 'view', id: coerceId(parts[1]) };
+  if (parts[0] === 'edit') return { name: 'edit', id: parts[1] ? coerceId(parts[1]) : 'new' };
+  if (parts[0] === 'settings') return { name: 'settings' };
+  return { name: 'list' };
+}
+
+function coerceId(s) {
+  if (s.startsWith('l')) return s;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : s;
+}
+
+function go(path) {
+  location.hash = '#' + path;
+}
+
+function iconBtn(action, label, text) {
+  return `<button class="icon-btn" data-act="${action}" aria-label="${esc(label)}">${text}</button>`;
+}
+
+function statusClass() {
+  if (db.isForceLocal()) return 'local';
+  if (sync.isSyncing()) return 'syncing';
+  if (!online) return 'offline';
+  return '';
+}
+
+function statusText() {
+  if (db.isForceLocal()) return 'Local only (this session)';
+  if (sync.isSyncing()) return 'Syncing…';
+  if (!online) return 'Offline';
+  return 'Online';
+}
+
+function shell(title, inner, { back = false, fab = false, extra = '' } = {}) {
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  return `
+    <header class="topbar">
+      ${back ? iconBtn('back', 'Back', '←') : ''}
+      <h1>${esc(title)}</h1>
+      ${iconBtn('theme', 'Toggle theme', '◐')}
+      ${iconBtn('settings', 'Settings', '⚙')}
+    </header>
+    <div class="status-bar ${statusClass()}"><span class="dot"></span><span>${esc(statusText())}</span></div>
+    ${!standalone && extra === 'list' ? `<div class="install-hint">Install: browser menu → Add to Home screen. Then this app works offline.</div>` : ''}
+    <div class="main">${inner}</div>
+    ${fab ? `<button class="fab" data-act="new" aria-label="New note">+</button>` : ''}
+  `;
+}
+
+async function requireAuth() {
+  try {
+    if (await api.ensureAuth()) return true;
+  } catch (e) {
+    if (e instanceof api.NetworkError) {
+      if (await api.hasSession()) return true;
+      renderLogin('Server unreachable. Log in once while online, or use the full site.');
+      return false;
+    }
+  }
+  renderLogin();
+  return false;
+}
+
+function renderLogin(msg = '') {
+  root.innerHTML = `
+    <header class="topbar"><h1>${esc(APP_NAME)}</h1>${iconBtn('theme', 'Toggle theme', '◐')}</header>
+    <div class="login">
+      <p>Sign in to this Razor Notes server.</p>
+      <form id="login-form">
+        <label>Username or email</label>
+        <input name="username" autocomplete="username" required>
+        <label>Password</label>
+        <input name="password" type="password" autocomplete="current-password" required>
+        <div class="err">${esc(msg)}</div>
+        <button class="btn solid" type="submit">Sign in</button>
+      </form>
+      <p class="muted"><a class="inline" href="/">Open full site</a></p>
+    </div>
+  `;
+  root.querySelector('#login-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    try {
+      await api.loginWithPassword(fd.get('username'), fd.get('password'));
+      await route();
+    } catch (e) {
+      ev.target.querySelector('.err').textContent = e.message || 'Login failed';
+    }
+  });
+}
+
+function noteCard(n) {
+  const cls = ['card'];
+  if (n.dirty) cls.push('dirty');
+  if (db.isLocalId(n.id)) cls.push('local-only');
+  const preview = sync.listPreview(n);
+  const badges = [
+    n.pinned ? '<span class="badge">Pinned</span>' : '',
+    n.note_type === 1 ? '<span class="badge">Task</span>' : '',
+    n.dirty ? '<span class="badge">Pending</span>' : ''
+  ].join('');
+  return `<a class="${cls.join(' ')}" href="#/note/${encodeURIComponent(n.id)}">
+    <div>
+      <h3>${badges}${esc(n.title || 'Untitled')}</h3>
+      <p>${esc(preview)}${preview.length >= 100 ? '…' : ''}</p>
+    </div>
+  </a>`;
+}
+
+async function renderList() {
+  let notes = await db.allNotes();
+  const mode = await db.getSyncMode();
+  if (mode === 'remote_only' && online && !db.isForceLocal()) {
+    try {
+      const meta = await api.apiFetch('/notes/meta');
+      const dirty = notes.filter((n) => n.dirty);
+      const remote = meta.map((m) => ({
+        id: m._id ?? m.id,
+        title: m.title,
+        preview: m.preview,
+        text: '',
+        pinned: Boolean(m.pinned),
+        relevant: m.relevant !== false,
+        date_mod: m.date_mod,
+        v_hash: m.v_hash,
+        note_type: m.note_type || 0
+      }));
+      const dirtyIds = new Set(dirty.map((d) => String(d.id)));
+      notes = dirty.concat(remote.filter((n) => !dirtyIds.has(String(n.id))));
+    } catch { /* keep cache */ }
+  }
+  const q = searchQuery.trim().toLowerCase();
+  if (q) {
+    notes = notes.filter((n) =>
+      (n.title || '').toLowerCase().includes(q) || (n.text || '').toLowerCase().includes(q));
+  }
+  notes.sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return String(b.date_mod).localeCompare(String(a.date_mod));
+  });
+  const pinned = notes.filter((n) => n.pinned);
+  const rest = notes.filter((n) => !n.pinned);
+  const body = `
+    <input class="search" id="search" placeholder="Search cached notes…" value="${esc(searchQuery)}">
+    ${notes.length === 0 ? `<div class="empty">${q ? 'No matches.' : 'No notes on this device yet. Open notes while online, or download all in Settings.'}</div>` : ''}
+    ${pinned.length ? `<div class="section-label">Pinned</div>${pinned.map(noteCard).join('')}` : ''}
+    ${rest.length ? `<div class="section-label">${q ? 'Results' : 'Notes'}</div>${rest.map(noteCard).join('')}` : ''}
+  `;
+  root.innerHTML = shell(APP_NAME, body, { fab: true, extra: 'list' });
+  const search = root.querySelector('#search');
+    search.addEventListener('input', () => {
+      searchQuery = search.value;
+      clearTimeout(search._t);
+      search._t = setTimeout(() => renderList(), 220);
+    });
+    if (searchQuery) {
+      search.focus();
+      search.setSelectionRange(searchQuery.length, searchQuery.length);
+    }
+}
+
+async function renderView(id) {
+  let note;
+  try {
+    note = await sync.cacheOpenedNote(id);
+  } catch (e) {
+    root.innerHTML = shell('Note', `<div class="empty">${esc(e.message || 'Could not load note.')}</div>`, { back: true });
+    return;
+  }
+  const body = `
+    <article class="note-view">
+      <div class="row-actions">
+        <button class="btn solid" data-act="edit-note">Edit</button>
+        <button class="btn ghost" data-act="toggle-pin">${note.pinned ? 'Unpin' : 'Pin'}</button>
+        <button class="btn ghost" data-act="toggle-rel">${note.relevant === false ? 'Show on home' : 'Hide from home'}</button>
+      </div>
+      <h2 class="title">${esc(note.title || 'Untitled')}</h2>
+      <div class="note-meta">${esc(note.date_mod || '')}${note.dirty ? ' · pending sync' : ''}${db.isLocalId(note.id) ? ' · not uploaded yet' : ''}</div>
+      <div class="note-body">${renderMarkdown(note.text || '')}</div>
+    </article>
+  `;
+  root.innerHTML = shell(note.title || 'Note', body, { back: true });
+  root.dataset.noteId = String(note.id);
+}
+
+async function renderEdit(id) {
+  let note = { id: db.newLocalId(), title: '', text: '', pinned: false, relevant: true, note_type: 0, v_hash: '', base_hash: '' };
+  if (id !== 'new') {
+    try {
+      note = await sync.cacheOpenedNote(id);
+      note.base_hash = note.v_hash;
+    } catch (e) {
+      root.innerHTML = shell('Edit', `<div class="empty">${esc(e.message)}</div>`, { back: true });
+      return;
+    }
+  }
+  const body = `
+    <input class="edit-title" id="title" placeholder="Title" value="${esc(note.title)}">
+    <textarea class="edit-body" id="body" placeholder="Write…">${esc(note.text)}</textarea>
+    <div class="row-actions">
+      <button class="btn solid" data-act="save">Save</button>
+      <label class="muted"><input type="checkbox" id="pinned" ${note.pinned ? 'checked' : ''}> Pinned</label>
+      <label class="muted"><input type="checkbox" id="relevant" ${note.relevant !== false ? 'checked' : ''}> Show on home</label>
+    </div>
+  `;
+  root.innerHTML = shell(id === 'new' ? 'New note' : 'Edit', body, { back: true });
+  const state = { note };
+  root._edit = state;
+  const save = async (andLeave) => {
+    const title = root.querySelector('#title').value.trim() || 'Untitled';
+    const text = root.querySelector('#body').value;
+    const pinned = root.querySelector('#pinned').checked;
+    const relevant = root.querySelector('#relevant').checked;
+    const stored = await sync.saveLocalEdit({
+      id: state.note.id,
+      title,
+      text,
+      pinned,
+      relevant,
+      note_type: state.note.note_type || 0,
+      v_hash: state.note.v_hash,
+      base_hash: state.note.base_hash || state.note.v_hash
+    });
+    state.note = stored;
+    if (!db.isForceLocal() && online) {
+      try {
+        const remap = await sync.pushDirty();
+        if (remap[stored.id]) state.note = remap[stored.id];
+        else {
+          const fresh = await db.getNote(stored.id);
+          if (fresh) state.note = fresh;
+        }
+      } catch (e) {
+        if (!(e instanceof api.NetworkError)) toast(e.message || 'Could not upload');
+      }
+    }
+    toast('Saved');
+    if (andLeave) go('/note/' + state.note.id);
+  };
+  let t;
+  root.querySelector('#body').addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => save(false), 800);
+  });
+  root.querySelector('#title').addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => save(false), 800);
+  });
+  root._saveEdit = () => save(true);
+}
+
+async function renderSettings() {
+  const mode = await db.getSyncMode();
+  const last = await db.getMeta('last_synced', 0);
+  const lastStr = last ? new Date(last).toLocaleString() : 'never';
+  const user = (await db.getMeta('username', '')) || '';
+  const n = (await db.allNotes()).length;
+  const pending = (await db.allNotes()).filter((x) => x.dirty).length;
+  const body = `
+    <div class="settings">
+      <p class="muted">${esc(user)} · ${n} notes cached · ${pending} pending</p>
+      <p class="muted">Last sync: ${esc(lastStr)}</p>
+      <h2>On this device</h2>
+      <label><input type="radio" name="mode" value="local_some" ${mode === 'local_some' ? 'checked' : ''}>
+        <span>Cache notes I open<span class="hint">Default. Offline you can reread what you already opened, and create new notes.</span></span></label>
+      <label><input type="radio" name="mode" value="full_mirror" ${mode === 'full_mirror' ? 'checked' : ''}>
+        <span>Keep a full copy<span class="hint">Download all notes and keep them in sync when you are online.</span></span></label>
+      <label><input type="radio" name="mode" value="remote_only" ${mode === 'remote_only' ? 'checked' : ''}>
+        <span>Do not store notes<span class="hint">Always fetch from the server. Offline reading will be empty except drafts.</span></span></label>
+      <label><input type="checkbox" id="force-local" ${db.isForceLocal() ? 'checked' : ''}>
+        <span>Use local copy only this session<span class="hint">Even if you are online, read/write the cache. Uploads wait until you turn this off.</span></span></label>
+      <div class="row-actions">
+        <button class="btn solid" data-act="sync-now">Sync now</button>
+        <button class="btn ghost" data-act="download-all">Download all notes</button>
+        <button class="btn ghost" data-act="clear-cache">Clear local notes</button>
+      </div>
+      <h2>Account</h2>
+      <div class="row-actions">
+        <a class="btn ghost" href="/">Full website</a>
+        <button class="btn danger" data-act="logout">Sign out of app</button>
+      </div>
+    </div>
+  `;
+  root.innerHTML = shell('Settings', body, { back: true });
+}
+
+async function onAction(act) {
+  if (act === 'back') {
+    history.length > 1 ? history.back() : go('/');
+    return;
+  }
+  if (act === 'theme') {
+    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+    return;
+  }
+  if (act === 'settings') { go('/settings'); return; }
+  if (act === 'new') { go('/edit/new'); return; }
+  if (act === 'save' && root._saveEdit) { await root._saveEdit(); return; }
+  if (act === 'edit-note') {
+    go('/edit/' + root.dataset.noteId);
+    return;
+  }
+  if (act === 'toggle-pin' || act === 'toggle-rel') {
+    const id = coerceId(root.dataset.noteId);
+    const note = await db.getNote(id) || await sync.cacheOpenedNote(id);
+    if (act === 'toggle-pin') note.pinned = !note.pinned;
+    if (act === 'toggle-rel') note.relevant = note.relevant === false;
+    note.base_hash = note.v_hash;
+    await sync.saveLocalEdit(note);
+    if (online && !db.isForceLocal()) {
+      try { await sync.pushDirty(); } catch { /* queued */ }
+    }
+    await renderView(note.id);
+    return;
+  }
+  if (act === 'sync-now') {
+    try {
+      toast('Syncing…');
+      const r = await sync.runSync();
+      toast(r.skipped ? 'Skipped' : 'Synced');
+    } catch (e) {
+      toast(e.message || 'Sync failed');
+    }
+    await renderSettings();
+    return;
+  }
+  if (act === 'download-all') {
+    await db.setSyncMode('full_mirror');
+    try {
+      toast('Downloading…');
+      const r = await sync.runSync({ full: true });
+      toast((r.downloaded || 0) + ' notes updated');
+    } catch (e) {
+      toast(e.message || 'Download failed');
+    }
+    await renderSettings();
+    return;
+  }
+  if (act === 'clear-cache') {
+    if (!confirm('Delete all cached notes on this device? Pending uploads will be lost.')) return;
+    await db.clearNotes();
+    toast('Cache cleared');
+    await renderSettings();
+    return;
+  }
+  if (act === 'logout') {
+    await api.clearTokens();
+    await db.clearNotes();
+    go('/');
+    renderLogin();
+  }
+}
+
+root.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('[data-act]');
+  if (!btn) return;
+  ev.preventDefault();
+  onAction(btn.dataset.act);
+});
+
+root.addEventListener('change', async (ev) => {
+  if (ev.target.name === 'mode') {
+    await db.setSyncMode(ev.target.value);
+    toast('Saved');
+  }
+  if (ev.target.id === 'force-local') {
+    db.setForceLocal(ev.target.checked);
+    toast(ev.target.checked ? 'Local-only until you close the tab' : 'Will use the server again');
+    await route();
+  }
+});
+
+async function refreshOnline() {
+  online = navigator.onLine && (db.isForceLocal() ? false : await api.ping());
+  if (online && !db.isForceLocal()) {
+    try { await sync.runSync(); } catch { /* stay quiet */ }
+  }
+}
+
+async function route() {
+  applyTheme(currentTheme());
+  const r = parseHash();
+  if (r.name !== 'list') searchQuery = searchQuery; // keep
+  if (!(await requireAuth())) return;
+  if (r.name === 'view') return renderView(r.id);
+  if (r.name === 'edit') return renderEdit(r.id);
+  if (r.name === 'settings') return renderSettings();
+  await renderList();
+}
+
+window.addEventListener('hashchange', () => route());
+window.addEventListener('online', async () => {
+  await refreshOnline();
+  await route();
+});
+window.addEventListener('offline', () => {
+  online = false;
+  const bar = document.querySelector('.status-bar');
+  if (bar) {
+    bar.className = 'status-bar offline';
+    bar.lastElementChild.textContent = 'Offline';
+  }
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/app/sw.js', { scope: '/app/' }).catch(() => {});
+}
+
+applyTheme(currentTheme());
+openDbAndStart();
+
+async function openDbAndStart() {
+  await db.openDb();
+  online = navigator.onLine;
+  try {
+    if (navigator.onLine && !db.isForceLocal()) online = await api.ping();
+  } catch {
+    online = false;
+  }
+  await route();
+  if (online && !db.isForceLocal()) {
+    try { await sync.runSync(); await route(); } catch { /* first paint already done */ }
+  }
+}

@@ -65,6 +65,7 @@ from app.main_page_module.controllers.controllers import main_page_module as mai
 from app.main_page_module.controllers.controllers_notes import notes_module as notes_module
 from app.main_page_module.controllers.controllers_admin import admin_module as admin_module
 from app.main_page_module.controllers.controllers_api_jwt import razor_api as api_module_v1
+from app.main_page_module.controllers.controllers_pwa import pwa_module
 from app.memory_module.controllers import memory_module
 from app.secrets_module.controllers import secrets_module
 
@@ -73,9 +74,11 @@ app.register_blueprint(main_module)
 app.register_blueprint(notes_module)
 app.register_blueprint(admin_module)
 app.register_blueprint(api_module_v1)
+app.register_blueprint(pwa_module)
 app.register_blueprint(memory_module)
 app.register_blueprint(secrets_module)
 csrf.exempt(api_module_v1)
+csrf.exempt(pwa_module)
 # app.register_blueprint(xyz_module)
 # ..
 

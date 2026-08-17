@@ -285,7 +285,7 @@ class Notes:
     @staticmethod
     def get_one(note_id):
         db = DB()
-        sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned
+        sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned, v_hash
         FROM notes WHERE id = %s;"""
 
         return db.q_r_one(sql_command, (note_id, ))
@@ -361,7 +361,7 @@ class Notes:
     @staticmethod    
     def get_all_hash():
         db = DB()
-        sql_command = f"""SELECT id, v_hash FROM notes;"""
+        sql_command = f"""SELECT id, v_hash, active FROM notes;"""
         
         return db.q_r_all(sql_command, ())      
     

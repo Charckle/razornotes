@@ -82,12 +82,15 @@
                 <li><a class="dropdown-item" href="{{ url_for('admin_module.notes_import') }}">Import</a></li>
               </ul>
             </li>
-            {% if config['MODULE_SECRETS'] or config['MODULE_MEMORY'] %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Other
               </a>
               <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('pwa_module.spa') }}"><i class="bi bi-phone"></i> App</a></li>
+                {% if config['MODULE_SECRETS'] or config['MODULE_MEMORY'] %}
+                <li><hr class="dropdown-divider"></li>
+                {% endif %}
                 {% if config['MODULE_SECRETS'] %}
                 <li><a class="dropdown-item" href="{{ url_for('secrets_module.secrets_all') }}">Secrets</a></li>
                 {% if config['MODULE_MEMORY'] %}<li><hr class="dropdown-divider"></li>{% endif %}
@@ -97,7 +100,6 @@
                 {% endif %}
               </ul>
             </li>
-            {% endif %}
             <li class="nav-item d-flex align-items-center">
               <button type="button" class="btn btn-outline-danger btn-sm ms-1" onclick="setClip()">Set Clipboard</button>
             </li>
