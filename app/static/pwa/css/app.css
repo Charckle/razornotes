@@ -55,7 +55,18 @@ html, body {
   color: var(--bar-ink);
   box-shadow: 0 8px 6px -6px #999;
 }
-.topbar h1 { font-size: 1.05rem; margin: 0; font-weight: 650; flex: 1; }
+.topbar h1 {
+  font-size: .9rem; margin: 0; font-weight: 500; flex: 1; min-width: 0;
+  opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.topbar .brand {
+  border: 0; background: transparent; color: inherit;
+  font-size: 1.05rem; font-weight: 650; padding: .35rem .45rem;
+  border-radius: 8px; cursor: pointer; white-space: nowrap;
+  font-family: inherit;
+}
+.topbar .brand:hover { background: rgba(255,255,255,.12); }
+.topbar-spacer { flex: 1; }
 .topbar .icon-btn, .btn {
   border: 0; background: transparent; color: inherit;
   padding: .35rem .5rem; border-radius: 8px; cursor: pointer;

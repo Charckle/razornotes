@@ -85,10 +85,13 @@ function statusText() {
 
 function shell(title, inner, { back = false, fab = false, editFab = false, extra = '', mainClass = '' } = {}) {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const onHome = title === APP_NAME;
+  const pageTitle = onHome ? '<span class="topbar-spacer"></span>' : `<h1>${esc(title)}</h1>`;
   return `
     <header class="topbar">
       ${back ? iconBtn('back', 'Back', '←') : ''}
-      <h1>${esc(title)}</h1>
+      <button class="brand" data-act="home" aria-label="Home">${esc(APP_NAME)}</button>
+      ${pageTitle}
       ${iconBtn('theme', 'Toggle theme', '◐')}
       ${iconBtn('settings', 'Settings', '⚙')}
     </header>
@@ -413,6 +416,10 @@ async function renderSettings() {
 async function onAction(act, btn) {
   if (act === 'back') {
     history.length > 1 ? history.back() : go('/');
+    return;
+  }
+  if (act === 'home') {
+    go('/');
     return;
   }
   if (act === 'theme') {
