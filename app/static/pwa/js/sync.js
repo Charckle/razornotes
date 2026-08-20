@@ -3,6 +3,8 @@ import { apiFetch, ApiError, NetworkError } from './api.js';
 import { previewText } from './markdown.js';
 
 const DOWNLOAD_CONCURRENCY = 6;
+export const FULL_SYNC_MS = 180000;
+export const STALE_POLL_MS = 30000;
 
 let _syncing = false;
 
@@ -23,7 +25,8 @@ function normalize(note) {
     active: note.active !== false,
     note_type: note.note_type || 0,
     dirty: false,
-    pending: null
+    pending: null,
+    body_missing: false
   };
 }
 
@@ -60,16 +63,16 @@ export async function cacheOpenedNote(id) {
     if (local && (local.text || local.dirty || db.isLocalId(id))) return local;
     throw new Error('Note not available offline.');
   }
+  if (local && local.dirty) return local;
   try {
     const hashRow = await apiFetch('/note/' + id + '/hash');
     const serverHash = hashRow.v_hash || '';
-    if (local && local.v_hash && local.v_hash === serverHash && !local.dirty && local.text) {
+    const localFresh = local && local.v_hash && local.v_hash === serverHash
+      && local.text && !local.body_missing;
+    if (localFresh) {
       return local;
     }
     const remote = normalize(await apiFetch('/note/' + id));
-    if (local && local.dirty && local.v_hash !== remote.v_hash) {
-      return local;
-    }
     if (mode !== 'remote_only') await db.saveNote(remote);
     return remote;
   } catch (e) {
@@ -101,7 +104,7 @@ export async function saveLocalEdit(note) {
   return stored;
 }
 
-async function handleConflict(local, serverNote) {
+export async function handleConflict(local, serverNote) {
   const copy = {
     id: db.newLocalId(),
     title: 'Conflict: ' + (local.title || 'Untitled'),
@@ -119,7 +122,7 @@ async function handleConflict(local, serverNote) {
   await db.saveNote(copy);
   const kept = normalize(serverNote);
   await db.saveNote(kept);
-  return kept;
+  return { note: kept, conflict: true, conflictTitle: copy.title, copy, fromId: local.id };
 }
 
 async function pushOne(note) {
@@ -137,7 +140,7 @@ async function pushOne(note) {
     const saved = normalize(created);
     await db.deleteNote(note.id);
     await db.saveNote(saved);
-    return saved;
+    return { note: saved };
   }
   try {
     const updated = await apiFetch('/note/' + note.id, {
@@ -153,10 +156,13 @@ async function pushOne(note) {
     });
     const saved = normalize(updated);
     await db.saveNote(saved);
-    return saved;
+    return { note: saved };
   } catch (e) {
-    if (e instanceof ApiError && e.status === 409 && e.data && e.data.note) {
-      return handleConflict(note, e.data.note);
+    if (e instanceof ApiError && e.status === 409) {
+      const serverNote = (e.data && e.data.note) || e.data;
+      if (serverNote && (serverNote.id || serverNote._id || serverNote.text != null)) {
+        return handleConflict(note, serverNote);
+      }
     }
     throw e;
   }
@@ -165,11 +171,13 @@ async function pushOne(note) {
 export async function pushDirty() {
   const notes = (await db.allNotes()).filter((n) => n.dirty);
   const remap = {};
+  const conflicts = [];
   for (const note of notes) {
-    const saved = await pushOne(note);
-    if (saved) remap[note.id] = saved;
+    const result = await pushOne(note);
+    if (result && result.note) remap[note.id] = result.note;
+    if (result && result.conflict) conflicts.push(result);
   }
-  return remap;
+  return { remap, conflicts };
 }
 
 export async function pullMeta() {
@@ -182,7 +190,7 @@ export async function pullMeta() {
     serverIds.add(String(id));
     const local = byId.get(String(id));
     if (local && local.dirty) continue;
-    const hashMatch = local && local.v_hash === item.v_hash && local.text;
+    const hashMatch = local && local.v_hash === item.v_hash && local.text && !local.body_missing;
     await db.saveNote({
       id,
       title: item.title || '',
@@ -191,7 +199,7 @@ export async function pullMeta() {
       pinned: Boolean(item.pinned),
       relevant: item.relevant !== false,
       date_mod: item.date_mod || '',
-      v_hash: item.v_hash || '',
+      v_hash: hashMatch ? (item.v_hash || '') : ((local && local.v_hash) || ''),
       active: true,
       note_type: item.note_type || 0,
       dirty: false,
@@ -229,7 +237,7 @@ export async function hashDiffSync() {
     }
     const local = byId.get(String(row.id));
     if (local && local.dirty) continue;
-    if (!local || local.v_hash !== row.v_hash || !local.text) {
+    if (!local || local.body_missing || local.v_hash !== row.v_hash || !local.text) {
       toFetch.push(row.id);
     }
   }
@@ -245,25 +253,53 @@ export async function hashDiffSync() {
   return toFetch.length;
 }
 
-export async function runSync({ full = false } = {}) {
-  if (_syncing) return { skipped: true };
-  if (db.isForceLocal()) return { skipped: true, reason: 'local' };
+export async function serverHash(id) {
+  const row = await apiFetch('/note/' + id + '/hash');
+  return row.v_hash || '';
+}
+
+export async function fetchNote(id) {
+  const remote = normalize(await apiFetch('/note/' + id));
+  await db.saveNote(remote);
+  return remote;
+}
+
+export async function takeServerVersion(id) {
+  const local = await db.getNote(id);
+  const remote = normalize(await apiFetch('/note/' + id));
+  if (local && local.dirty) {
+    return handleConflict(local, remote);
+  }
+  await db.saveNote(remote);
+  return { note: remote };
+}
+
+export async function runSync({ full = false, force = false } = {}) {
+  if (_syncing) return { skipped: true, conflicts: [] };
+  if (db.isForceLocal()) return { skipped: true, reason: 'local', conflicts: [] };
   _syncing = true;
   try {
-    await pushDirty();
+    const { conflicts } = await pushDirty();
     const mode = await db.getSyncMode();
     if (full || mode === 'full_mirror') {
+      if (!full && !force && mode === 'full_mirror') {
+        const last = (await db.getMeta('last_full_sync', 0)) || 0;
+        if (Date.now() - last < FULL_SYNC_MS) {
+          return { skipped: true, reason: 'recent', conflicts, downloaded: 0 };
+        }
+      }
       const n = await hashDiffSync();
       await db.setMeta('last_synced', Date.now());
-      return { downloaded: n };
+      await db.setMeta('last_full_sync', Date.now());
+      return { downloaded: n, conflicts };
     }
     if (mode === 'local_some') {
       await pullMeta();
       await db.setMeta('last_synced', Date.now());
-      return { downloaded: 0 };
+      return { downloaded: 0, conflicts };
     }
     await db.setMeta('last_synced', Date.now());
-    return { downloaded: 0 };
+    return { downloaded: 0, conflicts };
   } finally {
     _syncing = false;
   }

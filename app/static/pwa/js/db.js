@@ -154,3 +154,11 @@ export function setForceLocal(on) {
   if (on) sessionStorage.setItem('rn-force-local', '1');
   else sessionStorage.removeItem('rn-force-local');
 }
+
+export async function isSearchLocalOnly() {
+  return Boolean(await getMeta('search_local_only', false));
+}
+
+export async function setSearchLocalOnly(on) {
+  await setMeta('search_local_only', Boolean(on));
+}

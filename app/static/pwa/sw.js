@@ -1,4 +1,4 @@
-const CACHE = 'razor-pwa-v5';
+const CACHE = 'razor-pwa-v7';
 const PRECACHE = [
   '/app/',
   '/app/assets/css/app.css',

@@ -6,10 +6,19 @@ import { renderMarkdown } from './markdown.js';
 const APP_NAME = window.RN?.appName || 'Razor Notes';
 const HOME_LATEST = 20;
 const ALL_PAGE_SIZE = 25;
+const SEARCH_MIN = 3;
 const root = document.getElementById('app');
 let toastTimer = null;
 let searchQuery = '';
 let online = navigator.onLine;
+let staleTimer = null;
+let staleWatchId = null;
+let staleWatchMode = null;
+let staleMinimized = false;
+let keepMineUntilLeave = false;
+let staleChecking = false;
+let staleBaseline = '';
+let lastFocusSync = 0;
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({
@@ -17,7 +26,7 @@ function esc(s) {
   }[c]));
 }
 
-function toast(msg) {
+function toast(msg, ms = 2800) {
   let el = document.getElementById('toast');
   if (!el) {
     el = document.createElement('div');
@@ -28,7 +37,184 @@ function toast(msg) {
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+function toastConflicts(conflicts) {
+  if (!conflicts || !conflicts.length) return false;
+  const names = conflicts.map((c) => c.conflictTitle || 'Conflict copy').join(', ');
+  toast('Server had a newer version. Your edit was saved as "' + names + '".', 6000);
+  return true;
+}
+
+function hideStaleUi() {
+  const banner = document.getElementById('stale-banner');
+  const dot = document.getElementById('stale-dot');
+  if (banner) banner.hidden = true;
+  if (dot) dot.hidden = true;
+}
+
+function stopStaleWatch() {
+  clearInterval(staleTimer);
+  staleTimer = null;
+  staleWatchId = null;
+  staleWatchMode = null;
+  staleMinimized = false;
+  keepMineUntilLeave = false;
+  hideStaleUi();
+}
+
+function editHasUnsaved() {
+  if (!root._edit) return false;
+  const title = root.querySelector('#title');
+  const body = root.querySelector('#body');
+  const n = root._edit.note;
+  if (!n) return false;
+  if (n.dirty) return true;
+  if (!title || !body) return Boolean(n.dirty);
+  return title.value.trim() !== (n.title || '').trim() || body.value !== (n.text || '');
+}
+
+function paintStaleBanner() {
+  const banner = document.getElementById('stale-banner');
+  if (!banner) return;
+  const reload = banner.querySelector('[data-stale="reload"]');
+  const keep = banner.querySelector('[data-stale="keep"]');
+  const load = banner.querySelector('[data-stale="load"]');
+  const dirtyEdit = staleWatchMode === 'edit' && editHasUnsaved();
+  if (reload) reload.hidden = dirtyEdit;
+  if (keep) keep.hidden = !dirtyEdit;
+  if (load) load.hidden = !dirtyEdit;
+}
+
+function showStaleUi() {
+  ensureStaleEls();
+  paintStaleBanner();
+  const banner = document.getElementById('stale-banner');
+  const dot = document.getElementById('stale-dot');
+  if (staleMinimized || keepMineUntilLeave) {
+    if (banner) banner.hidden = true;
+    if (dot) dot.hidden = false;
+    return;
+  }
+  if (banner) banner.hidden = false;
+  if (dot) dot.hidden = true;
+}
+
+function ensureStaleEls() {
+  if (document.getElementById('stale-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'stale-banner';
+  banner.className = 'stale-banner';
+  banner.hidden = true;
+  banner.innerHTML = `
+    <div class="stale-banner-text">This note changed on the server.</div>
+    <div class="stale-banner-actions">
+      <button class="btn solid" data-stale="reload">Reload</button>
+      <button class="btn ghost" data-stale="keep">Keep mine</button>
+      <button class="btn ghost" data-stale="load">Load server</button>
+      <button class="btn ghost" data-stale="min" aria-label="Minimize">–</button>
+    </div>`;
+  const dot = document.createElement('button');
+  dot.id = 'stale-dot';
+  dot.className = 'stale-dot';
+  dot.type = 'button';
+  dot.hidden = true;
+  dot.setAttribute('aria-label', 'Server has a newer version');
+  dot.textContent = '!';
+  document.body.appendChild(banner);
+  document.body.appendChild(dot);
+  banner.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-stale]');
+    if (!btn) return;
+    ev.preventDefault();
+    onStaleAction(btn.dataset.stale);
+  });
+  dot.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    onStaleAction('expand');
+  });
+}
+
+function startStaleWatch(id, mode, hash) {
+  clearInterval(staleTimer);
+  staleTimer = null;
+  hideStaleUi();
+  staleMinimized = false;
+  keepMineUntilLeave = false;
+  staleWatchId = id;
+  staleWatchMode = mode;
+  staleBaseline = hash || '';
+  if (!filesOnline() || db.isLocalId(id) || id == null || id === 'new') return;
+  ensureStaleEls();
+  staleTimer = setInterval(() => { checkStale(); }, sync.STALE_POLL_MS);
+}
+
+async function checkStale() {
+  if (!staleWatchId || staleChecking || document.hidden) return;
+  if (!filesOnline() || db.isLocalId(staleWatchId)) return;
+  staleChecking = true;
+  try {
+    const remote = await sync.serverHash(staleWatchId);
+    const local = await db.getNote(staleWatchId);
+    const known = (local && local.v_hash) || staleBaseline;
+    if (remote && known && remote !== known) showStaleUi();
+    else if (remote && !known) showStaleUi();
+    else {
+      keepMineUntilLeave = false;
+      staleMinimized = false;
+      hideStaleUi();
+    }
+  } catch {
+    /* stay quiet while polling */
+  } finally {
+    staleChecking = false;
+  }
+}
+
+async function onStaleAction(act) {
+  if (act === 'min') {
+    staleMinimized = true;
+    showStaleUi();
+    return;
+  }
+  if (act === 'expand') {
+    staleMinimized = false;
+    keepMineUntilLeave = false;
+    showStaleUi();
+    return;
+  }
+  if (act === 'keep') {
+    if (root._flushEdit) await root._flushEdit(true, true);
+    root._holdPush = true;
+    keepMineUntilLeave = true;
+    staleMinimized = true;
+    showStaleUi();
+    return;
+  }
+  const id = staleWatchId;
+  const mode = staleWatchMode;
+  if (!id) return;
+  try {
+    if (act === 'reload') {
+      await sync.fetchNote(id);
+      hideStaleUi();
+      if (mode === 'edit') await renderEdit(id);
+      else await renderView(id);
+      return;
+    }
+    if (act === 'load') {
+      if (root._flushEdit) await root._flushEdit(true, true);
+      const result = await sync.takeServerVersion(id);
+      if (result.conflict) toastConflicts([result]);
+      hideStaleUi();
+      keepMineUntilLeave = false;
+      if (mode === 'edit') await renderEdit(id);
+      else await renderView(id);
+    }
+  } catch (e) {
+    toast(e.message || 'Could not load server copy');
+  }
 }
 
 function applyTheme(theme) {
@@ -202,7 +388,7 @@ function bindSearch() {
   search.addEventListener('input', () => {
     searchQuery = search.value;
     clearTimeout(search._t);
-    search._t = setTimeout(() => route(), 220);
+    search._t = setTimeout(() => route(), 280);
   });
   if (searchQuery) {
     search.focus();
@@ -216,25 +402,81 @@ function matchesQuery(n, q) {
     || (n.preview || '').toLowerCase().includes(q);
 }
 
-async function renderList() {
-  let notes = await loadNotes();
-  const q = searchQuery.trim().toLowerCase();
-  if (q) {
-    notes = notes.filter((n) => matchesQuery(n, q)).sort(byDateDesc);
-    const body = `
-      <input class="search" id="search" placeholder="Search cached notes…" value="${esc(searchQuery)}">
-      ${notes.length === 0 ? `<div class="empty">No matches.</div>` : `<div class="section-label">Results</div>${notes.map(noteCard).join('')}`}
-    `;
-    root.innerHTML = shell(APP_NAME, body, { fab: true, extra: 'list' });
-    bindSearch();
-    return;
+async function useServerSearch() {
+  return filesOnline() && !(await db.isSearchLocalOnly());
+}
+
+async function searchPlaceholder() {
+  return (await useServerSearch()) ? 'Search notes…' : 'Search cached notes…';
+}
+
+function searchBox(ph) {
+  return `<input class="search" id="search" placeholder="${esc(ph)}" value="${esc(searchQuery)}">`;
+}
+
+async function runSearch(cached) {
+  const q = searchQuery.trim();
+  if (!q) return { kind: 'home' };
+  const server = await useServerSearch();
+  if (server && q.length < SEARCH_MIN) {
+    return { kind: 'hint', message: 'Type at least 3 characters to search the server.' };
   }
+  if (server) {
+    try {
+      const data = await api.apiFetch('/search', { method: 'POST', body: { key: q } });
+      const localById = new Map(cached.map((n) => [String(n.id), n]));
+      const hits = Object.entries(data || {}).map(([id, pair]) => {
+        const loc = localById.get(String(id));
+        const title = (Array.isArray(pair) ? pair[0] : '') || '';
+        const snippet = (Array.isArray(pair) ? pair[1] : '') || '';
+        const coerced = coerceId(id);
+        if (loc) {
+          return Object.assign({}, loc, {
+            title: loc.dirty ? loc.title : (title || loc.title),
+            preview: snippet || loc.preview || ''
+          });
+        }
+        return {
+          id: coerced,
+          title,
+          preview: snippet,
+          text: '',
+          pinned: false,
+          relevant: true,
+          date_mod: '',
+          note_type: 0
+        };
+      });
+      const hitIds = new Set(hits.map((h) => String(h.id)));
+      const qLower = q.toLowerCase();
+      const extra = cached.filter((n) =>
+        (n.dirty || db.isLocalId(n.id)) && matchesQuery(n, qLower) && !hitIds.has(String(n.id)));
+      return { kind: 'results', notes: extra.concat(hits), source: 'server' };
+    } catch {
+      const qLower = q.toLowerCase();
+      return {
+        kind: 'results',
+        notes: cached.filter((n) => matchesQuery(n, qLower)).sort(byDateDesc),
+        source: 'fallback'
+      };
+    }
+  }
+  const qLower = q.toLowerCase();
+  return {
+    kind: 'results',
+    notes: cached.filter((n) => matchesQuery(n, qLower)).sort(byDateDesc),
+    source: 'local'
+  };
+}
+
+function homeBody(notes, ph, hint) {
   const pinned = notes.filter((n) => n.pinned && n.relevant !== false).sort(byDateDesc);
   const rest = notes.filter((n) => !n.pinned && (n.relevant !== false || n.dirty || db.isLocalId(n.id))).sort(byDateDesc);
   const latest = rest.slice(0, HOME_LATEST);
   const showAll = notes.length > pinned.length + latest.length || rest.length > HOME_LATEST;
-  const body = `
-    <input class="search" id="search" placeholder="Search cached notes…" value="${esc(searchQuery)}">
+  return `
+    ${searchBox(ph)}
+    ${hint ? `<p class="muted search-hint">${esc(hint)}</p>` : ''}
     ${notes.length === 0 ? `<div class="empty">No notes on this device yet. Open notes while online, or download all in Settings.</div>` : ''}
     <div class="home-cols">
       ${pinned.length ? `<section class="home-col"><div class="section-label">Pinned</div>${pinned.map(noteCard).join('')}</section>` : ''}
@@ -242,21 +484,51 @@ async function renderList() {
     </div>
     ${showAll ? `<div class="view-all-wrap"><button class="btn ghost" data-act="view-all">View all</button></div>` : ''}
   `;
-  root.innerHTML = shell(APP_NAME, body, { fab: true, extra: 'list', mainClass: 'home-screen' });
+}
+
+async function renderList() {
+  const notes = await loadNotes();
+  const ph = await searchPlaceholder();
+  const found = await runSearch(notes);
+  if (found.kind === 'results') {
+    const label = found.source === 'fallback'
+      ? 'Cached results (server unreachable)'
+      : 'Results';
+    const body = `
+      ${searchBox(ph)}
+      ${found.notes.length === 0 ? `<div class="empty">No matches.</div>` : `<div class="section-label">${label}</div>${found.notes.map(noteCard).join('')}`}
+    `;
+    root.innerHTML = shell(APP_NAME, body, { fab: true, extra: 'list' });
+    bindSearch();
+    return;
+  }
+  const hint = found.kind === 'hint' ? found.message : '';
+  root.innerHTML = shell(APP_NAME, homeBody(notes, ph, hint), { fab: true, extra: 'list', mainClass: 'home-screen' });
   bindSearch();
 }
 
 async function renderAll(page) {
-  let notes = await loadNotes();
-  const q = searchQuery.trim().toLowerCase();
-  if (q) notes = notes.filter((n) => matchesQuery(n, q));
-  notes.sort(byDateDesc);
+  const cached = await loadNotes();
+  const ph = await searchPlaceholder();
+  const found = await runSearch(cached);
+  if (found.kind === 'results') {
+    const body = `
+      ${searchBox(ph)}
+      ${found.notes.length === 0 ? `<div class="empty">No matches.</div>` : `<div class="section-label">Results</div>${found.notes.map(noteCard).join('')}`}
+    `;
+    root.innerHTML = shell('All notes', body, { back: true, fab: true });
+    bindSearch();
+    return;
+  }
+  let notes = cached.slice().sort(byDateDesc);
   const pages = Math.max(1, Math.ceil(notes.length / ALL_PAGE_SIZE));
   page = Math.min(Math.max(0, page), pages - 1);
   const slice = notes.slice(page * ALL_PAGE_SIZE, (page + 1) * ALL_PAGE_SIZE);
+  const hint = found.kind === 'hint' ? `<p class="muted search-hint">${esc(found.message)}</p>` : '';
   const body = `
-    <input class="search" id="search" placeholder="Search cached notes…" value="${esc(searchQuery)}">
-    ${notes.length === 0 ? `<div class="empty">${q ? 'No matches.' : 'No notes.'}</div>` : `<div class="section-label">All notes</div>${slice.map(noteCard).join('')}`}
+    ${searchBox(ph)}
+    ${hint}
+    ${notes.length === 0 ? `<div class="empty">No notes.</div>` : `<div class="section-label">All notes</div>${slice.map(noteCard).join('')}`}
     ${notes.length > ALL_PAGE_SIZE ? `<div class="pager">
       <button class="btn ghost" data-act="page-prev" ${page <= 0 ? 'disabled' : ''}>Prev</button>
       <span class="muted">Page ${page + 1} / ${pages}</span>
@@ -308,6 +580,7 @@ async function renderView(id) {
   `;
   root.innerHTML = shell(note.title || 'Note', body, { back: true, editFab: true });
   root.dataset.noteId = String(note.id);
+  startStaleWatch(note.id, 'view', note.v_hash);
 }
 
 async function renderEdit(id) {
@@ -335,9 +608,13 @@ async function renderEdit(id) {
   root.innerHTML = shell(id === 'new' ? 'New note' : 'Edit', body, { back: true, mainClass: 'edit-screen' });
   const state = { note };
   root._edit = state;
-  const save = async (andLeave) => {
-    const title = root.querySelector('#title').value.trim() || 'Untitled';
-    const text = root.querySelector('#body').value;
+  root._holdPush = false;
+  const save = async (andLeave, silent, localOnly) => {
+    const titleEl = root.querySelector('#title');
+    const bodyEl = root.querySelector('#body');
+    if (!titleEl || !bodyEl) return;
+    const title = titleEl.value.trim() || 'Untitled';
+    const text = bodyEl.value;
     const pinned = root.querySelector('#pinned').checked;
     const relevant = root.querySelector('#relevant').checked;
     const stored = await sync.saveLocalEdit({
@@ -351,9 +628,17 @@ async function renderEdit(id) {
       base_hash: state.note.base_hash || state.note.v_hash
     });
     state.note = stored;
-    if (!db.isForceLocal() && online) {
+    if (!localOnly && root._holdPush && !andLeave) localOnly = true;
+    if (!localOnly && !db.isForceLocal() && online) {
       try {
-        const remap = await sync.pushDirty();
+        const { remap, conflicts } = await sync.pushDirty();
+        const mine = (conflicts || []).filter((c) => String(c.fromId) === String(stored.id));
+        if (mine.length) {
+          toastConflicts(mine);
+          if (mine[0].copy) state.note = mine[0].copy;
+          if (andLeave) go('/note/' + state.note.id);
+          return;
+        }
         if (remap[stored.id]) state.note = remap[stored.id];
         else {
           const fresh = await db.getNote(stored.id);
@@ -363,19 +648,23 @@ async function renderEdit(id) {
         if (!(e instanceof api.NetworkError)) toast(e.message || 'Could not upload');
       }
     }
-    toast('Saved');
+    if (!silent) toast('Saved');
     if (andLeave) go('/note/' + state.note.id);
   };
   let t;
   root.querySelector('#body').addEventListener('input', () => {
     clearTimeout(t);
     t = setTimeout(() => save(false), 800);
+    paintStaleBanner();
   });
   root.querySelector('#title').addEventListener('input', () => {
     clearTimeout(t);
     t = setTimeout(() => save(false), 800);
+    paintStaleBanner();
   });
+  root._flushEdit = (silent, localOnly) => save(false, silent, localOnly);
   root._saveEdit = () => save(true);
+  startStaleWatch(state.note.id, 'edit', state.note.v_hash);
 }
 
 async function renderSettings() {
@@ -385,6 +674,7 @@ async function renderSettings() {
   const user = (await db.getMeta('username', '')) || '';
   const n = (await db.allNotes()).length;
   const pending = (await db.allNotes()).filter((x) => x.dirty).length;
+  const searchLocal = await db.isSearchLocalOnly();
   const body = `
     <div class="settings">
       <p class="muted">${esc(user)} · ${n} notes cached · ${pending} pending</p>
@@ -398,6 +688,8 @@ async function renderSettings() {
         <span>Do not store notes<span class="hint">Always fetch from the server. Offline reading will be empty except drafts.</span></span></label>
       <label><input type="checkbox" id="force-local" ${db.isForceLocal() ? 'checked' : ''}>
         <span>Use local copy only this session<span class="hint">Even if you are online, read/write the cache. Uploads wait until you turn this off.</span></span></label>
+      <label><input type="checkbox" id="search-local" ${searchLocal ? 'checked' : ''}>
+        <span>Search only locally<span class="hint">When off, search uses the server while you are online (3 or more characters).</span></span></label>
       <div class="row-actions">
         <button class="btn solid" data-act="sync-now">Sync now</button>
         <button class="btn ghost" data-act="download-all">Download all notes</button>
@@ -475,7 +767,10 @@ async function onAction(act, btn) {
     note.base_hash = note.v_hash;
     await sync.saveLocalEdit(note);
     if (online && !db.isForceLocal()) {
-      try { await sync.pushDirty(); } catch { /* queued */ }
+      try {
+        const { conflicts } = await sync.pushDirty();
+        toastConflicts(conflicts);
+      } catch { /* queued */ }
     }
     await renderView(note.id);
     return;
@@ -483,8 +778,9 @@ async function onAction(act, btn) {
   if (act === 'sync-now') {
     try {
       toast('Syncing…');
-      const r = await sync.runSync();
-      toast(r.skipped ? 'Skipped' : 'Synced');
+      const r = await sync.runSync({ force: true });
+      if (toastConflicts(r.conflicts)) { /* already told */ }
+      else toast(r.skipped ? 'Skipped' : 'Synced');
     } catch (e) {
       toast(e.message || 'Sync failed');
     }
@@ -496,7 +792,7 @@ async function onAction(act, btn) {
     try {
       toast('Downloading…');
       const r = await sync.runSync({ full: true });
-      toast((r.downloaded || 0) + ' notes updated');
+      if (!toastConflicts(r.conflicts)) toast((r.downloaded || 0) + ' notes updated');
     } catch (e) {
       toast(e.message || 'Download failed');
     }
@@ -535,19 +831,26 @@ root.addEventListener('change', async (ev) => {
     toast(ev.target.checked ? 'Local-only until you close the tab' : 'Will use the server again');
     await route();
   }
+  if (ev.target.id === 'search-local') {
+    await db.setSearchLocalOnly(ev.target.checked);
+    toast(ev.target.checked ? 'Search uses the cache' : 'Search uses the server while online');
+  }
 });
 
 async function refreshOnline() {
   online = navigator.onLine && (db.isForceLocal() ? false : await api.ping());
   if (online && !db.isForceLocal()) {
-    try { await sync.runSync(); } catch { /* stay quiet */ }
+    try {
+      const r = await sync.runSync();
+      toastConflicts(r.conflicts);
+    } catch { /* stay quiet */ }
   }
 }
 
 async function route() {
   applyTheme(currentTheme());
   const r = parseHash();
-  if (r.name !== 'list') searchQuery = searchQuery; // keep
+  stopStaleWatch();
   if (!(await requireAuth())) return;
   if (r.name === 'view') return renderView(r.id);
   if (r.name === 'edit') return renderEdit(r.id);
@@ -563,6 +866,7 @@ window.addEventListener('online', async () => {
 });
 window.addEventListener('offline', () => {
   online = false;
+  stopStaleWatch();
   const bar = document.querySelector('.status-bar');
   if (bar) {
     bar.className = 'status-bar offline';
@@ -570,6 +874,23 @@ window.addEventListener('offline', () => {
   }
   document.querySelectorAll('[data-act="download-file"]').forEach((el) => { el.disabled = true; });
 });
+
+async function onAppForeground() {
+  if (Date.now() - lastFocusSync < 2000) return;
+  lastFocusSync = Date.now();
+  if (online && !db.isForceLocal()) {
+    try {
+      const r = await sync.runSync();
+      toastConflicts(r.conflicts);
+    } catch { /* quiet */ }
+  }
+  if (staleWatchId) checkStale();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') onAppForeground();
+});
+window.addEventListener('focus', () => onAppForeground());
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/app/sw.js', { scope: '/app/' }).catch(() => {});
@@ -588,6 +909,10 @@ async function openDbAndStart() {
   }
   await route();
   if (online && !db.isForceLocal()) {
-    try { await sync.runSync(); await route(); } catch { /* first paint already done */ }
+    try {
+      const r = await sync.runSync();
+      toastConflicts(r.conflicts);
+      await route();
+    } catch { /* first paint already done */ }
   }
 }

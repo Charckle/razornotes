@@ -240,6 +240,40 @@ html, body {
 }
 .toast.show { opacity: 1; }
 
+.search-hint { margin: -.35rem 0 .75rem; }
+
+.stale-banner {
+  position: fixed;
+  left: 50%;
+  top: 3.55rem;
+  transform: translateX(-50%);
+  width: calc(100% - 1.5rem);
+  max-width: 520px;
+  z-index: 35;
+  background: #fff3cd;
+  color: #1a1a1a;
+  border: 1px solid var(--warn);
+  border-radius: 10px;
+  padding: .7rem .8rem;
+  box-shadow: var(--shadow);
+}
+[data-theme="dark"] .stale-banner {
+  background: #3d2e12;
+  color: var(--ink);
+}
+.stale-banner-text { font-size: .9rem; font-weight: 600; margin-bottom: .45rem; }
+.stale-banner-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.stale-dot {
+  position: fixed;
+  right: 1.1rem;
+  bottom: 5.4rem;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--warn); color: #fff;
+  border: 0; font-size: 1.25rem; font-weight: 800;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  cursor: pointer; z-index: 25;
+}
+
 .install-hint {
   margin: 0 .75rem .5rem; padding: .6rem .75rem;
   background: var(--card); border: 1px dashed var(--border); border-radius: 8px;
