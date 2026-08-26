@@ -7,6 +7,7 @@ export const FULL_SYNC_MS = 180000;
 export const STALE_POLL_MS = 30000;
 
 let _syncing = false;
+let _pushChain = Promise.resolve();
 
 export function isSyncing() {
   return _syncing;
@@ -84,7 +85,7 @@ export async function cacheOpenedNote(id) {
   }
 }
 
-export async function saveLocalEdit(note) {
+export async function saveLocalEdit(note, { held = false } = {}) {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const stored = {
     id: note.id,
@@ -97,6 +98,7 @@ export async function saveLocalEdit(note) {
     active: true,
     note_type: note.note_type || 0,
     dirty: true,
+    held: Boolean(held),
     pending: db.isLocalId(note.id) ? 'create' : 'update',
     base_hash: note.base_hash || note.v_hash || ''
   };
@@ -168,16 +170,27 @@ async function pushOne(note) {
   }
 }
 
-export async function pushDirty() {
-  const notes = (await db.allNotes()).filter((n) => n.dirty);
-  const remap = {};
-  const conflicts = [];
-  for (const note of notes) {
-    const result = await pushOne(note);
-    if (result && result.note) remap[note.id] = result.note;
-    if (result && result.conflict) conflicts.push(result);
-  }
-  return { remap, conflicts };
+export async function pushDirty({ includeHeld = false, skipIds = [] } = {}) {
+  const run = async () => {
+    const skip = new Set((skipIds || []).map((id) => String(id)));
+    const notes = (await db.allNotes()).filter((n) => n.dirty && (includeHeld || !n.held) && !skip.has(String(n.id)));
+    const remap = {};
+    const conflicts = [];
+    for (const note of notes) {
+      const result = await pushOne(note);
+      if (result && result.note) {
+        remap[note.id] = result.note;
+        if (String(note.id) !== String(result.note.id)) {
+          await db.remapOpenInEdit(note.id, result.note.id);
+        }
+      }
+      if (result && result.conflict) conflicts.push(result);
+    }
+    return { remap, conflicts };
+  };
+  const p = _pushChain.then(run, run);
+  _pushChain = p.catch(() => {});
+  return p;
 }
 
 export async function pullMeta() {
@@ -274,12 +287,12 @@ export async function takeServerVersion(id) {
   return { note: remote };
 }
 
-export async function runSync({ full = false, force = false } = {}) {
+export async function runSync({ full = false, force = false, includeHeld = false, skipIds = [] } = {}) {
   if (_syncing) return { skipped: true, conflicts: [] };
   if (db.isForceLocal()) return { skipped: true, reason: 'local', conflicts: [] };
   _syncing = true;
   try {
-    const { conflicts } = await pushDirty();
+    const { conflicts } = await pushDirty({ includeHeld, skipIds });
     const mode = await db.getSyncMode();
     if (full || mode === 'full_mirror') {
       if (!full && !force && mode === 'full_mirror') {

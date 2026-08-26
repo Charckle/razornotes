@@ -162,3 +162,56 @@ export async function isSearchLocalOnly() {
 export async function setSearchLocalOnly(on) {
   await setMeta('search_local_only', Boolean(on));
 }
+
+export async function getSaveMode() {
+  const m = await getMeta('save_mode', 'auto');
+  return m === 'manual' ? 'manual' : 'auto';
+}
+
+export async function setSaveMode(mode) {
+  await setMeta('save_mode', mode === 'manual' ? 'manual' : 'auto');
+}
+
+async function openInEditMap() {
+  return Object.assign({}, (await getMeta('open_in_edit', {})) || {});
+}
+
+export async function openInEditIds() {
+  const map = await openInEditMap();
+  return new Set(Object.keys(map).filter((k) => map[k]));
+}
+
+export async function isOpenInEdit(id) {
+  if (id == null || id === 'new') return false;
+  const map = await openInEditMap();
+  return Boolean(map[String(id)]);
+}
+
+export async function setOpenInEdit(id, on) {
+  if (id == null || id === 'new') return;
+  const map = await openInEditMap();
+  const key = String(id);
+  if (on) map[key] = true;
+  else delete map[key];
+  await setMeta('open_in_edit', map);
+}
+
+export async function remapOpenInEdit(fromId, toId) {
+  if (fromId == null || toId == null) return;
+  const map = await openInEditMap();
+  const from = String(fromId);
+  const to = String(toId);
+  if (!map[from]) return;
+  delete map[from];
+  if (to && to !== 'new') map[to] = true;
+  await setMeta('open_in_edit', map);
+}
+
+export async function clearHeldFlags() {
+  const notes = await allNotes();
+  for (const n of notes) {
+    if (!n.held) continue;
+    n.held = false;
+    await saveNote(n);
+  }
+}

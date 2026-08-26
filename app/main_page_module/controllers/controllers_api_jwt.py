@@ -283,8 +283,8 @@ class Clipboard(Resource):
 
     def post(self):
         user_id = get_jwt().get("_id")
-        args = parser.parse_args()
-        clipboard[user_id] = args["key"]
+        text = _arg("key")
+        clipboard[user_id] = "" if text is None else str(text)
         return {"clipboard": clipboard[user_id]}
 
 

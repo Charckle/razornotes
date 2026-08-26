@@ -19,6 +19,8 @@ let keepMineUntilLeave = false;
 let staleChecking = false;
 let staleBaseline = '';
 let lastFocusSync = 0;
+let openInEdit = new Set();
+let saveMode = 'auto';
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({
@@ -45,6 +47,155 @@ function toastConflicts(conflicts) {
   const names = conflicts.map((c) => c.conflictTitle || 'Conflict copy').join(', ');
   toast('Server had a newer version. Your edit was saved as "' + names + '".', 6000);
   return true;
+}
+
+function closeClipModal() {
+  const el = document.getElementById('clip-modal');
+  if (el) el.remove();
+  const pending = closeClipModal._finish;
+  if (pending) {
+    closeClipModal._finish = null;
+    pending(null);
+  }
+}
+
+function showClipModal({ title, hint, text = '', readonly = false, okLabel = 'Save', showCopy = false }) {
+  closeClipModal();
+  return new Promise((resolve) => {
+    const wrap = document.createElement('div');
+    wrap.id = 'clip-modal';
+    wrap.className = 'clip-modal';
+    wrap.innerHTML = `
+      <div class="clip-panel" role="dialog" aria-modal="true" aria-labelledby="clip-title">
+        <h2 id="clip-title">${esc(title)}</h2>
+        <p class="muted">${esc(hint)}</p>
+        <textarea id="clip-text" rows="7"${readonly ? ' readonly' : ''}></textarea>
+        <div class="row-actions">
+          ${showCopy ? '<button class="btn solid" type="button" data-clip="copy">Copy</button>' : ''}
+          <button class="btn ${showCopy ? 'ghost' : 'solid'}" type="button" data-clip="ok">${esc(okLabel)}</button>
+          <button class="btn ghost" type="button" data-clip="cancel">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    const ta = wrap.querySelector('#clip-text');
+    ta.value = text;
+    ta.focus();
+    if (readonly || text) ta.select();
+    let settled = false;
+    const onKey = (ev) => {
+      if (ev.key === 'Escape') {
+        ev.preventDefault();
+        finish(null);
+      }
+    };
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      closeClipModal._finish = null;
+      document.removeEventListener('keydown', onKey);
+      const el = document.getElementById('clip-modal');
+      if (el) el.remove();
+      resolve(value);
+    };
+    closeClipModal._finish = finish;
+    document.addEventListener('keydown', onKey);
+    wrap.addEventListener('click', (ev) => {
+      if (ev.target === wrap) finish(null);
+    });
+    wrap.addEventListener('click', async (ev) => {
+      const btn = ev.target.closest('[data-clip]');
+      if (!btn) return;
+      if (btn.dataset.clip === 'cancel') {
+        finish(null);
+        return;
+      }
+      if (btn.dataset.clip === 'copy') {
+        ta.select();
+        let ok = false;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          try {
+            await navigator.clipboard.writeText(ta.value);
+            ok = true;
+          } catch { /* try execCommand */ }
+        }
+        if (!ok) {
+          try { ok = document.execCommand('copy'); } catch { ok = false; }
+        }
+        toast(ok ? 'Clipboard loaded!' : 'Select the text and copy it');
+        if (ok) finish(ta.value);
+        return;
+      }
+      if (btn.dataset.clip === 'ok') finish(ta.value);
+    });
+  });
+}
+
+async function readDeviceClipboard() {
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    try {
+      return await navigator.clipboard.readText();
+    } catch { /* need paste fallback */ }
+  }
+  return null;
+}
+
+async function writeDeviceClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch { /* show copy fallback */ }
+  }
+  return false;
+}
+
+async function saveClipboardToServer() {
+  if (!filesOnline()) {
+    toast('Connect to use clipboard');
+    return;
+  }
+  let text = await readDeviceClipboard();
+  if (text == null) {
+    text = await showClipModal({
+      title: 'Save clipboard',
+      hint: 'This browser blocked clipboard access. Paste the text to store on the server.',
+      okLabel: 'Save'
+    });
+    if (text == null) return;
+  }
+  try {
+    await api.apiFetch('/clipboard', { method: 'POST', body: { key: text } });
+    toast('Clipboard saved!');
+  } catch (e) {
+    toast(e.message || 'Clipboard save failed');
+  }
+}
+
+async function loadClipboardFromServer() {
+  if (!filesOnline()) {
+    toast('Connect to use clipboard');
+    return;
+  }
+  let data;
+  try {
+    data = await api.apiFetch('/clipboard');
+  } catch (e) {
+    toast(e.message || 'Clipboard load failed');
+    return;
+  }
+  const text = data && data.clipboard != null ? String(data.clipboard) : '';
+  if (await writeDeviceClipboard(text)) {
+    toast(text ? 'Clipboard loaded!' : 'Clipboard is empty');
+    return;
+  }
+  await showClipModal({
+    title: 'Clipboard from server',
+    hint: 'Automatic copy failed. Copy the text below.',
+    text,
+    readonly: true,
+    okLabel: 'Done',
+    showCopy: true
+  });
 }
 
 function hideStaleUi() {
@@ -251,8 +402,27 @@ function go(path) {
   location.hash = '#' + path;
 }
 
-function iconBtn(action, label, text) {
-  return `<button class="icon-btn" data-act="${action}" aria-label="${esc(label)}">${text}</button>`;
+async function loadPrefs() {
+  openInEdit = await db.openInEditIds();
+  saveMode = await db.getSaveMode();
+}
+
+function editingNoteId() {
+  return (root._edit && root._edit.note && root._edit.note.id != null) ? root._edit.note.id : null;
+}
+
+function skipEditIds() {
+  const id = editingNoteId();
+  return id == null ? [] : [id];
+}
+
+function noteHref(n) {
+  const id = encodeURIComponent(n.id);
+  return openInEdit.has(String(n.id)) ? `#/edit/${id}` : `#/note/${id}`;
+}
+
+function iconBtn(action, label, text, { disabled = false } = {}) {
+  return `<button class="icon-btn" data-act="${action}" aria-label="${esc(label)}" title="${esc(label)}"${disabled ? ' disabled' : ''}>${text}</button>`;
 }
 
 function statusClass() {
@@ -278,6 +448,8 @@ function shell(title, inner, { back = false, fab = false, editFab = false, extra
       ${back ? iconBtn('back', 'Back', '←') : ''}
       <button class="brand" data-act="home" aria-label="Home">${esc(APP_NAME)}</button>
       ${pageTitle}
+      ${iconBtn('clip-set', 'Save clipboard to server', 'Set', { disabled: !filesOnline() })}
+      ${iconBtn('clip-get', 'Load clipboard from server', 'Get', { disabled: !filesOnline() })}
       ${iconBtn('theme', 'Toggle theme', '◐')}
       ${iconBtn('settings', 'Settings', '⚙')}
     </header>
@@ -336,12 +508,14 @@ function noteCard(n) {
   if (n.dirty) cls.push('dirty');
   if (db.isLocalId(n.id)) cls.push('local-only');
   const preview = sync.listPreview(n);
+  const openEdit = openInEdit.has(String(n.id));
   const badges = [
     n.pinned ? '<span class="badge">Pinned</span>' : '',
     n.note_type === 1 ? '<span class="badge">Task</span>' : '',
-    n.dirty ? '<span class="badge">Pending</span>' : ''
+    openEdit ? '<span class="badge">Edit</span>' : '',
+    n.held ? '<span class="badge">Draft</span>' : (n.dirty ? '<span class="badge">Pending</span>' : '')
   ].join('');
-  return `<a class="${cls.join(' ')}" href="#/note/${encodeURIComponent(n.id)}">
+  return `<a class="${cls.join(' ')}" href="${noteHref(n)}">
     <div>
       <h3>${badges}${esc(n.title || 'Untitled')}</h3>
       <p>${esc(preview)}${preview.length >= 100 ? '…' : ''}</p>
@@ -565,6 +739,7 @@ async function renderView(id) {
         ${canDl ? '' : '<p class="muted">Downloads need a connection.</p>'}`;
     }
   }
+  const openEdit = openInEdit.has(String(note.id));
   const body = `
     <article class="note-view">
       <div class="row-actions">
@@ -572,8 +747,9 @@ async function renderView(id) {
         <button class="btn ghost" data-act="toggle-pin">${note.pinned ? 'Unpin' : 'Pin'}</button>
         <button class="btn ghost" data-act="toggle-rel">${note.relevant === false ? 'Show on home' : 'Hide from home'}</button>
       </div>
+      <label class="muted open-edit-toggle"><input type="checkbox" id="open-in-edit" ${openEdit ? 'checked' : ''}> Always open in editor</label>
       <h2 class="title">${esc(note.title || 'Untitled')}</h2>
-      <div class="note-meta">${esc(note.date_mod || '')}${note.dirty ? ' · pending sync' : ''}${db.isLocalId(note.id) ? ' · not uploaded yet' : ''}</div>
+      <div class="note-meta">${esc(note.date_mod || '')}${note.held ? ' · draft on this device' : (note.dirty ? ' · pending sync' : '')}${db.isLocalId(note.id) ? ' · not uploaded yet' : ''}</div>
       <div class="note-body">${renderMarkdown(note.text || '')}</div>
       ${filesHtml}
     </article>
@@ -594,76 +770,136 @@ async function renderEdit(id) {
       return;
     }
   }
+  const openEdit = openInEdit.has(String(note.id));
+  const saveLabel = saveMode === 'auto' ? 'Done' : 'Save';
   const body = `
     <div class="edit-form">
       <input class="edit-title" id="title" placeholder="Title" value="${esc(note.title)}">
       <textarea class="edit-body" id="body" placeholder="Write…">${esc(note.text)}</textarea>
       <div class="row-actions">
-        <button class="btn solid" data-act="save">Save</button>
+        <button class="btn solid" data-act="save">${saveLabel}</button>
+        <button class="btn ghost" data-act="view-note">View note</button>
         <label class="muted"><input type="checkbox" id="pinned" ${note.pinned ? 'checked' : ''}> Pinned</label>
         <label class="muted"><input type="checkbox" id="relevant" ${note.relevant !== false ? 'checked' : ''}> Show on home</label>
+        <label class="muted"><input type="checkbox" id="open-in-edit" ${openEdit ? 'checked' : ''}> Always open in editor</label>
       </div>
     </div>
   `;
   root.innerHTML = shell(id === 'new' ? 'New note' : 'Edit', body, { back: true, mainClass: 'edit-screen' });
-  const state = { note };
+  const state = {
+    note,
+    orig: {
+      title: note.title || '',
+      text: note.text || '',
+      pinned: Boolean(note.pinned),
+      relevant: note.relevant !== false
+    }
+  };
   root._edit = state;
   root._holdPush = false;
-  const save = async (andLeave, silent, localOnly) => {
-    const titleEl = root.querySelector('#title');
-    const bodyEl = root.querySelector('#body');
-    if (!titleEl || !bodyEl) return;
-    const title = titleEl.value.trim() || 'Untitled';
-    const text = bodyEl.value;
-    const pinned = root.querySelector('#pinned').checked;
-    const relevant = root.querySelector('#relevant').checked;
-    const stored = await sync.saveLocalEdit({
-      id: state.note.id,
-      title,
-      text,
-      pinned,
-      relevant,
-      note_type: state.note.note_type || 0,
-      v_hash: state.note.v_hash,
-      base_hash: state.note.base_hash || state.note.v_hash
-    });
-    state.note = stored;
-    if (!localOnly && root._holdPush && !andLeave) localOnly = true;
-    if (!localOnly && !db.isForceLocal() && online) {
-      try {
-        const { remap, conflicts } = await sync.pushDirty();
-        const mine = (conflicts || []).filter((c) => String(c.fromId) === String(stored.id));
-        if (mine.length) {
-          toastConflicts(mine);
-          if (mine[0].copy) state.note = mine[0].copy;
-          if (andLeave) go('/note/' + state.note.id);
-          return;
-        }
-        if (remap[stored.id]) state.note = remap[stored.id];
-        else {
-          const fresh = await db.getNote(stored.id);
-          if (fresh) state.note = fresh;
-        }
-      } catch (e) {
-        if (!(e instanceof api.NetworkError)) toast(e.message || 'Could not upload');
+  root.dataset.noteId = String(note.id);
+  let saveChain = Promise.resolve();
+  const save = (andLeave, silent, localOnly) => {
+    const job = async () => {
+      const titleEl = root.querySelector('#title');
+      const bodyEl = root.querySelector('#body');
+      if (!titleEl || !bodyEl) return;
+      const title = titleEl.value.trim();
+      const text = bodyEl.value;
+      const pinned = root.querySelector('#pinned').checked;
+      const relevant = root.querySelector('#relevant').checked;
+      const same = title === (state.orig.title || '').trim()
+        && text === (state.orig.text || '')
+        && pinned === Boolean(state.orig.pinned)
+        && relevant === (state.orig.relevant !== false);
+      if (same && !andLeave) return;
+      if (same && andLeave && !state.note.dirty && !state.note.held) {
+        const stay = openInEdit.has(String(state.note.id)) || await db.isOpenInEdit(state.note.id);
+        if (stay) return;
+        root._flushEdit = null;
+        root._saveEdit = null;
+        if (id === 'new') go('/');
+        else go('/note/' + state.note.id);
+        return;
       }
-    }
-    if (!silent) toast('Saved');
-    if (andLeave) go('/note/' + state.note.id);
+      const mode = await db.getSaveMode();
+      const hold = Boolean(localOnly || (root._holdPush && !andLeave) || (mode === 'manual' && !andLeave));
+      const stored = await sync.saveLocalEdit({
+        id: state.note.id,
+        title: title || 'Untitled',
+        text,
+        pinned,
+        relevant,
+        note_type: state.note.note_type || 0,
+        v_hash: state.note.v_hash,
+        base_hash: state.note.base_hash || state.note.v_hash
+      }, { held: hold });
+      state.note = stored;
+      state.orig = { title: stored.title || '', text: stored.text || '', pinned: stored.pinned, relevant: stored.relevant !== false };
+      root.dataset.noteId = String(stored.id);
+      if (!hold && !db.isForceLocal() && online) {
+        try {
+          const { remap, conflicts } = await sync.pushDirty();
+          const mine = (conflicts || []).filter((c) => String(c.fromId) === String(stored.id));
+          if (mine.length) {
+            toastConflicts(mine);
+            if (mine[0].copy) {
+              state.note = mine[0].copy;
+              root.dataset.noteId = String(state.note.id);
+            }
+            if (andLeave) {
+              root._flushEdit = null;
+              root._saveEdit = null;
+              go('/note/' + state.note.id);
+            }
+            return;
+          }
+          if (remap[stored.id]) {
+            const next = remap[stored.id];
+            if (String(stored.id) !== String(next.id) && parseHash().name === 'edit') {
+              history.replaceState(null, '', '#/edit/' + next.id);
+            }
+            state.note = next;
+          } else {
+            const fresh = await db.getNote(stored.id);
+            if (fresh) state.note = fresh;
+          }
+          state.note.base_hash = state.note.v_hash;
+          root.dataset.noteId = String(state.note.id);
+          await loadPrefs();
+        } catch (e) {
+          if (!(e instanceof api.NetworkError)) toast(e.message || 'Could not upload');
+        }
+      }
+      if (!silent) toast(hold ? 'Saved on this device' : 'Saved');
+      if (andLeave) {
+        const stay = openInEdit.has(String(state.note.id)) || await db.isOpenInEdit(state.note.id);
+        if (!stay) {
+          root._flushEdit = null;
+          root._saveEdit = null;
+          go('/note/' + state.note.id);
+        }
+      }
+    };
+    const p = saveChain.then(job, job);
+    saveChain = p.catch(() => {});
+    return p;
   };
-  let t;
-  root.querySelector('#body').addEventListener('input', () => {
-    clearTimeout(t);
-    t = setTimeout(() => save(false), 800);
+  const persistSoon = () => {
+    clearTimeout(root._editTimer);
+    root._editTimer = setTimeout(() => save(false, true), 800);
     paintStaleBanner();
-  });
-  root.querySelector('#title').addEventListener('input', () => {
-    clearTimeout(t);
-    t = setTimeout(() => save(false), 800);
-    paintStaleBanner();
-  });
+  };
+  root.querySelector('#body').addEventListener('input', persistSoon);
+  root.querySelector('#title').addEventListener('input', persistSoon);
+  root.querySelector('#pinned').addEventListener('change', persistSoon);
+  root.querySelector('#relevant').addEventListener('change', persistSoon);
   root._flushEdit = (silent, localOnly) => save(false, silent, localOnly);
-  root._saveEdit = () => save(true);
+  root._saveEdit = () => {
+    clearTimeout(root._editTimer);
+    root._editTimer = null;
+    return save(true);
+  };
   startStaleWatch(state.note.id, 'edit', state.note.v_hash);
 }
 
@@ -679,6 +915,11 @@ async function renderSettings() {
     <div class="settings">
       <p class="muted">${esc(user)} · ${n} notes cached · ${pending} pending</p>
       <p class="muted">Last sync: ${esc(lastStr)}</p>
+      <h2>Saving</h2>
+      <label><input type="radio" name="save-mode" value="auto" ${saveMode === 'auto' ? 'checked' : ''}>
+        <span>Upload while typing<span class="hint">Writes locally as you type, then uploads. The button is Done.</span></span></label>
+      <label><input type="radio" name="save-mode" value="manual" ${saveMode === 'manual' ? 'checked' : ''}>
+        <span>Upload when I tap Save<span class="hint">Typing stays on this device until you Save or Sync now.</span></span></label>
       <h2>On this device</h2>
       <label><input type="radio" name="mode" value="local_some" ${mode === 'local_some' ? 'checked' : ''}>
         <span>Cache notes I open<span class="hint">Default. Offline you can reread what you already opened, and create new notes.</span></span></label>
@@ -719,6 +960,14 @@ async function onAction(act, btn) {
     return;
   }
   if (act === 'settings') { go('/settings'); return; }
+  if (act === 'clip-set') {
+    await saveClipboardToServer();
+    return;
+  }
+  if (act === 'clip-get') {
+    await loadClipboardFromServer();
+    return;
+  }
   if (act === 'new') { go('/edit/new'); return; }
   if (act === 'view-all') { go('/all/0'); return; }
   if (act === 'page-prev' || act === 'page-next') {
@@ -759,6 +1008,17 @@ async function onAction(act, btn) {
     go('/edit/' + root.dataset.noteId);
     return;
   }
+  if (act === 'view-note') {
+    if (root._flushEdit) {
+      const manual = (await db.getSaveMode()) === 'manual';
+      await root._flushEdit(true, manual || root._holdPush);
+    }
+    const id = (root._edit && root._edit.note && root._edit.note.id) || root.dataset.noteId;
+    root._flushEdit = null;
+    root._saveEdit = null;
+    if (id) go('/note/' + id);
+    return;
+  }
   if (act === 'toggle-pin' || act === 'toggle-rel') {
     const id = coerceId(root.dataset.noteId);
     const note = await db.getNote(id) || await sync.cacheOpenedNote(id);
@@ -778,7 +1038,7 @@ async function onAction(act, btn) {
   if (act === 'sync-now') {
     try {
       toast('Syncing…');
-      const r = await sync.runSync({ force: true });
+      const r = await sync.runSync({ force: true, includeHeld: true });
       if (toastConflicts(r.conflicts)) { /* already told */ }
       else toast(r.skipped ? 'Skipped' : 'Synced');
     } catch (e) {
@@ -826,6 +1086,19 @@ root.addEventListener('change', async (ev) => {
     await db.setSyncMode(ev.target.value);
     toast('Saved');
   }
+  if (ev.target.name === 'save-mode') {
+    await db.setSaveMode(ev.target.value);
+    saveMode = ev.target.value === 'manual' ? 'manual' : 'auto';
+    if (saveMode === 'auto') {
+      await db.clearHeldFlags();
+      toast('Will upload while typing');
+      if (online && !db.isForceLocal()) {
+        try { await sync.runSync({ includeHeld: true }); } catch { /* queued */ }
+      }
+    } else {
+      toast('Will upload when you tap Save');
+    }
+  }
   if (ev.target.id === 'force-local') {
     db.setForceLocal(ev.target.checked);
     toast(ev.target.checked ? 'Local-only until you close the tab' : 'Will use the server again');
@@ -835,13 +1108,20 @@ root.addEventListener('change', async (ev) => {
     await db.setSearchLocalOnly(ev.target.checked);
     toast(ev.target.checked ? 'Search uses the cache' : 'Search uses the server while online');
   }
+  if (ev.target.id === 'open-in-edit') {
+    const id = coerceId(root.dataset.noteId);
+    if (id == null || id === 'new') return;
+    await db.setOpenInEdit(id, ev.target.checked);
+    await loadPrefs();
+    toast(ev.target.checked ? 'Opens in editor from the list' : 'Opens in view from the list');
+  }
 });
 
 async function refreshOnline() {
   online = navigator.onLine && (db.isForceLocal() ? false : await api.ping());
   if (online && !db.isForceLocal()) {
     try {
-      const r = await sync.runSync();
+      const r = await sync.runSync({ skipIds: skipEditIds() });
       toastConflicts(r.conflicts);
     } catch { /* stay quiet */ }
   }
@@ -849,9 +1129,26 @@ async function refreshOnline() {
 
 async function route() {
   applyTheme(currentTheme());
-  const r = parseHash();
+  if (root._editTimer) {
+    clearTimeout(root._editTimer);
+    root._editTimer = null;
+  }
+  if (root._flushEdit) {
+    const flush = root._flushEdit;
+    root._flushEdit = null;
+    root._saveEdit = null;
+    try {
+      const manual = (await db.getSaveMode()) === 'manual';
+      await flush(true, manual || root._holdPush);
+    } catch { /* keep navigating */ }
+  } else {
+    root._saveEdit = null;
+  }
   stopStaleWatch();
+  closeClipModal();
   if (!(await requireAuth())) return;
+  await loadPrefs();
+  const r = parseHash();
   if (r.name === 'view') return renderView(r.id);
   if (r.name === 'edit') return renderEdit(r.id);
   if (r.name === 'settings') return renderSettings();
@@ -872,7 +1169,7 @@ window.addEventListener('offline', () => {
     bar.className = 'status-bar offline';
     bar.lastElementChild.textContent = 'Offline';
   }
-  document.querySelectorAll('[data-act="download-file"]').forEach((el) => { el.disabled = true; });
+  document.querySelectorAll('[data-act="download-file"], [data-act="clip-set"], [data-act="clip-get"]').forEach((el) => { el.disabled = true; });
 });
 
 async function onAppForeground() {
@@ -880,7 +1177,7 @@ async function onAppForeground() {
   lastFocusSync = Date.now();
   if (online && !db.isForceLocal()) {
     try {
-      const r = await sync.runSync();
+      const r = await sync.runSync({ skipIds: skipEditIds() });
       toastConflicts(r.conflicts);
     } catch { /* quiet */ }
   }
@@ -910,7 +1207,7 @@ async function openDbAndStart() {
   await route();
   if (online && !db.isForceLocal()) {
     try {
-      const r = await sync.runSync();
+      const r = await sync.runSync({ skipIds: skipEditIds() });
       toastConflicts(r.conflicts);
       await route();
     } catch { /* first paint already done */ }
