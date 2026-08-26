@@ -76,6 +76,31 @@ html, body {
 .topbar .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
 .icon-btn[aria-label] { min-width: 36px; min-height: 36px; }
 
+.topbar .icon-btn.clip-set,
+.topbar .icon-btn.clip-get {
+  font-weight: 600;
+  font-size: .8rem;
+  border: 2px solid;
+  min-width: auto;
+  padding: .2rem .5rem;
+}
+.topbar .icon-btn.clip-set {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+.topbar .icon-btn.clip-set:hover:not(:disabled) {
+  color: #fff;
+  background: #dc3545;
+}
+.topbar .icon-btn.clip-get {
+  color: #ffc107;
+  border-color: #ffc107;
+}
+.topbar .icon-btn.clip-get:hover:not(:disabled) {
+  color: #212529;
+  background: #ffc107;
+}
+
 .clip-modal {
   position: fixed; inset: 0; z-index: 50;
   background: rgba(0,0,0,.45);

@@ -421,8 +421,9 @@ function noteHref(n) {
   return openInEdit.has(String(n.id)) ? `#/edit/${id}` : `#/note/${id}`;
 }
 
-function iconBtn(action, label, text, { disabled = false } = {}) {
-  return `<button class="icon-btn" data-act="${action}" aria-label="${esc(label)}" title="${esc(label)}"${disabled ? ' disabled' : ''}>${text}</button>`;
+function iconBtn(action, label, text, { disabled = false, extraClass = '' } = {}) {
+  const cls = extraClass ? 'icon-btn ' + extraClass : 'icon-btn';
+  return `<button class="${cls}" data-act="${action}" aria-label="${esc(label)}" title="${esc(label)}"${disabled ? ' disabled' : ''}>${text}</button>`;
 }
 
 function statusClass() {
@@ -448,8 +449,8 @@ function shell(title, inner, { back = false, fab = false, editFab = false, extra
       ${back ? iconBtn('back', 'Back', '←') : ''}
       <button class="brand" data-act="home" aria-label="Home">${esc(APP_NAME)}</button>
       ${pageTitle}
-      ${iconBtn('clip-set', 'Save clipboard to server', 'Set', { disabled: !filesOnline() })}
-      ${iconBtn('clip-get', 'Load clipboard from server', 'Get', { disabled: !filesOnline() })}
+      ${iconBtn('clip-set', 'Save clipboard to server', 'Set', { disabled: !filesOnline(), extraClass: 'clip-set' })}
+      ${iconBtn('clip-get', 'Load clipboard from server', 'Get', { disabled: !filesOnline(), extraClass: 'clip-get' })}
       ${iconBtn('theme', 'Toggle theme', '◐')}
       ${iconBtn('settings', 'Settings', '⚙')}
     </header>
