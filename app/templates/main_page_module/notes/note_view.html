@@ -7,7 +7,7 @@
 {% set note_id = note["id"] %}
 {% set note_o = N_obj(note_id) %}
 {% set all_tags = Tag.get_all() %}
-{% set text = markdown2.markdown(note["text"]) %}
+{% set text = Pylavor.render_markdown(note["text"]) %}
 {% set tags_ = NotesS.list_tag_colors() %}
 
 <br>
@@ -38,7 +38,7 @@
 
       <hr>
       <div class="text-break rn-note-body">
-        {{ Pylavor.clean_rich_text(text) | safe }}
+        {{ text | safe }}
       </div>
       <hr>
       <br>

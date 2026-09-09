@@ -37,12 +37,7 @@
         {{ form.id }}
         <br>
         <div class="row">
-          <div class="col-md-6">
-            <div class="mb-3">
-              <input type="text" class="form-control" id="title" name="title" placeholder="Title" value="{{ note['title'] }}" required>
-              <div class="form-text">Note title</div>
-            </div>
-          </div>
+          <div class="col-md-6">{{ render_field(form.title, placeholder="Title") }}</div>
           <div class="col-md-3">{{ render_field(form.file_u) }}</div>
           <div class="col-md-3">{{ render_field(form.note_type) }}</div>
         </div>
@@ -59,9 +54,7 @@
           </div>
         </div>
 
-        <div class="mb-3">
-          <textarea class="form-control" id="note_text" name="note_text" placeholder="Write what stuff" required rows="30">{{ note["text"] }}</textarea>
-        </div>
+        {{ render_field(form.note_text, placeholder="Write what stuff", rows='30') }}
         <div class="mb-3">
           {{ form.submit(class="form-control btn btn-dark mb-2", value="Submit edits") }}
         </div>

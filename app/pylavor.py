@@ -9,6 +9,7 @@ import pickle
 from datetime import datetime
 from typing import Union, Optional
 import bleach
+import markdown2
 
 
 from unidecode import unidecode
@@ -204,16 +205,36 @@ class Pylavor:
         
         return months    
     
-    # Pylavor
-    @staticmethod        
+    MARKDOWN_EXTRAS = [
+        "tables",
+        "fenced-code-blocks",
+        "strike",
+        "cuddled-lists",
+    ]
+
+    @staticmethod
+    def render_markdown(text):
+        html = markdown2.markdown(text or "", extras=Pylavor.MARKDOWN_EXTRAS)
+        return Pylavor.clean_rich_text(html)
+
+    @staticmethod
     def clean_rich_text(input_text):
-        # Define allowed tags and attributes
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
-        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr']
-        allowed_attributes = {'a': ['href', 'title']}
-    
-        # Use bleach to clean the input text
-        cleaned_text = bleach.clean(input_text, tags=allowed_tags, attributes=allowed_attributes)
-        
-        return cleaned_text        
+        allowed_tags = [
+            'a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+            'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
+            'img',
+            'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+            's', 'strike', 'del',
+        ]
+        allowed_attributes = {
+            'a': ['href', 'title'],
+            'img': ['src', 'alt', 'title'],
+            'th': ['align'],
+            'td': ['align'],
+            'ol': ['start'],
+            'code': ['class'],
+            'pre': ['class'],
+        }
+
+        return bleach.clean(input_text or "", tags=allowed_tags, attributes=allowed_attributes) 
