@@ -326,6 +326,13 @@ html, body {
   font-size: .8rem;
 }
 
+.offline-offer {
+  margin: 0 0 .75rem; padding: .7rem .8rem;
+  background: var(--card); border: 1px solid var(--accent); border-radius: 8px;
+  font-size: .9rem;
+}
+.offline-offer .row-actions { margin: .5rem 0 0; }
+
 .open-edit-toggle {
   display: flex; gap: .45rem; align-items: center;
   margin: .1rem 0 .55rem; cursor: pointer;

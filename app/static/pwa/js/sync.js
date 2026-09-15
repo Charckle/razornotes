@@ -65,8 +65,10 @@ export async function cacheOpenedNote(id) {
     throw new Error('Note not available offline.');
   }
   if (local && local.dirty) return local;
+  const usableLocal = Boolean(local && (local.text || local.dirty));
+  if (!navigator.onLine && usableLocal) return local;
   try {
-    const hashRow = await apiFetch('/note/' + id + '/hash');
+    const hashRow = await apiFetch('/note/' + id + '/hash', { timeoutMs: 2500 });
     const serverHash = hashRow.v_hash || '';
     const localFresh = local && local.v_hash && local.v_hash === serverHash
       && local.text && !local.body_missing;
@@ -78,7 +80,7 @@ export async function cacheOpenedNote(id) {
     return remote;
   } catch (e) {
     if (e instanceof NetworkError) {
-      if (local && (local.text || local.dirty)) return local;
+      if (usableLocal) return local;
       throw new Error('Note not available offline.');
     }
     throw e;

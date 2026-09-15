@@ -21,6 +21,8 @@ let staleBaseline = '';
 let lastFocusSync = 0;
 let openInEdit = new Set();
 let saveMode = 'auto';
+let connecting = true;
+let downloadOffer = false;
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({
@@ -429,6 +431,7 @@ function iconBtn(action, label, text, { disabled = false, extraClass = '' } = {}
 function statusClass() {
   if (db.isForceLocal()) return 'local';
   if (sync.isSyncing()) return 'syncing';
+  if (connecting) return 'syncing';
   if (!online) return 'offline';
   return '';
 }
@@ -436,8 +439,96 @@ function statusClass() {
 function statusText() {
   if (db.isForceLocal()) return 'Local only (this session)';
   if (sync.isSyncing()) return 'Syncing…';
+  if (connecting) return 'Connecting…';
   if (!online) return 'Offline';
   return 'Online';
+}
+
+function formatBytes(n) {
+  if (!Number.isFinite(n) || n <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let i = 0;
+  let x = n;
+  while (x >= 1024 && i < units.length - 1) {
+    x /= 1024;
+    i += 1;
+  }
+  return (i === 0 ? String(Math.round(x)) : x.toFixed(1)) + ' ' + units[i];
+}
+
+function notesWithBody(notes) {
+  return notes.filter((n) => n.text && !n.body_missing).length;
+}
+
+async function requestPersistentStorage() {
+  if (!navigator.storage || !navigator.storage.persist) return false;
+  try {
+    if (await navigator.storage.persisted()) return true;
+    return await navigator.storage.persist();
+  } catch {
+    return false;
+  }
+}
+
+async function storageInfo() {
+  let persistent = false;
+  let quota = '';
+  try {
+    if (navigator.storage && navigator.storage.persisted) {
+      persistent = await navigator.storage.persisted();
+    }
+  } catch { /* ignore */ }
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const est = await navigator.storage.estimate();
+      quota = formatBytes(est.usage || 0) + ' of ' + formatBytes(est.quota || 0);
+    }
+  } catch { /* ignore */ }
+  return { persistent, quota };
+}
+
+async function maybePrepareDownloadOffer() {
+  downloadOffer = false;
+  if (!filesOnline()) return;
+  if (await db.getMeta('asked_full_download', false)) return;
+  const mode = await db.getSyncMode();
+  if (mode === 'full_mirror' || mode === 'remote_only') return;
+  const notes = await db.allNotes();
+  if (notesWithBody(notes) >= 30) {
+    await db.setMeta('asked_full_download', true);
+    return;
+  }
+  downloadOffer = true;
+}
+
+function downloadOfferHtml() {
+  if (!downloadOffer) return '';
+  return `<div class="offline-offer">
+    <div>Download all notes so they work without internet?</div>
+    <div class="row-actions">
+      <button class="btn solid" data-act="download-all">Download all</button>
+      <button class="btn ghost" data-act="dismiss-download">Not now</button>
+    </div>
+  </div>`;
+}
+
+function updateStatusBar() {
+  const bar = document.querySelector('.status-bar');
+  if (!bar || !bar.lastElementChild) return;
+  bar.className = 'status-bar ' + statusClass();
+  bar.lastElementChild.textContent = statusText();
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('/app/sw.js', {
+    scope: '/app/',
+    updateViaCache: 'none'
+  }).then((reg) => {
+    if (navigator.onLine) {
+      try { reg.update(); } catch { /* ignore */ }
+    }
+  }).catch(() => {});
 }
 
 function shell(title, inner, { back = false, fab = false, editFab = false, extra = '', mainClass = '' } = {}) {
@@ -497,6 +588,7 @@ function renderLogin(msg = '') {
     const fd = new FormData(ev.target);
     try {
       await api.loginWithPassword(fd.get('username'), fd.get('password'));
+      await requestPersistentStorage();
       await route();
     } catch (e) {
       ev.target.querySelector('.err').textContent = e.message || 'Login failed';
@@ -652,6 +744,7 @@ function homeBody(notes, ph, hint) {
   return `
     ${searchBox(ph)}
     ${hint ? `<p class="muted search-hint">${esc(hint)}</p>` : ''}
+    ${downloadOfferHtml()}
     ${notes.length === 0 ? `<div class="empty">No notes on this device yet. Open notes while online, or download all in Settings.</div>` : ''}
     <div class="home-cols">
       ${pinned.length ? `<section class="home-col"><div class="section-label">Pinned</div>${pinned.map(noteCard).join('')}</section>` : ''}
@@ -671,6 +764,7 @@ async function renderList() {
       : 'Results';
     const body = `
       ${searchBox(ph)}
+      ${downloadOfferHtml()}
       ${found.notes.length === 0 ? `<div class="empty">No matches.</div>` : `<div class="section-label">${label}</div>${found.notes.map(noteCard).join('')}`}
     `;
     root.innerHTML = shell(APP_NAME, body, { fab: true, extra: 'list' });
@@ -689,6 +783,7 @@ async function renderAll(page) {
   if (found.kind === 'results') {
     const body = `
       ${searchBox(ph)}
+      ${downloadOfferHtml()}
       ${found.notes.length === 0 ? `<div class="empty">No matches.</div>` : `<div class="section-label">Results</div>${found.notes.map(noteCard).join('')}`}
     `;
     root.innerHTML = shell('All notes', body, { back: true, fab: true });
@@ -702,6 +797,7 @@ async function renderAll(page) {
   const hint = found.kind === 'hint' ? `<p class="muted search-hint">${esc(found.message)}</p>` : '';
   const body = `
     ${searchBox(ph)}
+    ${downloadOfferHtml()}
     ${hint}
     ${notes.length === 0 ? `<div class="empty">No notes.</div>` : `<div class="section-label">All notes</div>${slice.map(noteCard).join('')}`}
     ${notes.length > ALL_PAGE_SIZE ? `<div class="pager">
@@ -909,19 +1005,29 @@ async function renderSettings() {
   const last = await db.getMeta('last_synced', 0);
   const lastStr = last ? new Date(last).toLocaleString() : 'never';
   const user = (await db.getMeta('username', '')) || '';
-  const n = (await db.allNotes()).length;
-  const pending = (await db.allNotes()).filter((x) => x.dirty).length;
+  const notes = await db.allNotes();
+  const n = notes.length;
+  const pending = notes.filter((x) => x.dirty).length;
+  const ready = notesWithBody(notes);
   const searchLocal = await db.isSearchLocalOnly();
+  const store = await storageInfo();
+  const persistLabel = store.persistent
+    ? 'Persistent — this browser should not auto-clear the cache'
+    : 'Not persistent — the browser may clear the cache when storage is low';
   const body = `
     <div class="settings">
-      <p class="muted">${esc(user)} · ${n} notes cached · ${pending} pending</p>
+      <p class="muted">${esc(user)} · ${n} notes cached · ${ready} ready offline · ${pending} pending</p>
       <p class="muted">Last sync: ${esc(lastStr)}</p>
+      <h2>This device</h2>
+      <p class="muted">${esc(persistLabel)}</p>
+      ${store.quota ? `<p class="muted">Storage used: ${esc(store.quota)}</p>` : ''}
+      ${store.persistent ? '' : `<div class="row-actions"><button class="btn solid" data-act="request-persist">Keep data on this device</button></div>`}
       <h2>Saving</h2>
       <label><input type="radio" name="save-mode" value="auto" ${saveMode === 'auto' ? 'checked' : ''}>
         <span>Upload while typing<span class="hint">Writes locally as you type, then uploads. The button is Done.</span></span></label>
       <label><input type="radio" name="save-mode" value="manual" ${saveMode === 'manual' ? 'checked' : ''}>
         <span>Upload when I tap Save<span class="hint">Typing stays on this device until you Save or Sync now.</span></span></label>
-      <h2>On this device</h2>
+      <h2>Notes cache</h2>
       <label><input type="radio" name="mode" value="local_some" ${mode === 'local_some' ? 'checked' : ''}>
         <span>Cache notes I open<span class="hint">Default. Offline you can reread what you already opened, and create new notes.</span></span></label>
       <label><input type="radio" name="mode" value="full_mirror" ${mode === 'full_mirror' ? 'checked' : ''}>
@@ -1050,6 +1156,8 @@ async function onAction(act, btn) {
   }
   if (act === 'download-all') {
     await db.setSyncMode('full_mirror');
+    await db.setMeta('asked_full_download', true);
+    downloadOffer = false;
     try {
       toast('Downloading…');
       const r = await sync.runSync({ full: true });
@@ -1057,6 +1165,19 @@ async function onAction(act, btn) {
     } catch (e) {
       toast(e.message || 'Download failed');
     }
+    await route();
+    return;
+  }
+  if (act === 'dismiss-download') {
+    await db.setMeta('asked_full_download', true);
+    downloadOffer = false;
+    toast('You can download all notes later in Settings');
+    await route();
+    return;
+  }
+  if (act === 'request-persist') {
+    const ok = await requestPersistentStorage();
+    toast(ok ? 'This device will keep the app cache' : 'Browser declined; install the app and try again');
     await renderSettings();
     return;
   }
@@ -1085,6 +1206,10 @@ root.addEventListener('click', (ev) => {
 root.addEventListener('change', async (ev) => {
   if (ev.target.name === 'mode') {
     await db.setSyncMode(ev.target.value);
+    if (ev.target.value === 'full_mirror' || ev.target.value === 'remote_only') {
+      await db.setMeta('asked_full_download', true);
+      downloadOffer = false;
+    }
     toast('Saved');
   }
   if (ev.target.name === 'save-mode') {
@@ -1118,13 +1243,22 @@ root.addEventListener('change', async (ev) => {
   }
 });
 
-async function refreshOnline() {
-  online = navigator.onLine && (db.isForceLocal() ? false : await api.ping());
+async function refreshOnline({ reroute = false } = {}) {
+  connecting = navigator.onLine && !db.isForceLocal();
+  updateStatusBar();
+  const reachable = navigator.onLine && !db.isForceLocal() && await api.ping();
+  connecting = false;
+  online = reachable;
+  updateStatusBar();
   if (online && !db.isForceLocal()) {
     try {
       const r = await sync.runSync({ skipIds: skipEditIds() });
       toastConflicts(r.conflicts);
     } catch { /* stay quiet */ }
+  }
+  if (reroute) {
+    const page = parseHash().name;
+    if (page !== 'view' && page !== 'edit') await route();
   }
 }
 
@@ -1150,6 +1284,7 @@ async function route() {
   if (!(await requireAuth())) return;
   await loadPrefs();
   const r = parseHash();
+  if (r.name === 'list' || r.name === 'all') await maybePrepareDownloadOffer();
   if (r.name === 'view') return renderView(r.id);
   if (r.name === 'edit') return renderEdit(r.id);
   if (r.name === 'settings') return renderSettings();
@@ -1159,29 +1294,21 @@ async function route() {
 
 window.addEventListener('hashchange', () => route());
 window.addEventListener('online', async () => {
-  await refreshOnline();
-  await route();
+  await refreshOnline({ reroute: true });
 });
 window.addEventListener('offline', () => {
+  connecting = false;
   online = false;
   stopStaleWatch();
-  const bar = document.querySelector('.status-bar');
-  if (bar) {
-    bar.className = 'status-bar offline';
-    bar.lastElementChild.textContent = 'Offline';
-  }
+  updateStatusBar();
   document.querySelectorAll('[data-act="download-file"], [data-act="clip-set"], [data-act="clip-get"]').forEach((el) => { el.disabled = true; });
 });
 
 async function onAppForeground() {
   if (Date.now() - lastFocusSync < 2000) return;
   lastFocusSync = Date.now();
-  if (online && !db.isForceLocal()) {
-    try {
-      const r = await sync.runSync({ skipIds: skipEditIds() });
-      toastConflicts(r.conflicts);
-    } catch { /* quiet */ }
-  }
+  const page = parseHash().name;
+  await refreshOnline({ reroute: page === 'list' || page === 'all' || page === 'settings' });
   if (staleWatchId) checkStale();
 }
 
@@ -1189,28 +1316,19 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') onAppForeground();
 });
 window.addEventListener('focus', () => onAppForeground());
+window.addEventListener('pageshow', (ev) => {
+  if (ev.persisted) onAppForeground();
+});
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/app/sw.js', { scope: '/app/' }).catch(() => {});
-}
-
+registerServiceWorker();
 applyTheme(currentTheme());
 openDbAndStart();
 
 async function openDbAndStart() {
   await db.openDb();
-  online = navigator.onLine;
-  try {
-    if (navigator.onLine && !db.isForceLocal()) online = await api.ping();
-  } catch {
-    online = false;
-  }
+  online = false;
+  connecting = true;
+  requestPersistentStorage();
   await route();
-  if (online && !db.isForceLocal()) {
-    try {
-      const r = await sync.runSync({ skipIds: skipEditIds() });
-      toastConflicts(r.conflicts);
-      await route();
-    } catch { /* first paint already done */ }
-  }
+  await refreshOnline({ reroute: true });
 }

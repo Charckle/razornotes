@@ -1,6 +1,8 @@
 import { getMeta, setMeta, deleteMeta } from './db.js';
 
 const API = '/api/v1';
+const FETCH_MS = 6000;
+const PING_MS = 2500;
 
 export class ApiError extends Error {
   constructor(message, status, data) {
@@ -15,6 +17,20 @@ export class NetworkError extends Error {
     super(message);
     this.offline = true;
   }
+}
+
+function fetchTimeout(url, opts = {}, ms = FETCH_MS) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  const headers = opts.headers;
+  const rest = Object.assign({}, opts);
+  delete rest.timeoutMs;
+  delete rest.headers;
+  return fetch(url, Object.assign({}, rest, { headers, signal: ctrl.signal }))
+    .catch(() => {
+      throw new NetworkError();
+    })
+    .finally(() => clearTimeout(timer));
 }
 
 async function saveTokens(data) {
@@ -35,15 +51,10 @@ export async function hasSession() {
 async function refreshAccess() {
   const refresh = await getMeta('refresh');
   if (!refresh) return false;
-  let res;
-  try {
-    res = await fetch(API + '/refresh', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + refresh }
-    });
-  } catch {
-    throw new NetworkError();
-  }
+  const res = await fetchTimeout(API + '/refresh', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + refresh }
+  });
   if (!res.ok) {
     await deleteMeta('refresh');
     return false;
@@ -54,16 +65,11 @@ async function refreshAccess() {
 }
 
 export async function loginWithPassword(username, password) {
-  let res;
-  try {
-    res = await fetch(API + '/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ username, password })
-    });
-  } catch {
-    throw new NetworkError();
-  }
+  const res = await fetchTimeout(API + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ username, password })
+  });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new ApiError(data.message || 'Login failed', res.status, data);
@@ -74,12 +80,10 @@ export async function loginWithPassword(username, password) {
 }
 
 export async function loginFromFlaskSession() {
-  let res;
-  try {
-    res = await fetch(API + '/pwa/token', { method: 'POST', credentials: 'same-origin' });
-  } catch {
-    throw new NetworkError();
-  }
+  const res = await fetchTimeout(API + '/pwa/token', {
+    method: 'POST',
+    credentials: 'same-origin'
+  });
   if (!res.ok) return false;
   const data = await res.json();
   await saveTokens(data);
@@ -88,15 +92,18 @@ export async function loginFromFlaskSession() {
 
 export async function ensureAuth() {
   if (await getMeta('access')) return true;
+  if (!navigator.onLine) return Boolean(await getMeta('refresh'));
   try {
     if (await loginFromFlaskSession()) return true;
   } catch (e) {
-    if (e instanceof NetworkError) throw e;
+    if (!(e instanceof NetworkError)) throw e;
   }
   try {
     if (await refreshAccess()) return true;
   } catch (e) {
-    if (e instanceof NetworkError) throw e;
+    if (e instanceof NetworkError) {
+      return Boolean(await getMeta('refresh'));
+    }
   }
   return false;
 }
@@ -119,12 +126,10 @@ export async function apiFetch(path, opts = {}, retry = true) {
     headers['Content-Type'] = 'application/json';
     opts = Object.assign({}, opts, { body: JSON.stringify(opts.body) });
   }
-  let res;
-  try {
-    res = await fetch(API + path, Object.assign({}, opts, { headers, credentials: 'same-origin' }));
-  } catch {
-    throw new NetworkError();
-  }
+  const timeoutMs = opts.timeoutMs || FETCH_MS;
+  const fetchOpts = Object.assign({}, opts, { headers, credentials: 'same-origin' });
+  delete fetchOpts.timeoutMs;
+  const res = await fetchTimeout(API + path, fetchOpts, timeoutMs);
   if ((res.status === 401 || res.status === 422) && retry) {
     const ok = await refreshAccess();
     if (ok) return apiFetch(path, opts, false);
@@ -155,12 +160,10 @@ export async function apiFetchBlob(path, opts = {}, retry = true) {
   const access = await getMeta('access');
   const headers = Object.assign({}, opts.headers || {});
   if (access) headers.Authorization = 'Bearer ' + access;
-  let res;
-  try {
-    res = await fetch(API + path, Object.assign({}, opts, { headers, credentials: 'same-origin' }));
-  } catch {
-    throw new NetworkError();
-  }
+  const timeoutMs = opts.timeoutMs || FETCH_MS;
+  const fetchOpts = Object.assign({}, opts, { headers, credentials: 'same-origin' });
+  delete fetchOpts.timeoutMs;
+  const res = await fetchTimeout(API + path, fetchOpts, timeoutMs);
   if ((res.status === 401 || res.status === 422) && retry) {
     const ok = await refreshAccess();
     if (ok) return apiFetchBlob(path, opts, false);
@@ -180,7 +183,7 @@ export async function apiFetchBlob(path, opts = {}, retry = true) {
 
 export async function ping() {
   try {
-    const res = await fetch('/health', { method: 'GET' });
+    const res = await fetchTimeout('/health', { method: 'GET' }, PING_MS);
     return res.ok;
   } catch {
     return false;
