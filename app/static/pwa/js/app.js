@@ -649,11 +649,19 @@ async function loadNotes() {
   return notes;
 }
 
+function syncSearchClear(search, clearBtn) {
+  if (!clearBtn) return;
+  clearBtn.disabled = !search.value;
+}
+
 function bindSearch() {
   const search = root.querySelector('#search');
   if (!search) return;
+  const clearBtn = root.querySelector('#search-clear');
+  syncSearchClear(search, clearBtn);
   search.addEventListener('input', () => {
     searchQuery = search.value;
+    syncSearchClear(search, clearBtn);
     clearTimeout(search._t);
     search._t = setTimeout(() => route(), 280);
   });
@@ -678,7 +686,10 @@ async function searchPlaceholder() {
 }
 
 function searchBox(ph) {
-  return `<input class="search" id="search" placeholder="${esc(ph)}" value="${esc(searchQuery)}">`;
+  return `<div class="search-wrap">
+    <button class="search-clear" id="search-clear" type="button" data-act="clear-search" aria-label="Clear search"${searchQuery ? '' : ' disabled'}>×</button>
+    <input class="search" id="search" type="search" placeholder="${esc(ph)}" value="${esc(searchQuery)}" autocomplete="off">
+  </div>`;
 }
 
 async function runSearch(cached) {
@@ -1077,6 +1088,18 @@ async function onAction(act, btn) {
   }
   if (act === 'new') { go('/edit/new'); return; }
   if (act === 'view-all') { go('/all/0'); return; }
+  if (act === 'clear-search') {
+    if (btn && btn.disabled) return;
+    const search = root.querySelector('#search');
+    if (search) {
+      clearTimeout(search._t);
+      search.value = '';
+      syncSearchClear(search, root.querySelector('#search-clear'));
+    }
+    searchQuery = '';
+    await route();
+    return;
+  }
   if (act === 'page-prev' || act === 'page-next') {
     if (btn && btn.disabled) return;
     const page = parseInt(root.dataset.page || '0', 10) || 0;
