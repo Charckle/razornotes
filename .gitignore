@@ -2,6 +2,8 @@ __pycache__/
 *.pyc
 *.exe
 database.db
+tui/rnotes
+tui/rnotes-*
 to-do.txt
 .vs
 .index/

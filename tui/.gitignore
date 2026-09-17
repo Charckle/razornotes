@@ -1,0 +1,12 @@
+/rnotes
+/rnotes.exe
+/rnotes-*
+*.exe
+
+# editor / OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
