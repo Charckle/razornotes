@@ -271,34 +271,83 @@ class UserM:
 
 class Notes:
     @staticmethod
-    def create(title, text, note_type, pinned=0, relevant=1):
+    def normalize_text(text):
+        """HTML forms submit CRLF while the JSON API sends LF. Store one form,
+        otherwise the same content hashes differently depending on the client."""
+        if text is None:
+            return ""
+
+        return str(text).replace("\r\n", "\n").replace("\r", "\n")
+
+    # Notes
+    @staticmethod
+    def content_hash(title, text, note_type, pinned, relevant):
+        """Covers every field a client can edit, so a title-only or pin-only
+        change is still visible to sync clients."""
+        payload = "\x1f".join([
+            str(title or ""),
+            Notes.normalize_text(text),
+            str(int(note_type or 0)),
+            str(int(bool(int(pinned or 0)))),
+            str(int(bool(int(relevant or 0)))),
+        ])
+
+        return hashlib.md5(payload.encode("utf-8")).hexdigest()
+
+    # Notes
+    @staticmethod
+    def legacy_hash(text):
+        """Hash format used before content_hash. Still accepted from clients
+        that cached a hash before the upgrade."""
+        return hashlib.md5((text or "").encode("utf-8")).hexdigest()
+
+    # Notes
+    @staticmethod
+    def create(title, text, note_type, pinned=0, relevant=1, client_uuid=None):
         db = DB()
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        v_hash = hashlib.md5(text.encode()).hexdigest()
-        
-        sql_command = f"""INSERT INTO notes (title, note_type, text, v_hash, pinned, relevant, date_mod)
-                      VALUES (%s, %s, %s, %s, %s, %s, %s);"""
-        
-        return db.q_exe_new(sql_command, (title, note_type, text, v_hash, pinned, relevant, timestamp))
+        text = Notes.normalize_text(text)
+        v_hash = Notes.content_hash(title, text, note_type, pinned, relevant)
+
+        sql_command = f"""INSERT INTO notes (title, note_type, text, v_hash, pinned, relevant, date_mod, client_uuid)
+                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
+
+        return db.q_exe_new(sql_command, (title, note_type, text, v_hash, pinned, relevant, timestamp,
+                                          client_uuid or None))
 
     # Notes
     @staticmethod
     def get_one(note_id):
         db = DB()
-        sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned, v_hash
+        sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned, v_hash,
+        client_uuid, op_id
         FROM notes WHERE id = %s;"""
 
         return db.q_r_one(sql_command, (note_id, ))
+
+    # Notes
+    @staticmethod
+    def get_one_by_client_uuid(client_uuid):
+        """Lets a retried create find the note it already made instead of
+        making a second one."""
+        db = DB()
+        sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned, v_hash,
+        client_uuid, op_id
+        FROM notes WHERE client_uuid = %s;"""
+
+        return db.q_r_one(sql_command, (client_uuid, ))
 
     
     # Notes
     @staticmethod
     def get_one_w_hash(v_hash):
+        """MD5(text) also matches exports written before the hash covered
+        every field, so re-importing an old export still de-duplicates."""
         db = DB()
         sql_command = f"""SELECT id, title, note_type, text, date_mod, active, relevant, pinned, v_hash
-        FROM notes WHERE v_hash = %s;"""
+        FROM notes WHERE v_hash = %s OR MD5(text) = %s;"""
 
-        return db.q_r_one(sql_command, (v_hash, ))   
+        return db.q_r_one(sql_command, (v_hash, v_hash))   
     
     # Notes
     @staticmethod    
@@ -409,29 +458,19 @@ class Notes:
     
     # Notes
     @staticmethod    
-    def update_one(note_id, title, note_type, text, relevant, pinned):
+    def update_one(note_id, title, note_type, text, relevant, pinned, op_id=None):
         db = DB()
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        v_hash = hashlib.md5(text.encode()).hexdigest()
-        
-        sql_command = f"""UPDATE notes 
-        SET title = %s, note_type = %s, text = %s, relevant = %s, pinned = %s, v_hash = %s, date_mod = %s 
+        text = Notes.normalize_text(text)
+        v_hash = Notes.content_hash(title, text, note_type, pinned, relevant)
+
+        sql_command = f"""UPDATE notes
+        SET title = %s, note_type = %s, text = %s, relevant = %s, pinned = %s, v_hash = %s, date_mod = %s,
+        op_id = %s
         WHERE id = %s;"""
-        
-        db.q_exe(sql_command, (title, note_type, text, relevant, pinned, v_hash, timestamp, note_id))
-    
-    # Notes
-    @staticmethod    
-    def edit_api(note_id, text):
-        db = DB()
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        v_hash = hashlib.md5(text.encode()).hexdigest()
-        
-        sql_command = f"""UPDATE notes 
-        SET text = %s, v_hash = %s, date_mod = %s 
-        WHERE id = %s;"""
-        
-        db.q_exe(sql_command, (text, v_hash, timestamp, note_id))
+
+        db.q_exe(sql_command, (title, note_type, text, relevant, pinned, v_hash, timestamp,
+                               op_id or None, note_id))
     
     # Notes
     def connect_file(note_id, file_name, file_id_name):

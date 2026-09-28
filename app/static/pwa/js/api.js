@@ -2,6 +2,9 @@ import { getMeta, setMeta, deleteMeta } from './db.js';
 
 const API = '/api/v1';
 const FETCH_MS = 6000;
+// Writes get longer than reads: an aborted write may still have been applied
+// by the server, and every such lost response costs us a reconciliation.
+export const WRITE_MS = 20000;
 const PING_MS = 2500;
 
 export class ApiError extends Error {

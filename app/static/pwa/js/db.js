@@ -138,6 +138,25 @@ export function newLocalId() {
   return 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+function randomId() {
+  // randomUUID needs a secure context; fall back when it is unavailable.
+  if (globalThis.crypto && globalThis.crypto.randomUUID) {
+    try { return globalThis.crypto.randomUUID(); } catch { /* fall through */ }
+  }
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12)
+    + Math.random().toString(36).slice(2, 12);
+}
+
+// Sent with a create so the server can recognise a retry of the same note.
+export function newClientUuid() {
+  return randomId().slice(0, 40);
+}
+
+// Sent with an update so the server can recognise a retry of the same change.
+export function newOpId() {
+  return randomId().slice(0, 40);
+}
+
 export async function getSyncMode() {
   return (await getMeta('sync_mode', 'local_some')) || 'local_some';
 }

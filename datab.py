@@ -259,7 +259,10 @@ class DBcreate:
             `active` INT DEFAULT 1,
             `relevant` INT DEFAULT 1,
             `date_mod` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
-            PRIMARY KEY (`id`)
+            `client_uuid` VARCHAR(40) NULL,
+            `op_id` VARCHAR(40) NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `notes_client_uuid` (`client_uuid`)
             )
             ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"""
             db.q_exe(sql_command, ())

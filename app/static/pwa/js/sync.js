@@ -1,16 +1,33 @@
 import * as db from './db.js';
-import { apiFetch, ApiError, NetworkError } from './api.js';
+import { apiFetch, ApiError, NetworkError, WRITE_MS } from './api.js';
 import { previewText } from './markdown.js';
 
 const DOWNLOAD_CONCURRENCY = 6;
 export const FULL_SYNC_MS = 180000;
 export const STALE_POLL_MS = 30000;
 
+// Fields a client can change. A push only sends the ones it actually touched,
+// so a pin toggle can never overwrite a body it does not have.
+const EDIT_FIELDS = ['title', 'text', 'pinned', 'relevant', 'note_type'];
+const MAX_SENT_OPS = 6;
+
 let _syncing = false;
 let _pushChain = Promise.resolve();
 
 export function isSyncing() {
   return _syncing;
+}
+
+// Web Locks serialise across every tab and installed window on this origin.
+// Without it two copies of the app push the same note and the loser gets a
+// conflict it had no way to avoid. Not reentrant: never nest two of these.
+function withSyncLock(fn) {
+  if (navigator.locks && navigator.locks.request) {
+    return navigator.locks.request('rn-sync', fn);
+  }
+  const p = _pushChain.then(fn, fn);
+  _pushChain = p.catch(() => {});
+  return p;
 }
 
 function normalize(note) {
@@ -29,6 +46,47 @@ function normalize(note) {
     pending: null,
     body_missing: false
   };
+}
+
+function editedFields(note) {
+  return (Array.isArray(note.dirty_fields) && note.dirty_fields.length)
+    ? note.dirty_fields
+    : EDIT_FIELDS;
+}
+
+// The server trims titles and stores LF line endings, so compare the same way.
+function comparable(note) {
+  return [
+    (note.title || '').trim(),
+    (note.text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
+    String(Boolean(note.pinned)),
+    String(note.relevant !== false),
+    String(note.note_type || 0)
+  ].join('\u001f');
+}
+
+// What the note would look like on the server once our edited fields land.
+function applyEdits(serverNote, note) {
+  const fields = editedFields(note);
+  const merged = Object.assign({}, serverNote);
+  if (fields.includes('title')) merged.title = note.title || 'Untitled';
+  if (fields.includes('text') && !note.body_missing) merged.text = note.text || '';
+  if (fields.includes('pinned')) merged.pinned = Boolean(note.pinned);
+  if (fields.includes('relevant')) merged.relevant = note.relevant !== false;
+  if (fields.includes('note_type')) merged.note_type = note.note_type || 0;
+  return merged;
+}
+
+function updateBody(note) {
+  const fields = editedFields(note);
+  const body = {};
+  if (fields.includes('title')) body.note_title = note.title || 'Untitled';
+  // Never send a body we do not have: a metadata-only record would wipe it.
+  if (fields.includes('text') && !note.body_missing) body.note_text = note.text || '';
+  if (fields.includes('pinned')) body.pinned = note.pinned;
+  if (fields.includes('relevant')) body.relevant = note.relevant;
+  if (fields.includes('note_type')) body.note_type = note.note_type || 0;
+  return body;
 }
 
 async function mapPool(items, limit, fn) {
@@ -87,8 +145,18 @@ export async function cacheOpenedNote(id) {
   }
 }
 
-export async function saveLocalEdit(note, { held = false } = {}) {
+export async function saveLocalEdit(note, { held = false, fields = null } = {}) {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const prev = await db.getNote(note.id);
+  const wasDirty = Boolean(prev && prev.dirty);
+
+  // Accumulate across saves: two quick edits to different fields must both ship.
+  const changed = new Set(fields || EDIT_FIELDS);
+  if (wasDirty && Array.isArray(prev.dirty_fields)) {
+    prev.dirty_fields.forEach((f) => changed.add(f));
+  }
+
+  const isNew = db.isLocalId(note.id);
   const stored = {
     id: note.id,
     title: note.title,
@@ -101,8 +169,17 @@ export async function saveLocalEdit(note, { held = false } = {}) {
     note_type: note.note_type || 0,
     dirty: true,
     held: Boolean(held),
-    pending: db.isLocalId(note.id) ? 'create' : 'update',
-    base_hash: note.base_hash || note.v_hash || ''
+    pending: isNew ? 'create' : 'update',
+    // The base is the server state this edit started from; once dirty it must
+    // not move, or a later push would claim to be based on its own output.
+    base_hash: (wasDirty ? prev.base_hash : null) || note.base_hash || note.v_hash || '',
+    body_missing: Boolean(prev && prev.body_missing && !changed.has('text')),
+    dirty_fields: Array.from(changed),
+    // A new op id per local change; retries of the same change reuse it.
+    op_id: db.newOpId(),
+    sent_ops: (prev && prev.sent_ops) || [],
+    client_uuid: (prev && prev.client_uuid) || (isNew ? db.newClientUuid() : null),
+    sync_blocked: null
   };
   await db.saveNote(stored);
   return stored;
@@ -121,7 +198,13 @@ export async function handleConflict(local, serverNote) {
     note_type: local.note_type || 0,
     dirty: true,
     pending: 'create',
-    base_hash: ''
+    base_hash: '',
+    body_missing: false,
+    dirty_fields: EDIT_FIELDS.slice(),
+    op_id: db.newOpId(),
+    sent_ops: [],
+    client_uuid: db.newClientUuid(),
+    sync_blocked: null
   };
   await db.saveNote(copy);
   const kept = normalize(serverNote);
@@ -129,70 +212,174 @@ export async function handleConflict(local, serverNote) {
   return { note: kept, conflict: true, conflictTitle: copy.title, copy, fromId: local.id };
 }
 
-async function pushOne(note) {
-  if (note.pending === 'create' || db.isLocalId(note.id)) {
-    const created = await apiFetch('/notes', {
-      method: 'POST',
-      body: {
-        note_title: note.title || 'Untitled',
-        note_text: note.text || '',
-        pinned: note.pinned,
-        relevant: note.relevant,
-        note_type: note.note_type || 0
-      }
-    });
-    const saved = normalize(created);
-    await db.deleteNote(note.id);
-    await db.saveNote(saved);
-    return { note: saved };
+// Persist the op id before the request goes out, so a reload mid-flight can
+// still tell that the server state came from us.
+async function rememberSentOp(note, opId) {
+  const fresh = (await db.getNote(note.id)) || note;
+  const ops = (Array.isArray(fresh.sent_ops) ? fresh.sent_ops : [])
+    .filter((x) => x !== opId)
+    .concat(opId)
+    .slice(-MAX_SENT_OPS);
+  await db.saveNote(Object.assign({}, fresh, { sent_ops: ops }));
+  return ops;
+}
+
+// Another window can edit the note while our request is in flight. Write the
+// server's answer back without throwing that edit away.
+async function adoptUpdate(pushed, saved) {
+  const fresh = await db.getNote(pushed.id);
+  if (fresh && fresh.dirty && fresh.op_id && fresh.op_id !== pushed.op_id) {
+    const rebased = Object.assign({}, fresh, { v_hash: saved.v_hash, base_hash: saved.v_hash });
+    await db.saveNote(rebased);
+    return rebased;
   }
-  try {
-    const updated = await apiFetch('/note/' + note.id, {
-      method: 'PUT',
-      body: {
-        note_title: note.title || 'Untitled',
-        note_text: note.text || '',
-        pinned: note.pinned,
-        relevant: note.relevant,
-        note_type: note.note_type || 0,
-        v_hash: note.base_hash || note.v_hash || undefined
-      }
+  await db.saveNote(saved);
+  return saved;
+}
+
+async function adoptCreate(pushed, saved) {
+  const fresh = await db.getNote(pushed.id);
+  await db.deleteNote(pushed.id);
+  if (fresh && fresh.dirty && fresh.op_id && fresh.op_id !== pushed.op_id) {
+    const carried = Object.assign({}, fresh, {
+      id: saved.id,
+      pending: 'update',
+      v_hash: saved.v_hash,
+      base_hash: saved.v_hash,
+      client_uuid: null,
+      sent_ops: []
     });
-    const saved = normalize(updated);
-    await db.saveNote(saved);
-    return { note: saved };
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 409) {
-      const serverNote = (e.data && e.data.note) || e.data;
-      if (serverNote && (serverNote.id || serverNote._id || serverNote.text != null)) {
-        return handleConflict(note, serverNote);
-      }
+    await db.saveNote(carried);
+    return carried;
+  }
+  await db.saveNote(saved);
+  return saved;
+}
+
+async function pushCreate(note) {
+  let current = note;
+  if (!current.client_uuid) {
+    current = Object.assign({}, note, { client_uuid: db.newClientUuid() });
+    await db.saveNote(current);
+  }
+  const created = await apiFetch('/notes', {
+    method: 'POST',
+    timeoutMs: WRITE_MS,
+    body: {
+      note_title: current.title || 'Untitled',
+      note_text: current.text || '',
+      pinned: current.pinned,
+      relevant: current.relevant,
+      note_type: current.note_type || 0,
+      client_uuid: current.client_uuid
     }
-    throw e;
+  });
+  return { note: await adoptCreate(current, normalize(created)) };
+}
+
+async function pushUpdate(note) {
+  const opId = note.op_id || db.newOpId();
+  const sentOps = await rememberSentOp(note, opId);
+  const baseHash = note.base_hash || note.v_hash || '';
+  const body = Object.assign(updateBody(note), { op_id: opId });
+  if (baseHash) body.v_hash = baseHash;
+
+  let saved;
+  try {
+    saved = normalize(await apiFetch('/note/' + note.id, {
+      method: 'PUT', body, timeoutMs: WRITE_MS
+    }));
+  } catch (e) {
+    if (!(e instanceof ApiError) || e.status !== 409) throw e;
+    const serverRaw = e.data && e.data.note;
+    if (!serverRaw || (serverRaw.id == null && serverRaw._id == null)) throw e;
+    const server = normalize(serverRaw);
+
+    // Our change is already there: an earlier attempt landed and only its
+    // response was lost. Nothing to merge, nothing to warn about.
+    if (comparable(server) === comparable(applyEdits(server, note))) {
+      return { note: await adoptUpdate(note, server) };
+    }
+
+    // The server version is our own earlier write, so there is no other
+    // author to conflict with. Rebase onto it and apply the change.
+    if (serverRaw.op_id && sentOps.includes(serverRaw.op_id)) {
+      const rebased = Object.assign(updateBody(note), { op_id: opId, v_hash: server.v_hash });
+      saved = normalize(await apiFetch('/note/' + note.id, {
+        method: 'PUT', body: rebased, timeoutMs: WRITE_MS
+      }));
+      return { note: await adoptUpdate(note, saved) };
+    }
+
+    return handleConflict(note, serverRaw);
+  }
+  return { note: await adoptUpdate(note, saved) };
+}
+
+function pushOne(note) {
+  if (note.pending === 'create' || db.isLocalId(note.id)) return pushCreate(note);
+  return pushUpdate(note);
+}
+
+// Park a note the server refuses, so one bad record cannot hold up every
+// other pending upload. Editing it again, or an explicit sync, clears this.
+async function blockNote(note, err) {
+  const fresh = (await db.getNote(note.id)) || note;
+  await db.saveNote(Object.assign({}, fresh, {
+    sync_blocked: {
+      status: (err && err.status) || 0,
+      message: (err && err.message) || 'Upload rejected',
+      at: Date.now()
+    }
+  }));
+}
+
+export async function clearSyncBlocks() {
+  const notes = await db.allNotes();
+  for (const n of notes) {
+    if (!n.sync_blocked) continue;
+    await db.saveNote(Object.assign({}, n, { sync_blocked: null }));
   }
 }
 
-export async function pushDirty({ includeHeld = false, skipIds = [] } = {}) {
-  const run = async () => {
-    const skip = new Set((skipIds || []).map((id) => String(id)));
-    const notes = (await db.allNotes()).filter((n) => n.dirty && (includeHeld || !n.held) && !skip.has(String(n.id)));
-    const remap = {};
-    const conflicts = [];
-    for (const note of notes) {
-      const result = await pushOne(note);
-      if (result && result.note) {
-        remap[note.id] = result.note;
-        if (String(note.id) !== String(result.note.id)) {
-          await db.remapOpenInEdit(note.id, result.note.id);
-        }
+async function pushDirtyInner({ includeHeld = false, skipIds = [] } = {}) {
+  const skip = new Set((skipIds || []).map((id) => String(id)));
+  const notes = (await db.allNotes()).filter((n) => n.dirty && (includeHeld || !n.held)
+    && !skip.has(String(n.id)) && !n.sync_blocked);
+  const remap = {};
+  const conflicts = [];
+  const blocked = [];
+  let stopped = null;
+
+  for (const note of notes) {
+    let result = null;
+    try {
+      result = await pushOne(note);
+    } catch (e) {
+      if (e instanceof NetworkError) { stopped = 'offline'; break; }
+      const status = (e instanceof ApiError) ? e.status : 0;
+      if (status === 401 || status === 422) { stopped = 'auth'; break; }
+      if (status >= 400 && status < 500) {
+        await blockNote(note, e);
+        blocked.push({ id: note.id, title: note.title || 'Untitled', message: e.message });
+        continue;
       }
-      if (result && result.conflict) conflicts.push(result);
+      // Server-side trouble is usually temporary: stay dirty, retry next run.
+      continue;
     }
-    return { remap, conflicts };
-  };
-  const p = _pushChain.then(run, run);
-  _pushChain = p.catch(() => {});
-  return p;
+    if (result && result.note) {
+      remap[note.id] = result.note;
+      if (String(note.id) !== String(result.note.id)) {
+        await db.remapOpenInEdit(note.id, result.note.id);
+      }
+    }
+    if (result && result.conflict) conflicts.push(result);
+  }
+  return { remap, conflicts, blocked, stopped };
+}
+
+export function pushDirty(opts = {}) {
+  return withSyncLock(() => pushDirtyInner(opts));
 }
 
 export async function pullMeta() {
@@ -290,31 +477,36 @@ export async function takeServerVersion(id) {
 }
 
 export async function runSync({ full = false, force = false, includeHeld = false, skipIds = [] } = {}) {
-  if (_syncing) return { skipped: true, conflicts: [] };
-  if (db.isForceLocal()) return { skipped: true, reason: 'local', conflicts: [] };
+  if (_syncing) return { skipped: true, conflicts: [], blocked: [] };
+  if (db.isForceLocal()) return { skipped: true, reason: 'local', conflicts: [], blocked: [] };
   _syncing = true;
   try {
-    const { conflicts } = await pushDirty({ includeHeld, skipIds });
+    if (force) await clearSyncBlocks();
+    // Only the push is locked. Downloading can take a while and holding the
+    // lock across it would stall a save the user is waiting on.
+    const { conflicts, blocked, stopped } = await pushDirty({ includeHeld, skipIds });
+    if (stopped) return { skipped: true, reason: stopped, conflicts, blocked, downloaded: 0 };
+
     const mode = await db.getSyncMode();
     if (full || mode === 'full_mirror') {
       if (!full && !force && mode === 'full_mirror') {
         const last = (await db.getMeta('last_full_sync', 0)) || 0;
         if (Date.now() - last < FULL_SYNC_MS) {
-          return { skipped: true, reason: 'recent', conflicts, downloaded: 0 };
+          return { skipped: true, reason: 'recent', conflicts, blocked, downloaded: 0 };
         }
       }
       const n = await hashDiffSync();
       await db.setMeta('last_synced', Date.now());
       await db.setMeta('last_full_sync', Date.now());
-      return { downloaded: n, conflicts };
+      return { downloaded: n, conflicts, blocked };
     }
     if (mode === 'local_some') {
       await pullMeta();
       await db.setMeta('last_synced', Date.now());
-      return { downloaded: 0, conflicts };
+      return { downloaded: 0, conflicts, blocked };
     }
     await db.setMeta('last_synced', Date.now());
-    return { downloaded: 0, conflicts };
+    return { downloaded: 0, conflicts, blocked };
   } finally {
     _syncing = false;
   }

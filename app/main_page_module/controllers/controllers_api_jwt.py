@@ -26,6 +26,8 @@ parser.add_argument('v_hash')
 parser.add_argument('pinned')
 parser.add_argument('relevant')
 parser.add_argument('note_type')
+parser.add_argument('client_uuid')
+parser.add_argument('op_id')
 
 
 class Resource(flask_restful.Resource):
@@ -39,9 +41,13 @@ class Resource(flask_restful.Resource):
 #   pinned    : bool
 #   relevant  : bool
 #   date_mod  : str
-#   v_hash    : str    — content hash for sync
+#   v_hash    : str    — hash of title + text + note_type + pinned + relevant
 #   active    : bool
 #   note_type : int    — 0 note, 1 task
+#
+# Writes are idempotent: POST /notes accepts client_uuid and PUT /note/<id>
+# accepts op_id, so a retry after a lost response confirms the first write
+# instead of duplicating it or reporting a conflict.
 
 
 def _serialize_note(note, truncate=None):
@@ -95,8 +101,10 @@ def _as_bool(val, default=None):
 def _require_write(claims=None):
     claims = claims if claims is not None else get_jwt()
     read_access = claims.get("read_access") or []
+    # 403, not 401: the token is valid, the user just cannot write. A 401 would
+    # make clients throw the token away and send the user back to the login screen.
     if not any(x in read_access for x in [1, 2]):
-        abort(401, message="You dont have the permission to edit it.")
+        abort(403, message="You dont have the permission to edit it.")
 
 
 def _tokens_for_user(user):
@@ -156,6 +164,16 @@ class NoteAll(Resource):
 
     def post(self):
         _require_write()
+
+        # A client that lost the response to its first attempt retries with the
+        # same client_uuid. Hand back the note it already made.
+        client_uuid = _arg("client_uuid")
+        if client_uuid:
+            client_uuid = str(client_uuid)[:40]
+            existing = Notes.get_one_by_client_uuid(client_uuid)
+            if existing is not None:
+                return _serialize_note(existing), 200
+
         title = str(_arg("note_title") or _arg("title") or "").strip()
         text = _arg("note_text")
         if text is None:
@@ -174,12 +192,17 @@ class NoteAll(Resource):
         pinned = int(_as_bool(_arg("pinned"), False))
         relevant = int(_as_bool(_arg("relevant"), True))
 
-        note_id = Notes.create(title, text, note_type, pinned, relevant)
+        note_id = Notes.create(title, text, note_type, pinned, relevant, client_uuid)
         if note_id == "error in querry" or not note_id:
+            # A duplicate client_uuid means a concurrent retry won the race.
+            if client_uuid:
+                existing = Notes.get_one_by_client_uuid(client_uuid)
+                if existing is not None:
+                    return _serialize_note(existing), 200
             abort(500, message="Could not create note.")
 
         note = Notes.get_one(note_id)
-        N_obj.argus_add_note({"id": note_id, "title": title, "text": text})
+        N_obj.argus_add_note({"id": note_id, "title": title, "text": note["text"]})
         return _serialize_note(note), 201
 
 
@@ -193,6 +216,8 @@ class NoteItem(Resource):
         return _serialize_note(note)
 
     def put(self, n_id):
+        """Partial update: any field left out keeps its current value, so a
+        client changing only the pin state never has to resend the body."""
         claims = get_jwt()
         _require_write(claims)
 
@@ -200,11 +225,26 @@ class NoteItem(Resource):
         if note is None:
             abort(404, message="No note found for this id.")
 
+        # Same op_id as the last applied write: this is a retry of a request
+        # whose response never made it back. Confirm it instead of conflicting.
+        op_id = _arg("op_id")
+        if op_id:
+            op_id = str(op_id)[:40]
+            if note.get("op_id") and note["op_id"] == op_id:
+                return _serialize_note(note)
+
         expected_hash = _arg("v_hash")
         if expected_hash:
             current_hash = note.get("v_hash") or ""
-            if current_hash and current_hash != expected_hash:
-                return {"message": "Note changed on server.", "note": _serialize_note(note)}, 409
+            # legacy_hash covers clients that cached a hash from before v_hash
+            # started covering the title, type, pin and relevance.
+            known = {current_hash, Notes.legacy_hash(note.get("text"))}
+            if current_hash and expected_hash not in known:
+                # op_id tells the client whether this version came from one of
+                # its own earlier attempts, which is not a conflict at all.
+                conflict = _serialize_note(note)
+                conflict["op_id"] = note.get("op_id") or ""
+                return {"message": "Note changed on server.", "note": conflict}, 409
 
         title = _arg("note_title")
         if title is None:
@@ -230,7 +270,7 @@ class NoteItem(Resource):
         except (TypeError, ValueError):
             note_type = note.get("note_type", 0)
 
-        Notes.update_one(n_id, title, note_type, text, int(relevant), int(pinned))
+        Notes.update_one(n_id, title, note_type, text, int(relevant), int(pinned), op_id)
 
         note_ = Notes.get_one(n_id)
         N_obj.argus_edit_note(note_)

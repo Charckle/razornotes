@@ -51,6 +51,19 @@ function toastConflicts(conflicts) {
   return true;
 }
 
+function toastBlocked(blocked) {
+  if (!blocked || !blocked.length) return false;
+  const first = blocked[0];
+  const more = blocked.length > 1 ? ' (+' + (blocked.length - 1) + ' more)' : '';
+  toast('"' + first.title + '" was not accepted: ' + first.message + more, 6000);
+  return true;
+}
+
+function reportSync(result) {
+  if (!result) return false;
+  return toastConflicts(result.conflicts) || toastBlocked(result.blocked);
+}
+
 function closeClipModal() {
   const el = document.getElementById('clip-modal');
   if (el) el.remove();
@@ -311,8 +324,9 @@ async function checkStale() {
     const remote = await sync.serverHash(staleWatchId);
     const local = await db.getNote(staleWatchId);
     const known = (local && local.v_hash) || staleBaseline;
+    // Without a baseline there is nothing to compare against, and claiming the
+    // note changed would leave a banner the user can never clear.
     if (remote && known && remote !== known) showStaleUi();
-    else if (remote && !known) showStaleUi();
     else {
       keepMineUntilLeave = false;
       staleMinimized = false;
@@ -947,7 +961,8 @@ async function renderEdit(id) {
       root.dataset.noteId = String(stored.id);
       if (!hold && !db.isForceLocal() && online) {
         try {
-          const { remap, conflicts } = await sync.pushDirty();
+          const { remap, conflicts, blocked } = await sync.pushDirty();
+          toastBlocked(blocked);
           const mine = (conflicts || []).filter((c) => String(c.fromId) === String(stored.id));
           if (mine.length) {
             toastConflicts(mine);
@@ -1019,6 +1034,7 @@ async function renderSettings() {
   const notes = await db.allNotes();
   const n = notes.length;
   const pending = notes.filter((x) => x.dirty).length;
+  const stuck = notes.filter((x) => x.sync_blocked);
   const ready = notesWithBody(notes);
   const searchLocal = await db.isSearchLocalOnly();
   const store = await storageInfo();
@@ -1029,6 +1045,8 @@ async function renderSettings() {
     <div class="settings">
       <p class="muted">${esc(user)} · ${n} notes cached · ${ready} ready offline · ${pending} pending</p>
       <p class="muted">Last sync: ${esc(lastStr)}</p>
+      ${stuck.length ? `<p class="muted">${stuck.length} note${stuck.length > 1 ? 's were' : ' was'} refused by the server
+        (${esc(stuck[0].sync_blocked.message || 'rejected')}). They are held here and skipped until you sync again.</p>` : ''}
       <h2>This device</h2>
       <p class="muted">${esc(persistLabel)}</p>
       ${store.quota ? `<p class="muted">Storage used: ${esc(store.quota)}</p>` : ''}
@@ -1151,15 +1169,23 @@ async function onAction(act, btn) {
   }
   if (act === 'toggle-pin' || act === 'toggle-rel') {
     const id = coerceId(root.dataset.noteId);
-    const note = await db.getNote(id) || await sync.cacheOpenedNote(id);
-    if (act === 'toggle-pin') note.pinned = !note.pinned;
-    if (act === 'toggle-rel') note.relevant = note.relevant === false;
+    let note;
+    try {
+      // Always go through the cache layer: a raw store row can be a
+      // metadata-only record whose empty body would overwrite the real one.
+      note = await sync.cacheOpenedNote(id);
+    } catch (e) {
+      toast(e.message || 'Could not load note');
+      return;
+    }
+    const field = act === 'toggle-pin' ? 'pinned' : 'relevant';
+    if (field === 'pinned') note.pinned = !note.pinned;
+    else note.relevant = note.relevant === false;
     note.base_hash = note.v_hash;
-    await sync.saveLocalEdit(note);
+    await sync.saveLocalEdit(note, { fields: [field] });
     if (online && !db.isForceLocal()) {
       try {
-        const { conflicts } = await sync.pushDirty();
-        toastConflicts(conflicts);
+        reportSync(await sync.pushDirty());
       } catch { /* queued */ }
     }
     await renderView(note.id);
@@ -1169,8 +1195,7 @@ async function onAction(act, btn) {
     try {
       toast('Syncing…');
       const r = await sync.runSync({ force: true, includeHeld: true });
-      if (toastConflicts(r.conflicts)) { /* already told */ }
-      else toast(r.skipped ? 'Skipped' : 'Synced');
+      if (!reportSync(r)) toast(r.skipped ? 'Skipped' : 'Synced');
     } catch (e) {
       toast(e.message || 'Sync failed');
     }
@@ -1184,7 +1209,7 @@ async function onAction(act, btn) {
     try {
       toast('Downloading…');
       const r = await sync.runSync({ full: true });
-      if (!toastConflicts(r.conflicts)) toast((r.downloaded || 0) + ' notes updated');
+      if (!reportSync(r)) toast((r.downloaded || 0) + ' notes updated');
     } catch (e) {
       toast(e.message || 'Download failed');
     }
@@ -1242,7 +1267,7 @@ root.addEventListener('change', async (ev) => {
       await db.clearHeldFlags();
       toast('Will upload while typing');
       if (online && !db.isForceLocal()) {
-        try { await sync.runSync({ includeHeld: true }); } catch { /* queued */ }
+        try { reportSync(await sync.runSync({ includeHeld: true })); } catch { /* queued */ }
       }
     } else {
       toast('Will upload when you tap Save');
@@ -1275,8 +1300,7 @@ async function refreshOnline({ reroute = false } = {}) {
   updateStatusBar();
   if (online && !db.isForceLocal()) {
     try {
-      const r = await sync.runSync({ skipIds: skipEditIds() });
-      toastConflicts(r.conflicts);
+      reportSync(await sync.runSync({ skipIds: skipEditIds() }));
     } catch { /* stay quiet */ }
   }
   if (reroute) {
@@ -1302,6 +1326,9 @@ async function route() {
   } else {
     root._saveEdit = null;
   }
+  // Leaving the editor: background syncs must stop excluding this note, or it
+  // sits unsent and collects a real conflict later.
+  root._edit = null;
   stopStaleWatch();
   closeClipModal();
   if (!(await requireAuth())) return;

@@ -11,6 +11,38 @@ class DB_upgrade:
         DB_upgrade.add_memory_failure_tracking()
         DB_upgrade.add_memory_reminder_fields()
         DB_upgrade.add_memory_item_show_field()
+        DB_upgrade.add_note_sync_columns()
+
+    # DB_upgrade
+    @staticmethod
+    def add_note_sync_columns():
+        """client_uuid and op_id let the server recognise a retried create or
+        update instead of duplicating it or reporting a false conflict.
+
+        v_hash now covers the title, type, pin and relevance as well as the
+        body, so every existing row is rehashed in the same step.
+        """
+        if check_column_exists("notes", "client_uuid"):
+            return False
+
+        db = DB()
+        db.q_exe_segment("ALTER TABLE `notes` ADD `client_uuid` VARCHAR(40) NULL;", ())
+        db.finish_()
+
+        if not check_column_exists("notes", "op_id"):
+            db = DB()
+            db.q_exe_segment("ALTER TABLE `notes` ADD `op_id` VARCHAR(40) NULL;", ())
+            db.finish_()
+
+        db = DB()
+        db.q_exe_segment("ALTER TABLE `notes` ADD UNIQUE INDEX `notes_client_uuid` (`client_uuid`);", ())
+        db.finish_()
+
+        from app.main_page_module.r_proc import HL_proc
+        HL_proc.create_hashes_()
+
+        return True
+
     
     # DB_upgrade
     @staticmethod

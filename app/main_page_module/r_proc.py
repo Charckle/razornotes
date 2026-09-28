@@ -2,7 +2,6 @@ from app.main_page_module.models import Notes, Tag
 from app.main_page_module.other import Randoms
 from app.main_page_module.argus import WSearch
 import json
-import hashlib
 
 
 class Import_Ex:
@@ -123,5 +122,6 @@ class HL_proc:
 
         for no in all_notes:
             note_id = no["id"]
-            v_hash = hashlib.md5(no["text"].encode()).hexdigest()
+            v_hash = Notes.content_hash(no["title"], no["text"], no["note_type"],
+                                        no["pinned"], no["relevant"])
             Notes.set_hash(note_id, v_hash)

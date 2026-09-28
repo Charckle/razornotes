@@ -41,24 +41,34 @@ class N_obj:
     
     # N_obj
     @staticmethod
+    def _argus_apply(action, payload):
+        """The note is already committed by the time we index it. A locked or
+        corrupt index must not turn a successful write into a 500, because the
+        client would retry and create a duplicate."""
+        try:
+            if not WSearch.index_exists():
+                N_obj.argus_create_index()
+            action(payload)
+        except Exception:
+            app.logger.exception("Search index update failed; note was saved")
+            return False
+        
+        return True
+    
+    # N_obj
+    @staticmethod
     def argus_add_note(note_):
-        if not WSearch.index_exists():
-            N_obj.argus_create_index()
-        WSearch.add_item(note_)    
+        return N_obj._argus_apply(WSearch.add_item, note_)
     
     # N_obj
     @staticmethod
     def argus_edit_note(note_):
-        if not WSearch.index_exists():
-            N_obj.argus_create_index()
-        WSearch.edit_item(note_)
+        return N_obj._argus_apply(WSearch.edit_item, note_)
         
     # N_obj
     @staticmethod
     def argus_delete_note(note_id):
-        if not WSearch.index_exists():
-            N_obj.argus_create_index()
-        WSearch.delete_item(note_id)        
+        return N_obj._argus_apply(WSearch.delete_item, note_id)
     
     # N_obj
     @staticmethod
