@@ -164,11 +164,6 @@ class N_obj:
         if os.path.exists(file_path):
             os.remove(file_path) 
     
-    def similar_notes(self, key_):
-        res, user_notes = N_obj.notes_n_index(key_) 
-        
-        return {r[0]: [r[1], r[2]] for r in res if (int(r[0]) in user_notes) and int(r[0]) != self.n_id}
-    
     @staticmethod
     def search(key_):
         res, user_notes = N_obj.notes_n_index(key_) 

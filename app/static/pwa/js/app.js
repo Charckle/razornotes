@@ -545,7 +545,7 @@ function registerServiceWorker() {
   }).catch(() => {});
 }
 
-function shell(title, inner, { back = false, fab = false, editFab = false, extra = '', mainClass = '' } = {}) {
+function shell(title, inner, { back = false, fab = false, editFab = false, editorFabs = false, extra = '', mainClass = '' } = {}) {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const onHome = title === APP_NAME;
   const pageTitle = onHome ? '<span class="topbar-spacer"></span>' : `<h1>${esc(title)}</h1>`;
@@ -564,6 +564,11 @@ function shell(title, inner, { back = false, fab = false, editFab = false, extra
     <div class="main ${esc(mainClass)}">${inner}</div>
     ${fab ? `<button class="fab" data-act="new" aria-label="New note">+</button>` : ''}
     ${editFab ? `<button class="fab fab-edit" data-act="edit-note" aria-label="Edit note">✎</button>` : ''}
+    ${editorFabs ? `<button class="fab fab-save" data-act="save-stay" aria-label="Save">✓</button>
+    <div class="fab-history">
+      <button class="fab" data-act="undo" aria-label="Undo" disabled>↶</button>
+      <button class="fab" data-act="redo" aria-label="Redo" disabled>↷</button>
+    </div>` : ''}
   `;
 }
 
@@ -907,7 +912,7 @@ async function renderEdit(id) {
       </div>
     </div>
   `;
-  root.innerHTML = shell(id === 'new' ? 'New note' : 'Edit', body, { back: true, mainClass: 'edit-screen' });
+  root.innerHTML = shell(id === 'new' ? 'New note' : 'Edit', body, { back: true, editorFabs: true, mainClass: 'edit-screen' });
   const state = {
     note,
     orig: {
@@ -921,7 +926,7 @@ async function renderEdit(id) {
   root._holdPush = false;
   root.dataset.noteId = String(note.id);
   let saveChain = Promise.resolve();
-  const save = (andLeave, silent, localOnly) => {
+  const save = (andLeave, silent, localOnly, push) => {
     const job = async () => {
       const titleEl = root.querySelector('#title');
       const bodyEl = root.querySelector('#body');
@@ -934,7 +939,10 @@ async function renderEdit(id) {
         && text === (state.orig.text || '')
         && pinned === Boolean(state.orig.pinned)
         && relevant === (state.orig.relevant !== false);
-      if (same && !andLeave) return;
+      if (same && !andLeave && !(push && (state.note.dirty || state.note.held))) {
+        if (push && !silent) toast('No changes to save');
+        return;
+      }
       if (same && andLeave && !state.note.dirty && !state.note.held) {
         const stay = openInEdit.has(String(state.note.id)) || await db.isOpenInEdit(state.note.id);
         if (stay) return;
@@ -945,7 +953,8 @@ async function renderEdit(id) {
         return;
       }
       const mode = await db.getSaveMode();
-      const hold = Boolean(localOnly || (root._holdPush && !andLeave) || (mode === 'manual' && !andLeave));
+      const explicit = andLeave || push;
+      const hold = Boolean(localOnly || (root._holdPush && !explicit) || (mode === 'manual' && !explicit));
       const stored = await sync.saveLocalEdit({
         id: state.note.id,
         title: title || 'Untitled',
@@ -1013,7 +1022,79 @@ async function renderEdit(id) {
     root._editTimer = setTimeout(() => save(false, true), 800);
     paintStaleBanner();
   };
-  root.querySelector('#body').addEventListener('input', persistSoon);
+  const bodyEl = root.querySelector('#body');
+  const undoBtn = root.querySelector('[data-act="undo"]');
+  const redoBtn = root.querySelector('[data-act="redo"]');
+  const snap = () => ({ text: bodyEl.value, start: bodyEl.selectionStart, end: bodyEl.selectionEnd });
+  const hist = { undo: [], redo: [], committed: snap(), open: false, timer: null };
+  const paintHistory = () => {
+    undoBtn.disabled = !hist.undo.length && !hist.open;
+    redoBtn.disabled = !hist.redo.length;
+  };
+  const openGroup = (before) => {
+    if (hist.open) return;
+    hist.undo.push(before);
+    if (hist.undo.length > 200) hist.undo.shift();
+    hist.redo = [];
+    hist.open = true;
+  };
+  const closeGroup = () => {
+    clearTimeout(hist.timer);
+    hist.open = false;
+    hist.committed = snap();
+  };
+  const restore = (s) => {
+    bodyEl.value = s.text;
+    bodyEl.setSelectionRange(s.start, s.end);
+    hist.committed = snap();
+    persistSoon();
+    paintHistory();
+  };
+  const undo = () => {
+    if (hist.open) closeGroup();
+    if (!hist.undo.length) return;
+    hist.redo.push(snap());
+    restore(hist.undo.pop());
+  };
+  const redo = () => {
+    if (hist.open) closeGroup();
+    if (!hist.redo.length) return;
+    hist.undo.push(snap());
+    restore(hist.redo.pop());
+  };
+  bodyEl.addEventListener('beforeinput', (ev) => {
+    if (ev.inputType === 'historyUndo' || ev.inputType === 'historyRedo') {
+      ev.preventDefault();
+      if (ev.inputType === 'historyUndo') undo();
+      else redo();
+      return;
+    }
+    openGroup(snap());
+  });
+  bodyEl.addEventListener('input', (ev) => {
+    openGroup(hist.committed);
+    clearTimeout(hist.timer);
+    if (ev.inputType === 'insertLineBreak' || (ev.data && /\s/.test(ev.data))) closeGroup();
+    else hist.timer = setTimeout(closeGroup, 600);
+    paintHistory();
+    persistSoon();
+  });
+  bodyEl.addEventListener('keydown', (ev) => {
+    if (!(ev.ctrlKey || ev.metaKey) || ev.altKey) return;
+    const key = ev.key.toLowerCase();
+    if (key === 'z' && !ev.shiftKey) { ev.preventDefault(); undo(); }
+    else if ((key === 'z' && ev.shiftKey) || key === 'y') { ev.preventDefault(); redo(); }
+  });
+  root.querySelectorAll('.fab-save, .fab-history .fab').forEach((b) => {
+    b.addEventListener('pointerdown', (ev) => ev.preventDefault());
+  });
+  root._undoEdit = undo;
+  root._redoEdit = redo;
+  root._saveStay = () => {
+    clearTimeout(root._editTimer);
+    root._editTimer = null;
+    return save(false, false, false, true);
+  };
   root.querySelector('#title').addEventListener('input', persistSoon);
   root.querySelector('#pinned').addEventListener('change', persistSoon);
   root.querySelector('#relevant').addEventListener('change', persistSoon);
@@ -1152,6 +1233,9 @@ async function onAction(act, btn) {
     return;
   }
   if (act === 'save' && root._saveEdit) { await root._saveEdit(); return; }
+  if (act === 'save-stay' && root._saveStay) { await root._saveStay(); return; }
+  if (act === 'undo' && root._undoEdit) { root._undoEdit(); return; }
+  if (act === 'redo' && root._redoEdit) { root._redoEdit(); return; }
   if (act === 'edit-note') {
     go('/edit/' + root.dataset.noteId);
     return;

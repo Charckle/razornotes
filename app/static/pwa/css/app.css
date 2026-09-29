@@ -13,6 +13,8 @@
   --accent: #c9a227;
   --fab: #ffdd09;
   --fab-edit: #007aff;
+  --fab-save: #2e9d44;
+  --fab-mini: #6c6f75;
   --danger: #c0392b;
   --ok: #2e7d32;
   --warn: #e67e22;
@@ -32,6 +34,8 @@
   --accent: #e0c35a;
   --fab: #e0c35a;
   --fab-edit: #4da3ff;
+  --fab-save: #3fb95a;
+  --fab-mini: #55576a;
   --shadow: 0 2px 8px rgba(0, 0, 0, .4);
 }
 
@@ -145,7 +149,7 @@ html, body {
 .main.edit-screen {
   display: flex;
   flex-direction: column;
-  padding-bottom: .75rem;
+  padding-bottom: 5rem;
   overflow: hidden;
 }
 
@@ -226,7 +230,23 @@ html, body {
   background: var(--fab-edit); color: #fff;
   font-size: 1.35rem;
 }
-.fab:active { transform: scale(.96); }
+.fab-save {
+  left: 1.1rem; right: auto;
+  background: var(--fab-save); color: #fff;
+  font-size: 1.5rem;
+}
+.fab-history {
+  position: fixed; right: 1.1rem; bottom: 1.1rem;
+  display: flex; gap: .6rem; z-index: 15;
+}
+.fab-history .fab {
+  position: static;
+  width: 48px; height: 48px;
+  background: var(--fab-mini); color: #fff;
+  font-size: 1.4rem;
+}
+.fab:disabled { opacity: .4; cursor: default; box-shadow: none; }
+.fab:active:not(:disabled) { transform: scale(.96); }
 
 .note-view .title { font-size: 1.4rem; font-weight: 700; margin: 0 0 .4rem; }
 .note-body {
