@@ -7,6 +7,7 @@ from app.main_page_module.p_objects.audit_log import AuditLog
 from app.main_page_module.models import Notes, Tag
 from app.main_page_module.other import Randoms
 from app.main_page_module.argus import WSearch
+from app.main_page_module.p_objects.todo_o import Todo, TODO_TYPE
 
 
 class N_obj:
@@ -27,6 +28,21 @@ class N_obj:
         self.tags = Tag.get_all_of_note(n_id)
         self.type_ = self.qrry["note_type"]
         self.type_clr = self.get_type_clr()
+
+    # N_obj
+    @property
+    def is_todo(self):
+        return self.type_ == TODO_TYPE
+
+    # N_obj
+    @property
+    def todo_progress(self):
+        return Todo.progress(self.qrry["text"])
+
+    # N_obj
+    @property
+    def todo_preview(self):
+        return Todo.preview(self.qrry["text"], 60)
     
     # N_obj
     @staticmethod
@@ -99,7 +115,8 @@ class N_obj:
     
     def get_type_clr(self):    
         colors = {0: ["Note","warning"],
-                    1: ["Task", "dark"]}
+                    1: ["Task", "dark"],
+                    TODO_TYPE: ["To-do", "success"]}
         
         return colors[self.type_]    
     
@@ -191,12 +208,18 @@ class N_obj:
     # N_obj
     @staticmethod
     def pagination_all_active(page_display, page_offset):
-        #print(page_offset)
-        #print(page_display)
+        return N_obj.pagination(Notes.count_active_notes(), page_display, page_offset)
+
+    # N_obj
+    @staticmethod
+    def pagination_todos(page_display, page_offset):
+        return N_obj.pagination(Notes.count_active_todos(), page_display, page_offset)
+
+    # N_obj
+    @staticmethod
+    def pagination(notes_len, page_display, page_offset):
         if page_offset < 0:
             page_offset = 0
-
-        notes_len = len(Notes.get_all_active())
 
         all_pages_len = math.ceil(notes_len / page_display)
         all_pages = range(0, all_pages_len)

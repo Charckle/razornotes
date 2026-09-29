@@ -43,6 +43,7 @@
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('notes_module.note_new') }}">Blank Note</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('notes_module.todo_new') }}"><i class="bi bi-check2-square"></i> To-do</a></li>
                 {% if templates %}<li><hr class="dropdown-divider"></li>{% endif %}
                 {% for tmpl in templates %}
                 <li><a class="dropdown-item" href="{{ url_for('notes_module.note_new', tmpl_id=tmpl['id']) }}">{{ tmpl['name'] }}</a></li>
@@ -51,6 +52,9 @@
             </li>
             <li class="nav-item {% block nav_all_notes %}{% endblock nav_all_notes %}">
               <a class="nav-link" href="{{ url_for('notes_module.notes_all') }}">All Notes</a>
+            </li>
+            <li class="nav-item {% block nav_todos %}{% endblock nav_todos %}">
+              <a class="nav-link" href="{{ url_for('notes_module.todos_all') }}"><i class="bi bi-check2-square"></i> To-dos</a>
             </li>
             <li class="nav-item {% block nav_all_tags %}{% endblock nav_all_tags %}">
               <a class="nav-link" href="{{ url_for('notes_module.tags_all') }}">All Tags</a>

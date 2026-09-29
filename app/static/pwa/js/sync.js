@@ -404,6 +404,7 @@ export async function pullMeta() {
       v_hash: hashMatch ? (item.v_hash || '') : ((local && local.v_hash) || ''),
       active: true,
       note_type: item.note_type || 0,
+      todo: item.todo || null,
       dirty: false,
       pending: null,
       body_missing: !hashMatch

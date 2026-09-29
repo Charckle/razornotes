@@ -8,6 +8,7 @@ const PRECACHE = [
   '/app/assets/js/db.js',
   '/app/assets/js/sync.js',
   '/app/assets/js/markdown.js',
+  '/app/assets/js/todo.js',
   '/app/icon.ico',
   '/app/manifest.webmanifest'
 ];

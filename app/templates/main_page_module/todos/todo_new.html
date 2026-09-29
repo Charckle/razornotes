@@ -1,0 +1,42 @@
+{% extends "main_page_module/base.html" %}
+
+{% block nav_new_note %}active{% endblock nav_new_note %}
+
+{% block content %}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2"><!-- aside --></div>
+    <div class="col-md-8">
+
+      <legend>New To-do</legend>
+
+      <form method="POST" action="{{ url_for('notes_module.todo_new') }}" accept-charset="UTF-8" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        <input type="hidden" id="id" name="id" value="999">
+
+        <div class="row">
+          <div class="col-md-8 mb-3">
+            {{ form.title.label }}
+            {{ form.title(class="form-control", placeholder="Title of the to-do", autofocus="") }}
+          </div>
+          <div class="col-md-4 mb-3">
+            {{ form.file_u.label }}
+            {{ form.file_u(class="form-control") }}
+          </div>
+        </div>
+
+        <div class="mb-3">{{ form.pinned(class="form-check-input") }} {{ form.pinned.label(class="form-check-label") }}</div>
+
+        {% include "main_page_module/todos/_todo_editor.html" %}
+
+        <div class="mb-3">
+          {{ form.submit(class="form-control btn btn-dark mb-2", value="Create to-do") }}
+        </div>
+      </form>
+
+    </div>
+    <div class="col-md-2"><!-- aside --></div>
+  </div>
+</div>
+{% endblock %}

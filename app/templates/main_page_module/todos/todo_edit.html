@@ -1,0 +1,45 @@
+{% extends "main_page_module/base.html" %}
+
+{% block nav_todos %}active{% endblock nav_todos %}
+
+{% block content %}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2"><!-- aside --></div>
+    <div class="col-md-8">
+
+      <legend>Edit To-do</legend>
+
+      <form id="editForm" method="POST" action="{{ url_for('notes_module.todo_edit') }}" accept-charset="UTF-8" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        {{ form.id }}
+
+        <div class="row">
+          <div class="col-md-8 mb-3">
+            {{ form.title.label }}
+            {{ form.title(class="form-control", placeholder="Title") }}
+          </div>
+          <div class="col-md-4 mb-3">
+            {{ form.file_u.label }}
+            {{ form.file_u(class="form-control") }}
+          </div>
+        </div>
+
+        <div class="mb-3">{{ form.pinned(class="form-check-input") }} {{ form.pinned.label(class="form-check-label") }}</div>
+
+        {% include "main_page_module/todos/_todo_editor.html" %}
+
+        <div class="mb-3 d-flex gap-2">
+          {{ form.submit(class="btn btn-dark flex-grow-1") }}
+          <a href="{{ url_for('notes_module.note_view', note_id=note['id']) }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+
+    </div>
+    <div class="col-md-2"><!-- aside --></div>
+  </div>
+</div>
+
+<button type="submit" class="rn-fab rn-fab-left" form="editForm">Save</button>
+{% endblock %}

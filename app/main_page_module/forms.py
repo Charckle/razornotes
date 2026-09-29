@@ -32,6 +32,21 @@ class Note(FlaskForm):
     file_u = MultipleFileField("File(s) to upload")   
     
     submit = SubmitField('Submit changes')
+
+
+class TodoF(FlaskForm):
+    id = HiddenField('id', [validators.InputRequired(message='Dont fiddle around with the code!')])
+
+    title = StringField('Title', [validators.InputRequired(message='You need to specify a title'),
+                                  validators.Length(max=128)])
+
+    todo_text = TextAreaField('Items')
+
+    pinned = BooleanField('Pin to the front page?')
+
+    file_u = MultipleFileField("File(s) to upload")
+
+    submit = SubmitField('Save')
     
     
 class Note_tmpl(FlaskForm):
@@ -166,6 +181,7 @@ class ImportNotes(FlaskForm):
     submit = SubmitField('Submit File')
  
 form_dicts = {"Note": Note,
+              "Todo": TodoF,
               "Login": Login,
               "User": UserF,
               "Register": Register,

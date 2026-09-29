@@ -1,0 +1,12 @@
+<div class="mb-3 rn-todo-editor" id="todoEditor">
+  <label class="form-label">{{ form.todo_text.label.text }}</label>
+  <ul class="list-unstyled mb-2 rn-todo-rows"></ul>
+  <button type="button" class="btn btn-outline-secondary btn-sm rn-todo-add"><i class="bi bi-plus-lg"></i> Add item</button>
+  <small class="text-muted ms-2">Enter adds the next item, Backspace on an empty item removes it.</small>
+  {{ form.todo_text(class="d-none") }}
+</div>
+
+<script src="{{ url_for('static', filename='main_page_module/js/todo.js') }}"></script>
+<script>
+  initTodoEditor(document.getElementById('todoEditor'), document.getElementById('todo_text'));
+</script>

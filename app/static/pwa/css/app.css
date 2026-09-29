@@ -388,6 +388,66 @@ a.inline { color: inherit; }
 .files-list li { display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem; }
 .files-list .fname { flex: 1; word-break: break-all; }
 
+.tabs {
+  display: flex; gap: .35rem; margin-bottom: .65rem;
+}
+.tab {
+  flex: 1; padding: .5rem .8rem; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent; color: var(--ink);
+  font: inherit; font-size: .9rem; cursor: pointer;
+}
+.tab.active { background: var(--bar); color: var(--bar-ink); border-color: var(--bar); }
+
+.card .badge.todo { background: var(--ok); color: #fff; }
+
+.todo-progress {
+  font-size: .8rem; font-weight: 600; vertical-align: middle;
+  padding: .1rem .5rem; border-radius: 999px;
+  background: var(--ok); color: #fff;
+}
+.todo-list { list-style: none; padding: 0; margin: 0; }
+.todo-item label {
+  display: flex; gap: .65rem; align-items: flex-start;
+  padding: .45rem .1rem; cursor: pointer;
+  font-size: 1.02rem; line-height: 1.35;
+}
+.todo-item input, .todo-row .todo-check {
+  width: 1.2rem; height: 1.2rem; margin: .1rem 0 0; flex-shrink: 0;
+  accent-color: var(--ok);
+}
+.todo-item span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.todo-item.done span, .todo-row.done .todo-input {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.todo-divider {
+  margin: .5rem 0 .2rem; padding-top: .5rem;
+  border-top: 1px solid var(--border);
+  font-size: .75rem; color: var(--muted);
+}
+
+.todo-editor {
+  flex: 1; min-height: 0; overflow: auto;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--card); padding: .5rem .6rem;
+}
+.todo-rows { list-style: none; padding: 0; margin: 0 0 .4rem; }
+.todo-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .3rem; }
+.todo-row .todo-check { margin: 0; }
+.todo-input {
+  flex: 1; min-width: 0;
+  border: 0; border-bottom: 1px solid transparent; border-radius: 0;
+  background: transparent; color: var(--ink);
+  font: inherit; font-size: 1rem; padding: .35rem .1rem;
+}
+.todo-input:focus { outline: none; border-bottom-color: var(--accent); }
+.todo-del {
+  border: 0; background: transparent; color: var(--muted);
+  font-size: 1.2rem; line-height: 1; padding: .2rem .4rem; cursor: pointer;
+  border-radius: 6px;
+}
+.todo-del:hover { color: var(--danger); }
+
 .pager {
   display: flex; align-items: center; justify-content: center; gap: .75rem;
   margin: 1rem 0 0; padding-bottom: .5rem;

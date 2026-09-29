@@ -11,6 +11,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, \
 from app.main_page_module.models import Notes, UserM, GroupsAccessM
 
 from app.main_page_module.p_objects.note_o import N_obj
+from app.main_page_module.p_objects.todo_o import Todo, TODO_TYPE
 
 from app import clipboard
 
@@ -43,7 +44,8 @@ class Resource(flask_restful.Resource):
 #   date_mod  : str
 #   v_hash    : str    — hash of title + text + note_type + pinned + relevant
 #   active    : bool
-#   note_type : int    — 0 note, 1 task
+#   note_type : int    — 0 note, 1 task, 2 to-do (text is a "- [ ] item" checklist)
+#   todo      : dict   — meta only, for to-dos: {"done": int, "total": int}
 #
 # Writes are idempotent: POST /notes accepts client_uuid and PUT /note/<id>
 # accepts op_id, so a retry after a lost response confirms the first write
@@ -152,6 +154,9 @@ class NoteMeta(Resource):
             item = _serialize_note(note_, truncate=100)
             item["preview"] = item["text"]
             del item["text"]
+            if item["note_type"] == TODO_TYPE:
+                item["preview"] = Todo.preview(note_["text"])
+                item["todo"] = Todo.progress(note_["text"])
             notes.append(item)
         return notes
 
@@ -191,6 +196,11 @@ class NoteAll(Resource):
             note_type = 0
         pinned = int(_as_bool(_arg("pinned"), False))
         relevant = int(_as_bool(_arg("relevant"), True))
+        if note_type == TODO_TYPE:
+            # To-dos never appear in Latest, so "relevant" only decides
+            # whether a pinned one shows on the front page.
+            relevant = 1
+            text = Todo.clean(text)
 
         note_id = Notes.create(title, text, note_type, pinned, relevant, client_uuid)
         if note_id == "error in querry" or not note_id:
@@ -269,6 +279,14 @@ class NoteItem(Resource):
             note_type = int(note_type)
         except (TypeError, ValueError):
             note_type = note.get("note_type", 0)
+
+        # Notes and to-dos store different kinds of text; switching between
+        # them is not supported.
+        if (note_type == TODO_TYPE) != (note.get("note_type") == TODO_TYPE):
+            note_type = note.get("note_type", 0)
+        if note_type == TODO_TYPE:
+            relevant = True
+            text = Todo.clean(text)
 
         Notes.update_one(n_id, title, note_type, text, int(relevant), int(pinned), op_id)
 

@@ -382,16 +382,44 @@ class Notes:
 
         db = DB()
         sql_command = f"""SELECT id, title, note_type, text, active, relevant, pinned, v_hash 
-        FROM notes WHERE active = 1 LIMIT %s OFFSET %s;"""
+        FROM notes WHERE active = 1 AND note_type != 2 LIMIT %s OFFSET %s;"""
         
         return db.q_r_all(sql_command, (display, offset))
+
+    # Notes
+    @staticmethod
+    def count_active_notes():
+        db = DB()
+        sql_command = f"""SELECT COUNT(*) AS n FROM notes WHERE active = 1 AND note_type != 2;"""
+
+        return db.q_r_one(sql_command, ())["n"]
+
+    # Notes
+    @staticmethod
+    def get_all_todos_offset(display, offset):
+        offset = offset * display
+
+        db = DB()
+        sql_command = f"""SELECT id, title, note_type, text, active, relevant, pinned, v_hash, date_mod
+        FROM notes WHERE active = 1 AND note_type = 2
+        ORDER BY date_mod DESC LIMIT %s OFFSET %s;"""
+
+        return db.q_r_all(sql_command, (display, offset))
+
+    # Notes
+    @staticmethod
+    def count_active_todos():
+        db = DB()
+        sql_command = f"""SELECT COUNT(*) AS n FROM notes WHERE active = 1 AND note_type = 2;"""
+
+        return db.q_r_one(sql_command, ())["n"]
     
     # Notes
     @staticmethod    
     def get_all_active_for_index():
         db = DB()
         sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text, pinned, relevant, date_mod FROM notes 
-        WHERE notes.relevant = 1 AND notes.active = 1 AND notes.pinned = 0
+        WHERE notes.relevant = 1 AND notes.active = 1 AND notes.pinned = 0 AND notes.note_type != 2
         ORDER BY notes.date_mod DESC LIMIT 15;"""
         
         return db.q_r_all(sql_command, ())  
@@ -556,7 +584,7 @@ class Notes:
         sql_command = f"""SELECT id, title, note_type, LEFT(notes.text, 50) as text
         FROM notes_recently_viewed
         LEFT JOIN notes ON notes_recently_viewed.note_id = notes.id 
-        WHERE notes.relevant = 1 AND notes.active = 1 AND notes.pinned = 0
+        WHERE notes.relevant = 1 AND notes.active = 1 AND notes.pinned = 0 AND notes.note_type != 2
         ORDER BY view_datetime DESC LIMIT 6"""
 
         return db.q_r_all(sql_command, ())       

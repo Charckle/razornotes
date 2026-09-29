@@ -2,6 +2,7 @@ import * as db from './db.js';
 import * as api from './api.js';
 import * as sync from './sync.js';
 import { renderMarkdown } from './markdown.js';
+import * as todo from './todo.js';
 
 const APP_NAME = window.RN?.appName || 'Razor Notes';
 const HOME_LATEST = 20;
@@ -402,7 +403,12 @@ function parseHash() {
     const page = Math.max(0, parseInt(parts[1], 10) || 0);
     return { name: 'all', page };
   }
+  if (parts[0] === 'todos') {
+    const page = Math.max(0, parseInt(parts[1], 10) || 0);
+    return { name: 'todos', page };
+  }
   if (parts[0] === 'note' && parts[1]) return { name: 'view', id: coerceId(parts[1]) };
+  if (parts[0] === 'edit' && parts[1] === 'new-todo') return { name: 'edit', id: 'new', todo: true };
   if (parts[0] === 'edit') return { name: 'edit', id: parts[1] ? coerceId(parts[1]) : 'new' };
   if (parts[0] === 'settings') return { name: 'settings' };
   return { name: 'list' };
@@ -545,7 +551,7 @@ function registerServiceWorker() {
   }).catch(() => {});
 }
 
-function shell(title, inner, { back = false, fab = false, editFab = false, editorFabs = false, extra = '', mainClass = '' } = {}) {
+function shell(title, inner, { back = false, fab = false, fabAct = 'new', editFab = false, editorFabs = false, historyFabs = true, extra = '', mainClass = '' } = {}) {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const onHome = title === APP_NAME;
   const pageTitle = onHome ? '<span class="topbar-spacer"></span>' : `<h1>${esc(title)}</h1>`;
@@ -562,10 +568,10 @@ function shell(title, inner, { back = false, fab = false, editFab = false, edito
     <div class="status-bar ${statusClass()}"><span class="dot"></span><span>${esc(statusText())}</span></div>
     ${!standalone && extra === 'list' ? `<div class="install-hint">Install: browser menu → Add to Home screen. Then this app works offline.</div>` : ''}
     <div class="main ${esc(mainClass)}">${inner}</div>
-    ${fab ? `<button class="fab" data-act="new" aria-label="New note">+</button>` : ''}
+    ${fab ? `<button class="fab" data-act="${esc(fabAct)}" aria-label="${fabAct === 'new-todo' ? 'New to-do' : 'New note'}">+</button>` : ''}
     ${editFab ? `<button class="fab fab-edit" data-act="edit-note" aria-label="Edit note">✎</button>` : ''}
-    ${editorFabs ? `<button class="fab fab-save" data-act="save-stay" aria-label="Save">✓</button>
-    <div class="fab-history">
+    ${editorFabs ? `<button class="fab fab-save" data-act="save-stay" aria-label="Save">✓</button>` : ''}
+    ${editorFabs && historyFabs ? `<div class="fab-history">
       <button class="fab" data-act="undo" aria-label="Undo" disabled>↶</button>
       <button class="fab" data-act="redo" aria-label="Redo" disabled>↷</button>
     </div>` : ''}
@@ -619,11 +625,15 @@ function noteCard(n) {
   const cls = ['card'];
   if (n.dirty) cls.push('dirty');
   if (db.isLocalId(n.id)) cls.push('local-only');
-  const preview = sync.listPreview(n);
+  const isTodo = todo.isTodo(n);
+  const hasBody = Boolean(n.text) && !n.body_missing;
+  const preview = isTodo && hasBody ? todo.preview(n.text) : sync.listPreview(n);
+  const prog = isTodo ? (hasBody ? todo.progress(n.text) : n.todo) : null;
   const openEdit = openInEdit.has(String(n.id));
   const badges = [
     n.pinned ? '<span class="badge">Pinned</span>' : '',
     n.note_type === 1 ? '<span class="badge">Task</span>' : '',
+    isTodo ? `<span class="badge todo">To-do${prog ? ' ' + prog.done + '/' + prog.total : ''}</span>` : '',
     openEdit ? '<span class="badge">Edit</span>' : '',
     n.held ? '<span class="badge">Draft</span>' : (n.dirty ? '<span class="badge">Pending</span>' : '')
   ].join('');
@@ -659,7 +669,8 @@ async function loadNotes() {
         relevant: m.relevant !== false,
         date_mod: m.date_mod,
         v_hash: m.v_hash,
-        note_type: m.note_type || 0
+        note_type: m.note_type || 0,
+        todo: m.todo || null
       }));
       const dirtyIds = new Set(dirty.map((d) => String(d.id)));
       notes = dirty.concat(remote.filter((n) => !dirtyIds.has(String(n.id))));
@@ -766,12 +777,32 @@ async function runSearch(cached) {
   };
 }
 
+function tabsHtml(active) {
+  return `<nav class="tabs">
+    <button class="tab${active === 'notes' ? ' active' : ''}" data-act="tab-notes">Notes</button>
+    <button class="tab${active === 'todos' ? ' active' : ''}" data-act="tab-todos">To-dos</button>
+  </nav>`;
+}
+
+function pagerHtml(total, page, pages) {
+  if (total <= ALL_PAGE_SIZE) return '';
+  return `<div class="pager">
+    <button class="btn ghost" data-act="page-prev" ${page <= 0 ? 'disabled' : ''}>Prev</button>
+    <span class="muted">Page ${page + 1} / ${pages}</span>
+    <button class="btn ghost" data-act="page-next" ${page >= pages - 1 ? 'disabled' : ''}>Next</button>
+  </div>`;
+}
+
+// To-dos only reach the home screen when pinned; they have their own tab.
 function homeBody(notes, ph, hint) {
+  const plain = notes.filter((n) => !todo.isTodo(n));
   const pinned = notes.filter((n) => n.pinned && n.relevant !== false).sort(byDateDesc);
-  const rest = notes.filter((n) => !n.pinned && (n.relevant !== false || n.dirty || db.isLocalId(n.id))).sort(byDateDesc);
+  const rest = plain.filter((n) => !n.pinned && (n.relevant !== false || n.dirty || db.isLocalId(n.id))).sort(byDateDesc);
   const latest = rest.slice(0, HOME_LATEST);
-  const showAll = notes.length > pinned.length + latest.length || rest.length > HOME_LATEST;
+  const pinnedPlain = pinned.filter((n) => !todo.isTodo(n)).length;
+  const showAll = plain.length > pinnedPlain + latest.length || rest.length > HOME_LATEST;
   return `
+    ${tabsHtml('notes')}
     ${searchBox(ph)}
     ${hint ? `<p class="muted search-hint">${esc(hint)}</p>` : ''}
     ${downloadOfferHtml()}
@@ -793,6 +824,7 @@ async function renderList() {
       ? 'Cached results (server unreachable)'
       : 'Results';
     const body = `
+      ${tabsHtml('notes')}
       ${searchBox(ph)}
       ${downloadOfferHtml()}
       ${found.notes.length === 0 ? `<div class="empty">No matches.</div>` : `<div class="section-label">${label}</div>${found.notes.map(noteCard).join('')}`}
@@ -820,7 +852,7 @@ async function renderAll(page) {
     bindSearch();
     return;
   }
-  let notes = cached.slice().sort(byDateDesc);
+  let notes = cached.filter((n) => !todo.isTodo(n)).sort(byDateDesc);
   const pages = Math.max(1, Math.ceil(notes.length / ALL_PAGE_SIZE));
   page = Math.min(Math.max(0, page), pages - 1);
   const slice = notes.slice(page * ALL_PAGE_SIZE, (page + 1) * ALL_PAGE_SIZE);
@@ -830,15 +862,29 @@ async function renderAll(page) {
     ${downloadOfferHtml()}
     ${hint}
     ${notes.length === 0 ? `<div class="empty">No notes.</div>` : `<div class="section-label">All notes</div>${slice.map(noteCard).join('')}`}
-    ${notes.length > ALL_PAGE_SIZE ? `<div class="pager">
-      <button class="btn ghost" data-act="page-prev" ${page <= 0 ? 'disabled' : ''}>Prev</button>
-      <span class="muted">Page ${page + 1} / ${pages}</span>
-      <button class="btn ghost" data-act="page-next" ${page >= pages - 1 ? 'disabled' : ''}>Next</button>
-    </div>` : ''}
+    ${pagerHtml(notes.length, page, pages)}
   `;
   root.innerHTML = shell('All notes', body, { back: true, fab: true });
   root.dataset.page = String(page);
+  root.dataset.pager = 'all';
   bindSearch();
+}
+
+async function renderTodos(page) {
+  const todos = (await loadNotes()).filter(todo.isTodo).sort(byDateDesc);
+  const pages = Math.max(1, Math.ceil(todos.length / ALL_PAGE_SIZE));
+  page = Math.min(Math.max(0, page), pages - 1);
+  const slice = todos.slice(page * ALL_PAGE_SIZE, (page + 1) * ALL_PAGE_SIZE);
+  const body = `
+    ${tabsHtml('todos')}
+    ${todos.length === 0
+      ? `<div class="empty">No to-dos on this device yet. Tap + to make one.</div>`
+      : `<div class="section-label">To-dos</div>${slice.map(noteCard).join('')}`}
+    ${pagerHtml(todos.length, page, pages)}
+  `;
+  root.innerHTML = shell('To-dos', body, { fab: true, fabAct: 'new-todo' });
+  root.dataset.page = String(page);
+  root.dataset.pager = 'todos';
 }
 
 async function renderView(id) {
@@ -866,6 +912,10 @@ async function renderView(id) {
         ${canDl ? '' : '<p class="muted">Downloads need a connection.</p>'}`;
     }
   }
+  if (todo.isTodo(note)) {
+    renderTodoView(note, filesHtml);
+    return;
+  }
   const openEdit = openInEdit.has(String(note.id));
   const body = `
     <article class="note-view">
@@ -886,8 +936,69 @@ async function renderView(id) {
   startStaleWatch(note.id, 'view', note.v_hash);
 }
 
-async function renderEdit(id) {
-  let note = { id: db.newLocalId(), title: '', text: '', pinned: false, relevant: true, note_type: 0, v_hash: '', base_hash: '' };
+function renderTodoView(note, filesHtml) {
+  const openEdit = openInEdit.has(String(note.id));
+  const prog = todo.progress(note.text);
+  const body = `
+    <article class="note-view">
+      <div class="row-actions">
+        <button class="btn solid" data-act="edit-note">Edit</button>
+        <button class="btn ghost" data-act="toggle-pin">${note.pinned ? 'Unpin' : 'Pin'}</button>
+      </div>
+      <label class="muted open-edit-toggle"><input type="checkbox" id="open-in-edit" ${openEdit ? 'checked' : ''}> Always open in editor</label>
+      <h2 class="title">${esc(note.title || 'Untitled')} <span class="todo-progress" id="todo-progress">${prog.done}/${prog.total}</span></h2>
+      <div class="note-meta">${esc(note.date_mod || '')}${note.held ? ' · draft on this device' : (note.dirty ? ' · pending sync' : '')}${db.isLocalId(note.id) ? ' · not uploaded yet' : ''}</div>
+      <div class="note-body todo-view" id="todo-view"></div>
+      ${filesHtml}
+    </article>
+  `;
+  root.innerHTML = shell(note.title || 'To-do', body, { back: true, editFab: true });
+  root.dataset.noteId = String(note.id);
+  const view = root.querySelector('#todo-view');
+  let text = note.text || '';
+  const paint = () => {
+    todo.paintView(view, text);
+    const p = todo.progress(text);
+    root.querySelector('#todo-progress').textContent = p.done + '/' + p.total;
+  };
+  paint();
+
+  // Toggles save one after another, each on top of whatever the previous one
+  // left in the cache, so the base hash is always the latest server version.
+  let chain = Promise.resolve();
+  const saveToggle = async () => {
+    const cached = await db.getNote(note.id);
+    const base = (cached && !cached.body_missing) ? cached : note;
+    const stored = await sync.saveLocalEdit(Object.assign({}, base, { text, base_hash: base.v_hash }), { fields: ['text'] });
+    if (!online || db.isForceLocal()) return;
+    let result;
+    try {
+      result = await sync.pushDirty();
+    } catch {
+      return;
+    }
+    toastBlocked(result.blocked);
+    const mine = (result.conflicts || []).filter((c) => String(c.fromId) === String(stored.id));
+    if (mine.length) {
+      toastConflicts(mine);
+      const r = parseHash();
+      if (r.name === 'view' && String(r.id) === String(note.id)) await renderView(note.id);
+    }
+  };
+  view.addEventListener('change', (ev) => {
+    const box = ev.target.closest('input[type="checkbox"]');
+    if (!box) return;
+    const next = todo.setChecked(text, Number(box.dataset.index), box.checked);
+    if (next == null) return;
+    text = next;
+    paint();
+    chain = chain.then(saveToggle).catch((e) => toast(e.message || 'Could not save'));
+  });
+  startStaleWatch(note.id, 'view', note.v_hash);
+}
+
+async function renderEdit(id, { todo: newTodo = false } = {}) {
+  let note = { id: db.newLocalId(), title: '', text: '', pinned: false, relevant: true, note_type: newTodo ? todo.TODO_TYPE : 0, v_hash: '', base_hash: '' };
   if (id !== 'new') {
     try {
       note = await sync.cacheOpenedNote(id);
@@ -897,22 +1008,31 @@ async function renderEdit(id) {
       return;
     }
   }
+  const isTodo = todo.isTodo(note);
   const openEdit = openInEdit.has(String(note.id));
   const saveLabel = saveMode === 'auto' ? 'Done' : 'Save';
+  const editor = isTodo
+    ? `<div class="todo-editor" id="todo-editor">
+        <ul class="todo-rows"></ul>
+        <button class="btn ghost todo-add" type="button">+ Add item</button>
+      </div>
+      <textarea id="body" hidden>${esc(note.text)}</textarea>`
+    : `<textarea class="edit-body" id="body" placeholder="Write…">${esc(note.text)}</textarea>`;
   const body = `
     <div class="edit-form">
       <input class="edit-title" id="title" placeholder="Title" value="${esc(note.title)}">
-      <textarea class="edit-body" id="body" placeholder="Write…">${esc(note.text)}</textarea>
+      ${editor}
       <div class="row-actions">
         <button class="btn solid" data-act="save">${saveLabel}</button>
-        <button class="btn ghost" data-act="view-note">View note</button>
+        <button class="btn ghost" data-act="view-note">${isTodo ? 'View to-do' : 'View note'}</button>
         <label class="muted"><input type="checkbox" id="pinned" ${note.pinned ? 'checked' : ''}> Pinned</label>
-        <label class="muted"><input type="checkbox" id="relevant" ${note.relevant !== false ? 'checked' : ''}> Show on home</label>
+        ${isTodo ? '' : `<label class="muted"><input type="checkbox" id="relevant" ${note.relevant !== false ? 'checked' : ''}> Show on home</label>`}
         <label class="muted"><input type="checkbox" id="open-in-edit" ${openEdit ? 'checked' : ''}> Always open in editor</label>
       </div>
     </div>
   `;
-  root.innerHTML = shell(id === 'new' ? 'New note' : 'Edit', body, { back: true, editorFabs: true, mainClass: 'edit-screen' });
+  const heading = id === 'new' ? (isTodo ? 'New to-do' : 'New note') : 'Edit';
+  root.innerHTML = shell(heading, body, { back: true, editorFabs: true, historyFabs: !isTodo, mainClass: 'edit-screen' });
   const state = {
     note,
     orig: {
@@ -934,7 +1054,8 @@ async function renderEdit(id) {
       const title = titleEl.value.trim();
       const text = bodyEl.value;
       const pinned = root.querySelector('#pinned').checked;
-      const relevant = root.querySelector('#relevant').checked;
+      const relevantEl = root.querySelector('#relevant');
+      const relevant = relevantEl ? relevantEl.checked : true;
       const same = title === (state.orig.title || '').trim()
         && text === (state.orig.text || '')
         && pinned === Boolean(state.orig.pinned)
@@ -1097,7 +1218,8 @@ async function renderEdit(id) {
   };
   root.querySelector('#title').addEventListener('input', persistSoon);
   root.querySelector('#pinned').addEventListener('change', persistSoon);
-  root.querySelector('#relevant').addEventListener('change', persistSoon);
+  if (isTodo) todo.bindEditor(root.querySelector('#todo-editor'), bodyEl, persistSoon);
+  else root.querySelector('#relevant').addEventListener('change', persistSoon);
   root._flushEdit = (silent, localOnly) => save(false, silent, localOnly);
   root._saveEdit = () => {
     clearTimeout(root._editTimer);
@@ -1186,6 +1308,9 @@ async function onAction(act, btn) {
     return;
   }
   if (act === 'new') { go('/edit/new'); return; }
+  if (act === 'new-todo') { go('/edit/new-todo'); return; }
+  if (act === 'tab-notes') { go('/'); return; }
+  if (act === 'tab-todos') { go('/todos/0'); return; }
   if (act === 'view-all') { go('/all/0'); return; }
   if (act === 'clear-search') {
     if (btn && btn.disabled) return;
@@ -1202,7 +1327,8 @@ async function onAction(act, btn) {
   if (act === 'page-prev' || act === 'page-next') {
     if (btn && btn.disabled) return;
     const page = parseInt(root.dataset.page || '0', 10) || 0;
-    go('/all/' + (act === 'page-next' ? page + 1 : Math.max(0, page - 1)));
+    const base = root.dataset.pager === 'todos' ? '/todos/' : '/all/';
+    go(base + (act === 'page-next' ? page + 1 : Math.max(0, page - 1)));
     return;
   }
   if (act === 'download-file') {
@@ -1420,9 +1546,10 @@ async function route() {
   const r = parseHash();
   if (r.name === 'list' || r.name === 'all') await maybePrepareDownloadOffer();
   if (r.name === 'view') return renderView(r.id);
-  if (r.name === 'edit') return renderEdit(r.id);
+  if (r.name === 'edit') return renderEdit(r.id, { todo: r.todo });
   if (r.name === 'settings') return renderSettings();
   if (r.name === 'all') return renderAll(r.page);
+  if (r.name === 'todos') return renderTodos(r.page);
   await renderList();
 }
 
@@ -1442,7 +1569,7 @@ async function onAppForeground() {
   if (Date.now() - lastFocusSync < 2000) return;
   lastFocusSync = Date.now();
   const page = parseHash().name;
-  await refreshOnline({ reroute: page === 'list' || page === 'all' || page === 'settings' });
+  await refreshOnline({ reroute: page === 'list' || page === 'all' || page === 'todos' || page === 'settings' });
   if (staleWatchId) checkStale();
 }
 

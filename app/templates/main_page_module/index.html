@@ -14,7 +14,10 @@
           {% set note_obj = N_obj(note["id"]) %}
           <a href="{{ url_for('notes_module.note_view', note_id=note['id']) }}" class="text-decoration-none text-white">
             <div class="d-flex rn-note-item p-2">
-              {% if note_obj.note_type != 0 %}
+              {% if note_obj.is_todo %}
+                {% set progress = note_obj.todo_progress %}
+                <span class="badge text-bg-{{ note_obj.type_clr[1] }} align-self-start me-1">{{ note_obj.type_clr[0] }} {{ progress.done }}/{{ progress.total }}</span>
+              {% elif note['note_type'] != 0 %}
                 <span class="badge text-bg-{{ note_obj.type_clr[1] }} align-self-start me-1">{{ note_obj.type_clr[0] }}</span>
               {% endif %}
               <img class="align-self-center me-2" src="/static/icons/pinned.svg" height="32" width="32">
@@ -25,7 +28,11 @@
                     <span class="badge rounded-pill text-bg-{{ tag_color }}">{{ i["tag_name"] }}</span>
                   {% endfor %}
                 </h6>
+                {% if note_obj.is_todo %}
+                <p class="mb-0">{{ note_obj.todo_preview }}</p>
+                {% else %}
                 <p class="mb-0">{{ note['text'] }} ...</p>
+                {% endif %}
               </div>
             </div>
           </a>
@@ -40,7 +47,7 @@
           {% set note_obj = N_obj(note["id"]) %}
           <a href="{{ url_for('notes_module.note_view', note_id=note['id']) }}" class="rn-note-link">
             <div class="d-flex rn-note-card p-2">
-              {% if note_obj.note_type != 0 %}
+              {% if note['note_type'] != 0 %}
                 <span class="badge text-bg-{{ note_obj.type_clr[1] }} align-self-start me-1">{{ note_obj.type_clr[0] }}</span>
               {% endif %}
               <img class="align-self-center me-2" src="/static/icons/note.svg" height="32" width="32">
@@ -67,7 +74,7 @@
           {% set note_obj = N_obj(note["id"]) %}
           <a href="{{ url_for('notes_module.note_view', note_id=note['id']) }}" class="rn-note-link">
             <div class="d-flex rn-note-item p-2">
-              {% if note_obj.note_type != 0 %}
+              {% if note['note_type'] != 0 %}
                 <span class="badge text-bg-{{ note_obj.type_clr[1] }} align-self-start me-1">{{ note_obj.type_clr[0] }}</span>
               {% endif %}
               <img class="align-self-center me-2" src="/static/icons/pinned.svg" height="32" width="32">

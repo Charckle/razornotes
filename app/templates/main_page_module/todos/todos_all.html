@@ -1,0 +1,64 @@
+{% extends "main_page_module/base.html" %}
+
+{% block nav_todos %}active{% endblock nav_todos %}
+
+{% block content %}
+<br>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md text-center">
+      <h5>Options</h5>
+      <a href="{{ url_for('notes_module.todo_new') }}" class="btn btn-success btn-sm mb-1"><i class="bi bi-plus-lg"></i> New To-do</a><br>
+      <a href="{{ url_for('notes_module.notes_all_trashed') }}" class="btn btn-warning btn-sm">View Trash</a>
+    </div>
+    <div class="col-md-6">
+
+      <legend>To-dos</legend>
+      <div id="all_entries" class="container">
+        {% if not todos %}
+          <p class="text-muted">No to-dos yet. <a href="{{ url_for('notes_module.todo_new') }}">Create one</a>.</p>
+        {% endif %}
+        {% for i in todos %}
+          {% set progress = Todo.progress(i["text"]) %}
+          <a href="{{ url_for('notes_module.note_view', note_id=i['id']) }}" class="rn-note-link">
+            <div class="d-flex rn-note-card p-2 align-items-center">
+              <span class="badge rounded-pill text-bg-{{ 'secondary' if progress.total and progress.done == progress.total else 'success' }} me-3">{{ progress.done }}/{{ progress.total }}</span>
+              <div class="flex-grow-1 text-break">
+                <h6 class="mt-0 mb-0">
+                  {% if i["pinned"] %}<i class="bi bi-pin-angle-fill" title="Pinned"></i>{% endif %}
+                  {{ i["title"] }}
+                </h6>
+                <p class="mb-0 text-muted">{{ Todo.preview(i["text"]) }}</p>
+              </div>
+              <small class="text-muted ms-2 text-nowrap">{{ i["date_mod"] }}</small>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+
+      <hr>
+
+      {% set pagination = N_obj.pagination_todos(page_display, page_offset) %}
+      {% if pagination["all_pages_len"] > 1 %}
+      <nav aria-label="To-dos pagination" class="d-flex justify-content-center">
+        <ul class="pagination">
+          <li class="page-item {% if pagination['previous'] < 0 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('notes_module.todos_all', page_offset=pagination['previous']) }}">Previous</a>
+          </li>
+          {% for page_num in pagination["all_pages"] %}
+          <li class="page-item {% if pagination['current'] == page_num %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('notes_module.todos_all', page_offset=page_num) }}">{{ page_num + 1 }}</a>
+          </li>
+          {% endfor %}
+          <li class="page-item {% if pagination['next'] == (pagination['all_pages_len']) %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('notes_module.todos_all', page_offset=pagination['next']) }}">Next</a>
+          </li>
+        </ul>
+      </nav>
+      {% endif %}
+
+    </div>
+    <div class="col-md"><!-- aside --></div>
+  </div>
+</div>
+{% endblock content %}

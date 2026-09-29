@@ -68,6 +68,25 @@ a.rn-note-link:hover {
   overflow-wrap: break-word;
 }
 
+/* ── To-do lists ─────────────────────────────────────────────────────────── */
+.rn-todo { font-size: 15px; }
+.rn-todo-item label { cursor: pointer; padding: 4px 0; width: 100%; }
+.rn-todo-item.rn-todo-done .rn-todo-label,
+.rn-todo-row.rn-todo-done .rn-todo-input {
+  text-decoration: line-through;
+  color: var(--bs-secondary-color);
+}
+.rn-todo-divider {
+  margin: 8px 0 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--bs-border-color);
+  font-size: 12px;
+  color: var(--bs-secondary-color);
+}
+.rn-todo-divider[hidden], .rn-todo-empty[hidden] { display: none; }
+.rn-todo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.rn-todo-row .rn-todo-check { flex-shrink: 0; margin-top: 0; }
+
 /* ── Heading sizes ───────────────────────────────────────────────────────── */
 h1 { font-size: 32px; font-weight: bold; }
 h2 { font-size: 25px; font-weight: bold; }

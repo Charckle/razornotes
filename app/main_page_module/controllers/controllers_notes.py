@@ -8,6 +8,7 @@ from flask import Blueprint, request, render_template, \
 from app.main_page_module.forms import form_dicts
 from app.main_page_module.p_objects.note_o import N_obj
 from app.main_page_module.p_objects.audit_log import AuditLog
+from app.main_page_module.p_objects.todo_o import Todo, TODO_TYPE
 
 # Import module models (i.e. User)
 from app.main_page_module.models import UserM, Notes, Tag, Tmpl, GroupsAccessM
@@ -26,7 +27,7 @@ notes_module = Blueprint('notes_module', __name__, url_prefix='/')
 @app.context_processor
 def inject_to_every_page():
     
-    return dict(Randoms=Randoms, Notes=Notes, Tag=Tag, Tmpl=Tmpl,
+    return dict(Randoms=Randoms, Notes=Notes, Tag=Tag, Tmpl=Tmpl, Todo=Todo,
                 NotesS=NotesS, N_obj=N_obj, markdown2=markdown2, UserM=UserM, GroupsAccessM=GroupsAccessM)
 
 
@@ -102,6 +103,9 @@ def note_trash():
     
     flash(f'Note -{note["title"]}- successfully trashed.', 'success')  
     
+    if note["note_type"] == TODO_TYPE:
+        return redirect(url_for("notes_module.todos_all"))
+
     return redirect(url_for("notes_module.notes_all"))  
 
 @notes_module.route('/note_reactivate/<note_id>', methods=['get'])
@@ -206,6 +210,10 @@ def note_view(note_id):
         
         return redirect(url_for("main_page_module.index"))
     
+    if note["note_type"] == TODO_TYPE:
+        return render_template("main_page_module/todos/todo_view.html", note=note,
+                               items=Todo.indexed(note["text"]))
+
     # set note as viewed
     N_obj.notes_viewed(note_id)
 
@@ -226,6 +234,9 @@ def note_edit(note_id=None):
     if note is None:
         flash('No entrie found or you do not have permissions to edit the note.', 'error')
         return redirect(url_for("notes_module.notes_all"))    
+
+    if note["note_type"] == TODO_TYPE:
+        return redirect(url_for("notes_module.todo_edit", note_id=note["id"]))
 
     # GET
     if request.method == 'GET':
@@ -269,6 +280,117 @@ def note_edit(note_id=None):
             flash(f'Invalid Data for {field}: {error}', 'error')    
             
     return render_template("main_page_module/notes/note_edit.html", note=note, form=form)    
+
+
+@notes_module.route('/todos_all/<int:page_offset>')
+@notes_module.route('/todos_all/')
+@access_required()
+def todos_all(page_offset=0):
+    page_display = 25
+    todos = Notes.get_all_todos_offset(page_display, page_offset)
+
+    return render_template("main_page_module/todos/todos_all.html", todos=todos,
+                           page_display=page_display, page_offset=page_offset)
+
+
+@notes_module.route('/todo_new', methods=['GET', 'POST'])
+@access_required(UserRole.READWRITE)
+def todo_new():
+    form = form_dicts["Todo"]()
+
+    if form.validate_on_submit():
+        title = str(form.title.data).strip()
+        text = Todo.clean(form.todo_text.data)
+        note_id = Notes.create(title, text, TODO_TYPE, int(bool(form.pinned.data)), 1)
+
+        if form.file_u.data:
+            note_o = N_obj(note_id)
+            for file_u in form.file_u.data:
+                note_o.save_file_to_note(file_u)
+
+        N_obj.argus_add_note({"id": note_id, "title": title, "text": text})
+
+        flash('To-do successfully created!', 'success')
+
+        return redirect(url_for("notes_module.note_view", note_id=note_id))
+
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')
+
+    return render_template("main_page_module/todos/todo_new.html", form=form)
+
+
+@notes_module.route('/todo_edit/<int:note_id>', methods=['GET', 'POST'])
+@notes_module.route('/todo_edit/', methods=['POST'])
+@access_required(UserRole.READWRITE)
+def todo_edit(note_id=None):
+    form = form_dicts["Todo"]()
+    if note_id == None:
+        note_id = form.id.data
+    else:
+        form.id.data = note_id
+
+    note = Notes.get_one(note_id)
+    if note is None or note["note_type"] != TODO_TYPE:
+        flash('No to-do found or you do not have permissions to edit it.', 'error')
+        return redirect(url_for("notes_module.todos_all"))
+
+    if request.method == 'GET':
+        form.process(id = note["id"],
+                     title = note["title"],
+                     todo_text = note["text"],
+                     pinned = note["pinned"])
+
+    if form.validate_on_submit():
+        title = str(form.title.data).strip()
+        text = Todo.clean(form.todo_text.data)
+        Notes.update_one(note["id"], title, TODO_TYPE, text, 1, int(bool(form.pinned.data)))
+
+        if form.file_u.data:
+            note_o = N_obj(note["id"])
+            for file_u in form.file_u.data:
+                note_o.save_file_to_note(file_u)
+
+        N_obj.argus_edit_note({"id": note["id"], "title": title, "text": text})
+
+        AuditLog.create(f"To-do Edited, id: {note['id']}: {note['title'][:10]}")
+
+        flash('To-do successfully saved!', 'success')
+
+        return redirect(url_for("notes_module.note_view", note_id=note["id"]))
+
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f'Invalid Data for {field}: {error}', 'error')
+
+    return render_template("main_page_module/todos/todo_edit.html", note=note, form=form)
+
+
+@notes_module.route('/todo_toggle/', methods=['POST'])
+@access_required(UserRole.READWRITE)
+def todo_toggle():
+    note = Notes.get_one(request.form.get("note_id"))
+    if note is None or note["note_type"] != TODO_TYPE:
+        return jsonify({"message": "To-do not found."}), 404
+
+    # The page sends the hash it was rendered with; anything else means the
+    # to-do was edited elsewhere and the item positions may no longer match.
+    if request.form.get("v_hash") != note["v_hash"]:
+        return jsonify({"message": "This to-do was changed somewhere else. Reload the page."}), 409
+
+    try:
+        index = int(request.form.get("index"))
+    except (TypeError, ValueError):
+        return jsonify({"message": "Invalid item."}), 400
+
+    text = Todo.set_checked(note["text"], index, request.form.get("checked") == "1")
+    if text is None:
+        return jsonify({"message": "Invalid item."}), 400
+
+    Notes.update_one(note["id"], note["title"], TODO_TYPE, text, note["relevant"], note["pinned"])
+
+    return jsonify(dict(Todo.progress(text), v_hash=Notes.get_one_hash(note["id"])["v_hash"]))
 
 
 @notes_module.route('/note_delete_file/', methods=['POST'])
